@@ -306,9 +306,11 @@ const FmpqPolyID = Dict{Tuple{FlintRationalField, Symbol}, FmpqPolyRing}()
 
 mutable struct fmpq_poly <: PolyElem{fmpq}
    coeffs::Ptr{Int}
-   den::Int
    alloc::Int
    length::Int
+   den::Int
+   # end flint struct
+
    parent::FmpqPolyRing
 
    function fmpq_poly()
@@ -2093,7 +2095,7 @@ end
 
 @attributes mutable struct FqDefaultFiniteField <: FinField
    # fq_default_ctx_struct is 200 bytes on 64 bit machine
-   opaque::NTuple{200, Int8} 
+   opaque::NTuple{200, Int8}
    # end of flint struct
 
    var::String
@@ -3067,9 +3069,11 @@ const FmpqRelSeriesID = Dict{Tuple{Int, Symbol}, FmpqRelSeriesRing}()
 
 mutable struct fmpq_rel_series <: RelSeriesElem{fmpq}
    coeffs::Ptr{Nothing}
-   den::Int
    alloc::Int
    length::Int
+   den::Int
+   # end flint struct
+
    prec::Int
    val::Int
    parent::FmpqRelSeriesRing
@@ -3132,9 +3136,11 @@ const FmpqAbsSeriesID = Dict{Tuple{Int, Symbol}, FmpqAbsSeriesRing}()
 
 mutable struct fmpq_abs_series <: AbsSeriesElem{fmpq}
    coeffs::Ptr{Nothing}
-   den::Int
    alloc::Int
    length::Int
+   den::Int
+   # end flint struct
+
    prec :: Int
    parent::FmpqAbsSeriesRing
 
@@ -4038,8 +4044,8 @@ end
 const FqDefaultRelSeriesID = Dict{Tuple{FqDefaultFiniteField, Int, Symbol}, FqDefaultRelSeriesRing}()
  
 mutable struct fq_default_rel_series <: RelSeriesElem{fq_default}
-   # fq_default_poly_struct is 24 bytes on 64 bit machine
-   opaque::NTuple{24, Int8} 
+   # fq_default_poly_struct is 48 bytes on 64 bit machine
+   opaque::NTuple{48, Int8}
    # end of flint struct
 
    prec::Int
@@ -4178,8 +4184,8 @@ end
 const FqDefaultAbsSeriesID = Dict{Tuple{FqDefaultFiniteField, Int, Symbol}, FqDefaultAbsSeriesRing}()
  
 mutable struct fq_default_abs_series <: AbsSeriesElem{fq_default}
-   # fq_default_poly_struct is 24 bytes on 64 bit machine
-   opaque::NTuple{24, Int8} 
+   # fq_default_poly_struct is 48 bytes on 64 bit machine
+   opaque::NTuple{48, Int8}
    # end of flint struct
 
    prec::Int
@@ -5385,8 +5391,8 @@ end
 const FqDefaultPolyID = Dict{Tuple{FqDefaultFiniteField, Symbol}, FqDefaultPolyRing}()
  
 mutable struct fq_default_poly <: PolyElem{fq_default}
-   # fq_default_poly_struct is 24 bytes on 64 bit machine
-   opaque::NTuple{24, Int8} 
+   # fq_default_poly_struct is 48 bytes on 64 bit machine
+   opaque::NTuple{48, Int8}
    # end of flint struct
 
    parent::FqDefaultPolyRing
@@ -5822,8 +5828,8 @@ mutable struct FqDefaultMatSpace <: MatSpace{fq_default}
  const FqDefaultMatID = Dict{Tuple{FqDefaultFiniteField, Int, Int}, FqDefaultMatSpace}()
  
  mutable struct fq_default_mat <: MatElem{fq_default}
-    # fq_default_mat_struct is 32 bytes on 64 bit machine
-    opaque::NTuple{32, Int8} 
+    # fq_default_mat_struct is 56 bytes on 64 bit machine
+    opaque::NTuple{56, Int8}
     # end of flint struct
     
     base_ring::FqDefaultFiniteField
