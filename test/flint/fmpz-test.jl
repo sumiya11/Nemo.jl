@@ -757,16 +757,96 @@ end
    @test_throws DomainError sqrtmod(fmpz(12), fmpz(-13))
 
    @test_throws ErrorException sqrtmod(fmpz(-7), fmpz(1024))
+end
+
+@testset "fmpz.crt" begin
+   function testit(r, m, check=true)
+      n = length(r)
+      s = rand(Bool)
+      a = @inferred crt(r, m, s; check=check)
+      b, l = @inferred crt_with_lcm(r, m, !s; check=check)
+      if !iszero(l)
+         if s
+            @test -l < 2*a <= l
+            @test 0 <= b < l
+         else
+            @test 0 <= a < l
+            @test -l < 2*b <= l
+         end
+      end
+      for i in 1:length(r)
+         @test is_divisible_by(l, m[i])
+         @test is_divisible_by(a - r[i], m[i])
+         @test is_divisible_by(b - r[i], m[i])
+      end
+   end
+
+   testit([ZZ(1)], [ZZ(4)])
+   testit([ZZ(1)], [ZZ(0)])
+
+   testit([ZZ(1), ZZ(2)], [ZZ(4), ZZ(5)])
+   testit([ZZ(1), ZZ(3)], [ZZ(4), ZZ(6)], false)
+   testit([ZZ(1), ZZ(3)], [ZZ(4), ZZ(6)], true)
+   testit([ZZ(-1), ZZ(2)], [ZZ(0), ZZ(3)])
+   testit([ZZ(-1), ZZ(2)], [ZZ(3), ZZ(0)])
+   @test_throws Exception crt([ZZ(1), ZZ(2)], [ZZ(0), ZZ(3)])
+   @test_throws Exception crt([ZZ(1), ZZ(2)], [ZZ(3), ZZ(0)])
+   @test_throws Exception crt([ZZ(1), ZZ(2)], [ZZ(4), ZZ(6)])
+   @test parent(crt([ZZ(1), ZZ(2)], [ZZ(4), ZZ(6)]; check=false)) == ZZ # junk but no throw
+
+   testit([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5), ZZ(7)])
+   testit([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5), ZZ(-6)])
+   testit([ZZ(-1), ZZ(2), ZZ(-1)], [ZZ(0), ZZ(3), ZZ(0)])
+   @test_throws Exception crt([ZZ(1), ZZ(2), ZZ(2)], [ZZ(4), ZZ(5), ZZ(6)])
+   @test_throws Exception crt([ZZ(-1), ZZ(2), ZZ(2)], [ZZ(0), ZZ(3), ZZ(0)])
+   @test_throws Exception crt([ZZ(-1), ZZ(-1), ZZ(2)], [ZZ(0), ZZ(0), ZZ(4)])
 
    @test crt(fmpz(5), fmpz(13), fmpz(7), fmpz(37), true) == 44
+   @test crt(fmpz(1), fmpz(2), fmpz(2), fmpz(-3), true) == -1
+   @test crt(fmpz(1), fmpz(2), fmpz(0), fmpz(3), true) == 3
+   @test crt(fmpz(1), fmpz(-2), fmpz(2), fmpz(3), false) == 5
+   @test crt(fmpz(1), fmpz(2), fmpz(0), fmpz(3), false) == 3
+   @test crt(fmpz(11),fmpz(30),fmpz(41),fmpz(85)) == 41
+   @test crt(fmpz(11), fmpz(30), fmpz(40), fmpz(85); check=false) isa fmpz
+   @test_throws Exception crt(fmpz(11), fmpz(30), fmpz(40), fmpz(85)) isa fmpz
 
-   @test crt(fmpz(5), fmpz(13), 7, 37, false) == 44
+   for s in (true, false)
+      rr = ZZ(99)^150
+      mm = ZZ(101)^100  # something prime to the typemax/mins
+      for (r1, m1, r2, m2) in ((5, 13, 7, 37),
+                               (5, 13, -7, 37),
+                               (5, 13, 7, -37),
+                               (5, 13, -7, -37),
+                               (0, 0, 0, 0),
+                               (2, 4, 0, 2),
+                               (0, 2, 2, 4),
+                               (1, 0, 1, 3),
+                               (1, 3, 1, 0),
+                               (1, 3, UInt(1), UInt(0)),
+                               (rr, mm, 100, typemax(UInt)),
+                               (rr, mm, -200, typemax(UInt)),
+                               (rr, mm, typemin(Int), typemax(UInt)),
+                               (rr, mm, typemin(Int), typemax(UInt)),
+                               (rr, mm, typemax(Int), typemax(UInt)),
+                               (rr, mm, typemin(Int), typemax(Int)),
+                               (rr, mm, typemax(Int), typemax(Int)),
+                               (rr, mm, typemin(Int), typemin(Int)),
+                               (rr, mm, typemax(Int), typemin(Int)),
+                               (rr, mm, typemax(UInt), typemin(Int)),
+                               (rr, mm, typemax(UInt), typemin(Int)))
 
-   @test_throws DomainError crt(fmpz(5), fmpz(13), -7, 37, true)
+         @test crt(ZZ(r1), ZZ(m1), r2, m2, s) ==
+               crt(ZZ(r1), ZZ(m1), ZZ(r2), ZZ(m2), s)
 
-   @test_throws DomainError crt(fmpz(5), fmpz(13), 7, -37, true)
+         @test crt_with_lcm(ZZ(r1), ZZ(m1), r2, m2, s) ==
+               crt_with_lcm(ZZ(r1), ZZ(m1), ZZ(r2), ZZ(m2), s)
+      end
+   end
 
-   @test_throws DomainError crt(fmpz(5), fmpz(13), -7, -37, true)
+   @test_throws Exception crt(fmpz(1), fmpz(3), UInt(2), UInt(0))
+   @test_throws Exception crt(fmpz(1), fmpz(3), 2, 0)
+   @test_throws Exception crt(fmpz(11), fmpz(30), UInt(40), UInt(85))
+   @test_throws Exception crt(fmpz(11), fmpz(30), 40, 85)
 end
 
 @testset "fmpz.factor" begin

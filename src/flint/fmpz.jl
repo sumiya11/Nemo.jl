@@ -36,7 +36,8 @@ export fmpz, FlintZZ, FlintIntegerRing, parent, show, convert, hash, bell,
        is_prime, fdiv, cdiv, tdiv, rem, mod, gcd, lcm, invmod, powermod, abs,
        isqrt, popcount, prevpow2, nextpow2, ndigits, dec, bin, oct, hex, base,
        one, zero, divexact, fits, sign, nbits, deepcopy, tdivpow2, fdivpow2,
-       cdivpow2, flog, clog, cmpabs, clrbit!, setbit!, combit!, crt, divisible,
+       cdivpow2, flog, clog, cmpabs, clrbit!, setbit!, combit!, crt,
+       crt_with_lcm, divisible,
        divisors, prime_divisors, divisor_lenstra, fmodpow2, gcdinv,
        is_probable_prime, jacobi_symbol, kronecker_symbol, remove, root, size,
        isqrtrem, sqrtmod, trailing_zeros, divisor_sigma, euler_phi, fibonacci,
@@ -169,6 +170,8 @@ zero(::Type{fmpz}) = fmpz(0)
 Return the sign of $a$, i.e. $+1$, $0$ or $-1$.
 """
 sign(a::fmpz) = fmpz(ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), a))
+
+sign(::Type{Int}, a::fmpz) = Int(ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), a))
 
 @doc Markdown.doc"""
     fits(::Type{Int}, a::fmpz)
@@ -636,8 +639,7 @@ function nfdivrem(a::fmpz, b::fmpz)
    q, r = tdivrem(a, b)
    c = ccall((:fmpz_cmp2abs, libflint), Cint, (Ref{fmpz}, Ref{fmpz}), b, r)
    if c <= 0
-      if ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), b) !=
-         ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), r)
+      if sign(Int, b) != sign(Int, r)
          sub!(q, q, UInt(1))
          add!(r, r, b)
       elseif c < 0
@@ -652,8 +654,7 @@ function ncdivrem(a::fmpz, b::fmpz)
    q, r = tdivrem(a, b)
    c = ccall((:fmpz_cmp2abs, libflint), Cint, (Ref{fmpz}, Ref{fmpz}), b, r)
    if c <= 0
-      if ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), r) ==
-         ccall((:fmpz_sgn, libflint), Cint, (Ref{fmpz},), b)
+      if sign(Int, b) == sign(Int, r)
          add!(q, q, UInt(1))
          sub!(r, r, b)
       elseif c < 0
@@ -902,36 +903,125 @@ function sqrtmod(x::fmpz, m::fmpz)
     return z
 end
 
-@doc Markdown.doc"""
-    crt(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false)
+function _normalize_crt(r::fmpz, m::fmpz, signed)
+   s = sign(Int, m)
+   if s > 0
+      return signed ? nfdivrem(r, m)[2] : fdivrem(r, m)[2]
+   elseif s < 0
+      return signed ? ncdivrem(r, m)[2] : cdivrem(r, m)[2]
+   else
+      return r
+   end
+end
 
-Return $r$ such that $r \equiv r_1 (\mod m_1)$ and $r \equiv r_2 (\mod m_2)$.
-If `signed = true`, $r$ will be in the range $-m_1m_2/2 < r \leq m_1m_2/2$.
-If `signed = false` the value will be in the range $0 \leq r < m_1m_2$.
-"""
-function crt(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false)
-   z = fmpz()
-   ccall((:fmpz_CRT, libflint), Nothing,
-          (Ref{fmpz}, Ref{fmpz}, Ref{fmpz}, Ref{fmpz}, Ref{fmpz}, Cint),
-          z, r1, m1, r2, m2, signed)
-   return z
+function _normalize_crt_with_lcm(r::fmpz, m::fmpz, signed)
+   s = sign(Int, m)
+   if s == 0
+      return (r, m)
+   elseif s < 0
+      m = -m
+   end
+   return (signed ? nfdivrem(r, m)[2] : fdivrem(r, m)[2], m)
 end
 
 @doc Markdown.doc"""
-    crt(r1::fmpz, m1::fmpz, r2::Int, m2::Int, signed=false)
+    crt(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false; check::Bool=true)
+    crt(r1::fmpz, m1::fmpz, r2::Union{Int, UInt}, m2::Union{Int, UInt}, signed=false; check::Bool=true)
+    crt(r::Vector{fmpz}, m::Vector{fmpz}, signed=false; check::Bool=true)
+    crt_with_lcm(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false; check::Bool=true)
+    crt_with_lcm(r1::fmpz, m1::fmpz, r2::Union{Int, UInt}, m2::Union{Int, UInt}, signed=false; check::Bool=true)
+    crt_with_lcm(r::Vector{fmpz}, m::Vector{fmpz}, signed=false; check::Bool=true)
 
-Return $r$ such that $r \equiv r_1 (\mod m_1)$ and $r \equiv r_2 (\mod m_2)$.
-If `signed = true`, $r$ will be in the range $-m_1m_2/2 < r \leq m_1m_2/2$.
-If `signed = false` the value will be in the range $0 \leq r < m_1m_2$.
+As per the AbstractAlgebra `crt` interface, with the following option.
+If `signed = true`, the solution is the range $(-m/2, m/2]$, otherwise it is in
+the range $[0,m)$, where $m$ is the least common multiple of the moduli.
 """
-function crt(r1::fmpz, m1::fmpz, r2::Int, m2::Int, signed = false)
-   z = fmpz()
-   r2 < 0 && throw(DomainError(r2, "Second residue must be non-negative"))
-   m2 < 0 && throw(DomainError(m2, "Second modulus must be non-negative"))
-   ccall((:fmpz_CRT_ui, libflint), Nothing,
-          (Ref{fmpz}, Ref{fmpz}, Ref{fmpz}, Int, Int, Cint),
-          z, r1, m1, r2, m2, signed)
-   return z
+function crt(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false; check::Bool=true)
+   r, m = AbstractAlgebra._crt_with_lcm_stub(r1, m1, r2, m2; check=check)
+   return _normalize_crt(r, m, signed)
+end
+
+function crt(r::Vector{fmpz}, m::Vector{fmpz}, signed=false; check::Bool=true)
+   r, m = AbstractAlgebra._crt_with_lcm_stub(r, m; check=check)
+   return _normalize_crt(r, m, signed)
+end
+
+function crt_with_lcm(r1::fmpz, m1::fmpz, r2::fmpz, m2::fmpz, signed=false; check::Bool=true)
+   r, m = AbstractAlgebra._crt_with_lcm_stub(r1, m1, r2, m2; check=check)
+   return _normalize_crt_with_lcm(r, m, signed)
+end
+
+function crt_with_lcm(r::Vector{fmpz}, m::Vector{fmpz}, signed=false; check::Bool=true)
+   r, m = AbstractAlgebra._crt_with_lcm_stub(r, m; check=check)
+   return _normalize_crt_with_lcm(r, m, signed)
+end
+
+# requires a < b
+function _gcdinv(a::UInt, b::UInt)
+   s = Ref{UInt}()
+   g = ccall((:n_gcdinv, libflint), UInt,
+             (Ptr{UInt}, UInt, UInt),
+             s, a, b)
+   return g, s[]
+end
+
+function submod(a::UInt, b::UInt, n::UInt)
+   return a >= b ? a - b : a - b + n
+end
+
+function mulmod(a::UInt, b::UInt, n::UInt)
+   return UInt(mod(widen(a)*b, n))
+end
+
+function divexact(a::UInt, b::UInt; check::Bool=true)
+   check && !iszero(mod(a, b)) && throw(ArgumentError("Not an exact division"))
+   return div(a, b)
+end
+
+function _crt_with_lcm(r1::fmpz, m1::fmpz, r2::UInt, m2::UInt; check::Bool=true)
+   if iszero(m2)
+      check && !is_divisible_by(r2 - r1, m1) && error("no crt solution")
+      return (fmpz(r2), fmpz(m2))
+   end
+   if r2 >= m2
+      r2 = mod(r2, m2)
+   end
+   if iszero(m1)
+      check && mod(r1, m2) != r2 && error("no crt solution")
+      return (r1, m1)
+   end
+   g, s = _gcdinv(mod(m1, m2), m2)
+   diff = submod(r2, mod(r1, m2), m2)
+   if isone(g)
+      return (r1 + mulmod(diff, s, m2)*m1, m1*m2)
+   else
+      m2og = divexact(m2, g; check=false)
+      diff = divexact(diff, g; check=check)
+      return (r1 + mulmod(diff, s, m2og)*m1, m1*m2og)
+   end
+end
+
+function _crt_with_lcm(r1::fmpz, m1::fmpz, r2::Union{Int, UInt},
+                                        m2::Union{Int, UInt}; check::Bool=true)
+   if iszero(m2)
+      check && !is_divisible_by(r2 - r1, m1) && error("no crt solution")
+      return (fmpz(r2), fmpz(m2))
+   end
+   m2 = abs(m2)%UInt
+   r2 = r2 < 0 ? mod(r2, m2) : UInt(r2)
+   return _crt_with_lcm(r1, m1, r2::UInt, m2; check=check)
+end
+
+function crt(r1::fmpz, m1::fmpz, r2::Union{Int, UInt},
+                        m2::Union{Int, UInt}, signed = false; check::Bool=true)
+   r, m = _crt_with_lcm(r1, m1, r2, m2; check=check)
+   return _normalize_crt(r, m, signed)
+end
+
+function crt_with_lcm(r1::fmpz, m1::fmpz, r2::Union{Int, UInt},
+                        m2::Union{Int, UInt}, signed = false; check::Bool=true)
+   r, m = _crt_with_lcm(r1, m1, r2, m2; check=check)
+   return _normalize_crt_with_lcm(r, m, signed)
 end
 
 ###############################################################################
