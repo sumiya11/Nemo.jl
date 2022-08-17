@@ -236,8 +236,8 @@ function _absolute_basis(F::FqDefaultFiniteField)
     res = elem_type(F)[]
     kabs = _absolute_basis(base_field(F))
     for b in basis(F)
-      for bb in kabs
-        push!(res, F(bb) * b)
+      for c in kabs
+        push!(res, F(c) * b)
       end
     end
     return res
@@ -541,31 +541,29 @@ end
 ################################################################################
 
 function (a::FqDefaultFiniteField)(b::fq_default)
-   if parent(b) === a
-     return b
-   end
+  k = parent(b)
+  if k === a
+    return b
+  end
 
   if is_absolute(a)
-    k = parent(b)
     da = degree(a)
     dk = degree(k)
-    if k == a
-        return b
-    elseif dk < da
-        da % dk != 0 && error("Coercion impossible")
-        f = embed(k, a)
-        return f(b)
+    if dk < da
+      da % dk != 0 && error("Coercion impossible")
+      f = embed(k, a)
+      return f(b)
     else
-        dk % da != 0 && error("Coercion impossible")
-        f = preimage_map(a, k)
-        return f(b)
+      dk % da != 0 && error("Coercion impossible")
+      f = preimage_map(a, k)
+      return f(b)
     end
   end
 
-   if parent(b) === base_field(a)
-     return (a.image_basefield)(b)
-   end
+  if k === base_field(a)
+    return (a.image_basefield)(b)
+  end
 
-   # To make it work in towers
-   return a(base_field(a)(b))
+  # To make it work in towers
+  return a(base_field(a)(b))
 end
