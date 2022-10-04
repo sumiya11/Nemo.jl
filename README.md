@@ -12,7 +12,6 @@ to cover commutative algebra, number theory and group theory.
 It is currently developed by Dan Schultz, William Hart, Tommy Hofmann, Fredrik Johansson and
 Claus Fieker with contributions from others.
 
-- <https://nemocas.org> (Website)
 - <https://nemocas.github.io/Nemo.jl/dev/> (Online documentation for development version)
 - <https://nemocas.github.io/Nemo.jl/stable/> (Online documentation for latest stable release)
 
