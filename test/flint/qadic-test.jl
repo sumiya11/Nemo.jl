@@ -303,4 +303,6 @@ end
    @test log(R(1)) == 0
 
    @test teichmuller(b) == 2 + 4*7^1 + 6*7^2 + O(R, 7^3)
+
+   @test 6 * log(R(2)) == log(R(2)^6)
 end

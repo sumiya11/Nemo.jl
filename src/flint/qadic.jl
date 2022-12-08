@@ -535,12 +535,22 @@ end
 function log(a::qadic)
    av = valuation(a)
    (av > 0 || av < 0 || iszero(a)) && throw(DomainError(a, "Valuation must be zero"))
+   av = valuation(a-1)
+   ctx = parent(a)
+   if av == 0
+     qm1 = prime(ctx)^degree(ctx) - 1
+     a = a^qm1
+   end
+
    ctx = parent(a)
    z = qadic(a.N)
    z.parent = ctx
    res = Bool(ccall((:qadic_log, libflint), Cint,
                     (Ref{qadic}, Ref{qadic}, Ref{FlintQadicField}), z, a, ctx))
    !res && error("Unable to compute logarithm")
+   if av == 0
+     z = divexact(z, qm1)
+   end
    return z
 end
 
