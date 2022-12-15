@@ -1102,10 +1102,10 @@ function (R::FqNmodMPolyRing)(a::Vector{fq_nmod}, b::Vector{Vector{T}}) where {T
 end
 
 # Create poly with given array of coefficients and array of exponent vectors (sorting is performed)
-function (R::FqNmodMPolyRing)(a::Vector{Any}, b::Vector{Vector{T}}) where T
+function (R::FqNmodMPolyRing)(a::Vector{<:Any}, b::Vector{Vector{T}}) where T
    n = nvars(R)
    length(a) != length(b) && error("Coefficient and exponent vector must have the same length")
-   newa = map(R, a)
+   newa = map(base_ring(R), a)
    newb = map(x -> map(FlintZZ, x), b)
    newaa = convert(Vector{fq_nmod}, newa)
    newbb = convert(Vector{Vector{fmpz}}, newb)
