@@ -82,6 +82,11 @@
    S, (x, y) = PolynomialRing(R, ["x", "y"])
    M = MPolyBuildCtx(S)
    @test_throws ErrorException push_term!(M, one(RR), zeros(Int, 2))
+
+   F, = FiniteField(2, 2, :z)
+   R, (x, ) = PolynomialRing(F, ["x",])
+   @test R([F(1)], [[BigInt(1)]]) == x
+   @test R([1], [[BigInt(1)]]) == x
 end
 
 @testset "fq_nmod_mpoly.printing" begin
