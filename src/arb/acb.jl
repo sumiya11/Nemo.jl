@@ -1142,21 +1142,6 @@ function eisenstein_g(k::Int, x::acb)
 end
 
 @doc Markdown.doc"""
-    hilbert_class_polynomial(D::Int, R::FmpzPolyRing)
-
-Return in the ring $R$ the Hilbert class polynomial of discriminant $D$,
-which is only defined for $D < 0$ and $D \equiv 0, 1 \pmod 4$.
-"""
-function hilbert_class_polynomial(D::Int, R::FmpzPolyRing)
-   D < 0 && mod(D, 4) < 2 || throw(ArgumentError("$D is not a negative discriminant"))
-   z = R()
-   ccall((:acb_modular_hilbert_class_poly, Nemo.libarb), Nothing,
-         (Ref{fmpz_poly}, Int),
-         z, D)
-   return z
-end
-
-@doc Markdown.doc"""
     elliptic_k(x::acb)
 
 Return the complete elliptic integral $K(x)$.

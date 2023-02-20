@@ -1,25 +1,25 @@
-RR = ArbField(64)
-CC = AcbField(64)
+RR = RealField()
+CC = ComplexField()
 
-@testset "acb.constructors" begin
-   @test isa(CC, AcbField)
+@testset "ComplexElem.constructors" begin
+   @test isa(CC, ComplexField)
    @test isa(CC(2), FieldElem)
 
-   @test elem_type(CC) == acb
+   @test elem_type(CC) == ComplexElem
    @test base_ring(CC) == Union{}
 
-   @test elem_type(AcbField) == acb
-   @test parent_type(acb) == AcbField
+   @test elem_type(ComplexField) == ComplexElem
+   @test parent_type(ComplexElem) == ComplexField
 
-   @test AcbField(10, cached = true) === AcbField(10, cached = true)
-   @test AcbField(11, cached = false) !== AcbField(11, cached = false)
+#   @test ComplexField(10, cached = true) === ComplexField(10, cached = true)
+#   @test ComplexField(11, cached = false) !== ComplexField(11, cached = false)
 
-   for T in [Int32, Int, BigInt, Complex{Int}, Complex{Float64}, Rational{Int}, Rational{BigInt}, Float64, BigFloat, fmpz, fmpq, arb]
-     @test acb === Nemo.promote_rule(acb, T)
+   for T in [Int32, Int, BigInt, Complex{Int}, Complex{Float64}, Rational{Int}, Rational{BigInt}, Float64, BigFloat, fmpz, fmpq, RealElem]
+     @test ComplexElem === Nemo.promote_rule(ComplexElem, T)
    end
 end
 
-@testset "acb.printing" begin
+@testset "ComplexElem.printing" begin
    @test occursin(r"\A0\Z", string(CC(0)))
    @test occursin(r"\A1\.[0]+\Z", string(CC(1)))
    @test occursin(r"\A1\.[0]+[ ]*\*[ ]*?im\Z", string(onei(CC)))
@@ -27,7 +27,7 @@ end
                                                       string(CC(1) + onei(CC)))
 end
 
-@testset "acb.basic_ops" begin
+@testset "ComplexElem.basic_ops" begin
    @test one(CC) == 1
    @test zero(CC) == 0
 
@@ -66,7 +66,7 @@ end
    @test characteristic(CC) == 0
 end
 
-@testset "acb.comparison" begin
+@testset "ComplexElem.comparison" begin
    exact3 = CC(3)
    exact4 = CC(4)
    approx3 = CC("3 +/- 0.000001")
@@ -100,7 +100,7 @@ end
 end
 
 
-@testset "acb.predicates" begin
+@testset "ComplexElem.predicates" begin
    @test iszero(CC(0))
    @test !iszero(CC(1))
    @test !iszero(CC("0 +/- 0.01"))
@@ -125,14 +125,14 @@ end
    @test !isinteger(CC("3 +/- 0.01"))
 end
 
-@testset "acb.unary_ops" begin
+@testset "ComplexElem.unary_ops" begin
    @test -CC(3) == CC(-3)
    @test abs(-CC(3)) == 3
    @test abs(CC(3)) == 3
    @test inv(CC(2)) == CC(QQ(1,2))
 end
 
-@testset "acb.binary_ops" begin
+@testset "ComplexElem.binary_ops" begin
    x = CC(2)
    y = CC(4)
 
@@ -154,7 +154,7 @@ end
       @test x ^ T(4) == 16
    end
 
-   for T in [Float64, BigFloat, arb]
+   for T in [Float64, BigFloat, RealElem]
       @test contains(x + T(4), 6)
       @test contains(x - T(4), -2)
       @test contains(x * T(4), 8)
@@ -167,14 +167,14 @@ end
    end
 end
 
-@testset "acb.misc_ops" begin
+@testset "ComplexElem.misc_ops" begin
    @test ldexp(CC(3), 2) == 12
    @test ldexp(CC(3), ZZ(2)) == 12
    @test contains(trim(CC("1.1 +/- 0.001")), CC("1.1"))
 
    @test accuracy_bits(CC(0)) == typemax(Int)
    @test accuracy_bits(CC("+/- inf")) == -typemax(Int)
-   @test accuracy_bits(CC("0.1")) > precision(CC) - 4
+   @test accuracy_bits(CC("0.1")) > precision(Balls) - 4
 
    uniq, n = unique_integer(CC("3 +/- 0.001"))
    @test uniq
@@ -187,7 +187,7 @@ end
    @test !uniq
 end
 
-@testset "acb.unsafe_ops" begin
+@testset "ComplexElem.unsafe_ops" begin
    z = CC(1)
    x = CC(2)
    y = CC(3)
@@ -205,11 +205,11 @@ end
    @test z == 1.5
 end
 
-@testset "acb.constants" begin
+@testset "ComplexElem.constants" begin
    @test overlaps(const_pi(CC), CC("3.141592653589793238462643 +/- 4.03e-25"))
 end
 
-@testset "acb.functions" begin
+@testset "ComplexElem.functions" begin
    z = CC("0.2", "0.3")
    a = CC("0.3", "0.4")
    b = CC("0.4", "0.5")
@@ -434,40 +434,60 @@ end
    @test overlaps(prod_sqr, CC(2))
 end
 
-@testset "acb.fmpz_poly" begin
+@testset "ComplexElem.fmpz_poly" begin
    R, x = PolynomialRing(ZZ, "x")
    @test hilbert_class_polynomial(-3, R) == x
    @test_throws ArgumentError hilbert_class_polynomial(2, R)
    @test_throws ArgumentError hilbert_class_polynomial(-2, R)
 end
 
-@testset "acb.lindep" begin
-   CC = AcbField(512)
-   tau1 = CC(1//3, 8//7)
-   tau2 = CC(1//5, 9//8)
-   A1 = modular_weber_f1(tau1)^8; B1 = modular_weber_f1(2*tau1)^8
+@testset "ComplexElem.lindep" begin
+   set_precision!(Balls, 512) do
+     tau1 = CC(1//3, 8//7)
+     tau2 = CC(1//5, 9//8)
+     A1 = modular_weber_f1(tau1)^8; B1 = modular_weber_f1(2*tau1)^8
 
-   vals1 = [A1^i*B1^j for i in 0:2 for j in 0:2];
-   C = lindep(vals1, 150)
+     vals1 = [A1^i*B1^j for i in 0:2 for j in 0:2];
+     C = lindep(vals1, 150)
 
-   @test_throws DomainError lindep(vals1, -1)
+     @test_throws DomainError lindep(vals1, -1)
 
-   R, (x, y) = PolynomialRing(ZZ, ["x", "y"])
-   Phi = sum([C[3*i+j+1]*x^i*y^j for i in 0:2 for j in 0:2])
+     R, (x, y) = PolynomialRing(ZZ, ["x", "y"])
+     Phi = sum([C[3*i+j+1]*x^i*y^j for i in 0:2 for j in 0:2])
 
-   @test Phi == x^2*y+16*x-y^2
+     @test Phi == x^2*y+16*x-y^2
 
-   A2 = modular_weber_f1(tau2)^8; B2 = modular_weber_f1(2*tau2)^8
-   vals2 = [A2^i*B2^j for i in 0:2 for j in 0:2]
+     A2 = modular_weber_f1(tau2)^8; B2 = modular_weber_f1(2*tau2)^8
+     vals2 = [A2^i*B2^j for i in 0:2 for j in 0:2]
 
-   vals = permutedims([vals1 vals2])
-   C = lindep(vals, 150)
+     vals = permutedims([vals1 vals2])
+     C = lindep(vals, 150)
 
-   @test_throws DomainError lindep(vals, -1)
+     @test_throws DomainError lindep(vals, -1)
 
-   Phi = sum([C[3*i+j+1]*x^i*y^j for i in 0:2 for j in 0:2])
+     Phi = sum([C[3*i+j+1]*x^i*y^j for i in 0:2 for j in 0:2])
 
-   @test Phi == x^2*y+16*x-y^2
+     @test Phi == x^2*y+16*x-y^2
+  end
+end
 
-   CC = AcbField(64)
+@testset "ComplexElem.integration" begin
+   res = Nemo.integrate(CC, x->x,  -1, 1)
+   @test contains(res, CC(0))
+   @test imag(res) == CC(0)
+   @test radius(real(res)) < 3e-19
+
+   res = Nemo.integrate(CC, x->x^2, -1, 1)
+   @test contains(res, CC(2//3))
+   @test imag(res) == CC(0)
+   @test radius(real(res)) < 7e-19
+
+   res = Nemo.integrate(CC, sin, 0, const_pi(CC))
+   @test overlaps(res, CC(2))
+   @test imag(res) == CC(0)
+   @test radius(real(res)) < 4e-18
+
+   res = Nemo.integrate(CC, exp, 0, 1, rel_tol = 1.0e-6, abs_tol = 1.0e-6)
+   @test overlaps(res, CC(const_e(parent(real(zero(CC))))) - 1)
+   @test radius(real(res)) < 1.0e-6
 end

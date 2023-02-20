@@ -1,16 +1,39 @@
-RR = ArbField(64)
+RR = RealField()
 
-@testset "arb.constructors" begin
-   @test isa(RR, ArbField)
+@testset "RealElem.precision" begin
+   old_prec = precision(RealField)
+
+   set_precision!(RealField, 100) do
+      RR = RealField()
+      @test precision(RR) == 100
+   end
+
+   set_precision!(RealField(), 100) do
+      RR = RealField()
+      @test precision(RR) == 100
+   end
+
+   @test precision(RealField) == old_prec
+
+   set_precision!(RealField, 200)
+   @test precision(RealField) == 200
+
+   set_precision!(RealField(), 300)
+   @test precision(RealField) == 300
+
+   set_precision!(RealField, old_prec)
+end
+
+@testset "RealElem.constructors" begin
+   @test isa(RR, RealField)
    @test isa(RR(2), FieldElem)
 
-   @test elem_type(RR) == arb
-   @test elem_type(ArbField) == arb
-   @test parent_type(arb) == ArbField
+   @test elem_type(RR) == RealElem
+   @test elem_type(RealField) == RealElem
+   @test parent_type(RealElem) == RealField
    @test base_ring(RR) == Union{}
 
-   @test ArbField(10, cached = true) === ArbField(10, cached = true)
-   @test ArbField(11, cached = false) !== ArbField(11, cached = false)
+   @test RealField() == RealField()
 end
 
 @testset "arf.hecke_semantics" begin
@@ -24,13 +47,13 @@ end
           x)
 end
 
-@testset "arb.printing" begin
+@testset "RealElem.printing" begin
    a = RR(2)
 
    @test string(a) == "2.0000000000000000000"
 end
 
-@testset "arb.basic_ops" begin
+@testset "RealElem.basic_ops" begin
    @test one(RR) == 1
    @test zero(RR) == 0
 
@@ -69,7 +92,9 @@ end
 
    @test abs(Float64(RR("2.3")) - 2.3) < 1e-10
    @test setprecision(BigFloat, 1000) do
-      abs(BigFloat(ArbField(1000)("2.3")) - BigFloat("2.3")) < 1e-299
+      set_precision!(Balls, 1000) do
+         abs(BigFloat(RR("2.3")) - BigFloat("2.3")) < 1e-299
+      end
    end
 
    for T in [Float64, BigFloat]
@@ -84,7 +109,7 @@ end
    @test characteristic(RR) == 0
 end
 
-@testset "arb.comparison" begin
+@testset "RealElem.comparison" begin
    exact3 = RR(3)
    exact4 = RR(4)
    approx3 = RR("3 +/- 0.000001")
@@ -145,7 +170,7 @@ end
    @test contains_nonnegative(approx3 - 3)
 end
 
-@testset "arb.adhoc_comparison" begin
+@testset "RealElem.adhoc_comparison" begin
    a = RR(3)
 
    for T in [fmpz, fmpq, Int, BigInt, Float64, BigFloat, Rational{Int}, Rational{BigInt}]
@@ -166,7 +191,7 @@ end
    end
 end
 
-@testset "arb.predicates" begin
+@testset "RealElem.predicates" begin
    @test iszero(RR(0))
    @test !iszero(RR(1))
    @test !iszero(RR("0 +/- 0.01"))
@@ -201,7 +226,7 @@ end
    @test is_nonpositive(RR(0))
 end
 
-@testset "arb.parts" begin
+@testset "RealElem.parts" begin
    @test midpoint(RR(3)) == 3
    @test radius(RR(3)) == 0
    @test midpoint(RR("3 +/- 0.25")) == 3
@@ -213,14 +238,14 @@ end
    @test 3.999 <= radius(x) <= 4.001
 end
 
-@testset "arb.unary_ops" begin
+@testset "RealElem.unary_ops" begin
    @test -RR(3) == RR(-3)
    @test abs(-RR(3)) == 3
    @test abs(RR(3)) == 3
    @test inv(RR(2)) == RR(0.5)
 end
 
-@testset "arb.binary_ops" begin
+@testset "RealElem.binary_ops" begin
    x = RR(2)
    y = RR(4)
 
@@ -256,14 +281,14 @@ end
    end
 end
 
-@testset "arb.misc_ops" begin
+@testset "RealElem.misc_ops" begin
    @test ldexp(RR(3), 2) == 12
    @test ldexp(RR(3), ZZ(2)) == 12
    @test contains(trim(RR("1.1 +/- 0.001")), RR("1.1"))
 
    @test accuracy_bits(RR(0)) == typemax(Int)
    @test accuracy_bits(RR("+/- inf")) == -typemax(Int)
-   @test accuracy_bits(RR("0.1")) > precision(RR) - 4
+   @test accuracy_bits(RR("0.1")) > precision(Balls) - 4
 
    uniq, n = unique_integer(RR("3 +/- 0.001"))
    @test uniq
@@ -276,14 +301,15 @@ end
    @test contains(setunion(RR(3), RR(4)), 4)
 
    # Issue #499
-   RRR = ArbField(1000)
-   b, i = unique_integer(RRR(2)^1000);
-   b, i = unique_integer(RRR(2)^1000);
-   b, i = unique_integer(RRR(2)^1000);
-   b, i = unique_integer(RRR(2)^1000);
+   set_precision!(Balls, 1000) do
+     b, i = unique_integer(RR(2)^1000)
+     b, i = unique_integer(RR(2)^1000)
+     b, i = unique_integer(RR(2)^1000)
+     b, i = unique_integer(RR(2)^1000)
+   end
 end
 
-@testset "arb.unsafe_ops" begin
+@testset "RealElem.unsafe_ops" begin
    z = RR(1)
    x = RR(2)
    y = RR(3)
@@ -301,7 +327,7 @@ end
    @test z == 1.5
 end
 
-@testset "arb.constants" begin
+@testset "RealElem.constants" begin
    @test overlaps(const_pi(RR), RR("3.141592653589793238462643 +/- 4.03e-25"))
    @test overlaps(const_e(RR), RR("2.718281828459045235360287 +/- 4.96e-25"))
    @test overlaps(const_log2(RR), RR("0.6931471805599453094172321 +/- 2.28e-26"))
@@ -312,7 +338,7 @@ end
    @test overlaps(const_glaisher(RR), RR("1.282427129100622636875343 +/- 4.78e-25"))
 end
 
-@testset "arb.functions" begin
+@testset "RealElem.functions" begin
    @test floor(RR(2.5)) == 2
    @test ceil(RR(2.5)) == 3
 
@@ -488,7 +514,7 @@ end
    @test overlaps(airy_bi_prime(x), RR("[0.9324359333927756329 +/- 7.75e-20]"))
 end
 
-@testset "fmpq.arb_special_functions" begin
+@testset "fmpq.RealElem_special_functions" begin
    @test bernoulli(10) == fmpz(5)//66
 
    b = bernoulli(100)
@@ -502,8 +528,8 @@ end
    @test denominator(bernoulli(100)) == 33330
 end
 
-@testset "arb.lindep" begin
-   CC = AcbField(64)
+@testset "RealElem.lindep" begin
+   CC = ComplexField()
 
    tau = (1 + sqrt(CC(-23)))/2
    a = abs(modular_weber_f2(tau))^2
@@ -512,16 +538,16 @@ end
    @test C == fmpz[-1, 1, 1, 0, 1, 0]
 end
 
-@testset "arb.simplest_rational_inside" begin
-   R = ArbField(64)
+@testset "RealElem.simplest_rational_inside" begin
+   R = RealField()
    @test @inferred simplest_rational_inside(R(1)) == 1
    @test simplest_rational_inside(R(1//2)) == 1//2
    @test simplest_rational_inside(R("0.1 +/- 0.01")) == 1//10
    @test simplest_rational_inside(const_pi(R)) == 8717442233//2774848045
 end
 
-@testset "arb.rand" begin
-   R = ArbField(64)
+@testset "RealElem.rand" begin
+   R = RealField()
 
    n = 100
    for _ in 1:n
@@ -538,11 +564,11 @@ end
       @test isfinite(r_precise)
       # Does not work for small precisions (< 20) because of radius
       if midpoint(r_precise) != 0 != radius(r_precise)
-         @test R(0.99) * R(2)^(-6 - precision(R)) <
+         @test R(0.99) * R(2)^(-6 - precision(Balls)) <
                abs(radius(r_precise) / midpoint(r_precise)) <
-               R(1.01) * R(2)^(3 - precision(R))
+               R(1.01) * R(2)^(3 - precision(Balls))
       end
       @test isfinite(r_wide)
-      @test r_special isa arb
+      @test r_special isa RealElem
    end
 end

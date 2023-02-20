@@ -1,20 +1,21 @@
-RR = ArbField(64)
+RR = RealField()
+CC = ComplexField()
 
-@testset "arb_poly.constructors" begin
-   S1 = PolyRing(RR)
-   S2 = PolyRing(RR)
+@testset "ComplexPoly.constructors" begin
+   S1 = PolyRing(CC)
+   S2 = PolyRing(CC)
 
-   @test isa(S1, ArbPolyRing)
+   @test isa(S1, ComplexPolyRing)
    @test S1 !== S2
 
-   R, x = PolynomialRing(RR, "x")
+   R, x = PolynomialRing(CC, "x")
 
-   @test elem_type(R) == arb_poly
-   @test elem_type(ArbPolyRing) == arb_poly
-   @test parent_type(arb_poly) == ArbPolyRing
-   @test dense_poly_type(arb) == arb_poly
+   @test elem_type(R) == ComplexPoly
+   @test elem_type(ComplexPolyRing) == ComplexPoly
+   @test parent_type(ComplexPoly) == ComplexPolyRing
+   @test dense_poly_type(ComplexElem) == ComplexPoly
 
-   @test typeof(R) <: ArbPolyRing
+   @test typeof(R) <: ComplexPolyRing
 
    @test isa(x, PolyElem)
 
@@ -30,26 +31,31 @@ RR = ArbField(64)
 
    @test isa(h, PolyElem)
 
-   k = R([RR(1), RR(0), RR(3)])
+   k = R([CC(1), CC(0), CC(3)])
 
    @test isa(k, PolyElem)
 
-   for T in [Int, UInt, BigInt, Float64, BigFloat, fmpz, fmpq, Rational{Int}, Rational{BigInt}]
-      l = R(T[1, 2, 3])
+   l = R([1, 2, 3])
 
-      @test isa(l, arb_poly)
+   @test isa(l, PolyElem)
+
+   for T in [RR, fmpz, fmpq, Int, BigInt, Rational{Int}, Rational{BigInt}]
+     m = R(map(T, [1, 2, 3]))
+
+     @test isa(m, PolyElem)
    end
 end
 
-@testset "arb_poly.printing" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.printing" begin
+   R, x = PolynomialRing(CC, "x")
    f = x^3 + 2x^2 + x + 1
 
-   @test sprint(show, "text/plain", f) == "x^3 + 2.0000000000000000000*x^2 + x + 1"
+   @test occursin(r"x", string(f))
+   @test occursin(r"2.[0]+", string(f))
 end
 
-@testset "arb_poly.manipulation" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.manipulation" begin
+   R, x = PolynomialRing(CC, "x")
 
    @test iszero(zero(R))
 
@@ -78,43 +84,8 @@ end
    @test characteristic(R) == 0
 end
 
-@testset "arb_poly.polynomial" begin
-   R = ArbField(53)
-
-   f = polynomial(R, [])
-   g = polynomial(R, [1, 2, 3])
-   h = polynomial(R, fmpz[1, 2, 3])
-   k = polynomial(R, [R(1), R(2), R(3)])
-   p = polynomial(R, [1, 2, 3], "y")
-
-   @test isa(f, arb_poly)
-   @test isa(g, arb_poly)
-   @test isa(h, arb_poly)
-   @test isa(k, arb_poly)
-   @test isa(p, arb_poly)
-
-   q = polynomial(R, [1, 2, 3], cached=false)
-
-   @test parent(g) != parent(q)
-end
-
-@testset "arb_poly.similar" begin
-   R = ArbField(53)
-
-   f = polynomial(R, [1, 2, 3])
-   g = similar(f)
-   h = similar(f, "y")
-
-   @test isa(g, arb_poly)
-   @test isa(h, arb_poly)
-
-   q = similar(g, cached=false)
-
-   @test parent(g) != parent(q)
-end
-
-@testset "arb_poly.binary_ops" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.binary_ops" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 2
@@ -126,13 +97,13 @@ end
    @test f - g == -x^3+x^2-x-1
 end
 
-@testset "arb_poly.adhoc_binary" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.adhoc_binary" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 2
 
-   for T in [Int, BigInt, RR, fmpz, fmpq, Rational{Int}, Rational{BigInt}]
+   for T in [Int, BigInt, RR, CC, fmpz, fmpq, Rational{Int}, Rational{BigInt}]
       @test f * T(12) == 12*x^2+24*x+12
 
       @test T(7) * g == 7*x^3+21*x+14
@@ -153,15 +124,15 @@ end
    end
 end
 
-@testset "arb_poly.comparison" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.comparison" begin
+   R, x = PolynomialRing(CC, "x")
    Zx, zx = PolynomialRing(ZZ, "x")
    Qx, qx = PolynomialRing(QQ, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 2
-   h = f + RR("0 +/- 0.0001")
-   i = f + RR("0 +/- 0.0001") * x^4
+   h = f + CC("0 +/- 0.0001")
+   i = f + CC("0 +/- 0.0001") * x^4
 
    @test f != g
    @test f == deepcopy(f)
@@ -195,12 +166,12 @@ end
    @test uniq
    @test p == zx^2 + 2zx + 1
 
-   uniq, p = unique_integer(f + RR("3 +/- 1.01") * x^4)
+   uniq, p = unique_integer(f + CC("3 +/- 1.01") * x^4)
    @test !uniq
 end
 
-@testset "arb_poly.adhoc_comparison" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.adhoc_comparison" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -212,25 +183,27 @@ end
 
    @test fmpz(7) != f
 
-   @test R(7) == RR(7)
+   @test R(7) == CC(7)
 
-   @test RR(7) != f
+   @test CC(7) != f
 
    @test R(7) == QQ(7)
 
    @test QQ(7) != f
+
+   @test R(7) == RR(7.0)
 end
 
-@testset "arb_poly.unary_ops" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.unary_ops" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
    @test -f == -x^2 - 2x - 1
 end
 
-@testset "arb_poly.truncation" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.truncation" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 1
@@ -244,16 +217,16 @@ end
    @test_throws DomainError mullow(f, g, -1)
 end
 
-@testset "arb_poly.reverse" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.reverse" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 3
 
    #@test reverse(f) == 3x^2 + 2x + 1
 end
 
-@testset "arb_poly.shift" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.shift" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -266,8 +239,8 @@ end
    @test_throws DomainError shift_right(f, -1)
 end
 
-@testset "arb_poly.powering" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.powering" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -276,8 +249,8 @@ end
    @test_throws DomainError f^-1
 end
 
-@testset "arb_poly.exact_division" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.exact_division" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 1
@@ -285,8 +258,8 @@ end
    @test divexact(f*g, f) == g
 end
 
-@testset "arb_poly_scalar_division" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.scalar_division" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -296,13 +269,13 @@ end
 
    @test divexact(2*f, QQ(2)) == f
 
-   @test divexact(2*f, RR(2)) == f
+   @test divexact(2*f, CC(2)) == f
 
    @test divexact(2*f, 2.0) == f
 end
 
-@testset "arb_poly.evaluation" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.evaluation" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -314,7 +287,7 @@ end
 
    @test evaluate(f, QQ(10)) == 121
 
-   @test evaluate(f, RR(10)) == 121
+   @test evaluate(f, CC(10)) == 121
 
    @test evaluate2(f, 10) == (121, 22)
 
@@ -324,11 +297,23 @@ end
 
    @test evaluate2(f, QQ(10)) == (121, 22)
 
-   @test evaluate2(f, RR(10)) == (121, 22)
+   @test evaluate2(f, CC(10)) == (121, 22)
 end
 
-@testset "arb_poly.composition" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.roots" begin
+   R, x = PolynomialRing(CC, "x")
+
+   f = (x - 1)*(x - 2)*(x - CC("5 +/- 0.001"))
+
+   r = roots(f, isolate_real = true)
+
+   @test contains(r[1], 1)
+   @test contains(r[2], 2)
+   @test contains(r[3], 5)
+end
+
+@testset "ComplexPoly.composition" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
    g = x^3 + 3x + 1
@@ -336,8 +321,8 @@ end
    @test compose(f, g) == x^6+6*x^4+4*x^3+9*x^2+12*x+4
 end
 
-@testset "arb_poly.derivative_integral" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.derivative_integral" begin
+   R, x = PolynomialRing(CC, "x")
 
    f = x^2 + 2x + 1
 
@@ -346,12 +331,12 @@ end
    @test contains(derivative(integral(f)), f)
 end
 
-@testset "arb_poly.evaluation_interpolation" begin
-   R, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.evaluation_interpolation" begin
+   R, x = PolynomialRing(CC, "x")
 
    n = 5
-   xs = arb[inv(RR(i)) for i=1:n]
-   ys = arb[RR(i) for i=1:n]
+   xs = ComplexElem[inv(CC(i)) for i=1:n]
+   ys = ComplexElem[CC(i) for i=1:n]
 
    f = interpolate(R, xs, ys)
    vs = evaluate(f, xs)
@@ -390,14 +375,14 @@ end
    end
 end
 
-@testset "arb_poly.root_bound" begin
-   Rx, x = PolynomialRing(RR, "x")
+@testset "ComplexPoly.root_bound" begin
+   Rx, x = PolynomialRing(CC, "x")
 
    for i in 1:2
       r = rand(1:10)
-      z = map(RR, rand(-BigInt(2)^60:BigInt(2)^60, r))
-      f = prod([ x - z[i] for i in 1:r])
+      z = map(CC, rand(-BigInt(2)^60:BigInt(2)^60, r))
+      f = prod([ x - (z[i]  + onei(CC)) for i in 1:r])
       b = roots_upper_bound(f)
-      @test all([ abs(z[i]) <= b for i in 1:r])
+      @test all([ abs(z[i] + onei(CC)) <= b for i in 1:r])
    end
 end

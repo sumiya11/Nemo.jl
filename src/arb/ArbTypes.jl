@@ -7,6 +7,13 @@
 #
 ###############################################################################
 
+export Balls
+export RealField, RealElem
+export ComplexField, ComplexElem
+export RealPolyRing, RealPoly
+export ComplexPolyRing, ComplexPoly
+export RealMatSpace, RealMat
+export ComplexMatSpace, ComplexMat
 export ArbField, arb
 export AcbField, acb
 export ArbPolyRing, arb_poly
@@ -31,9 +38,9 @@ const ARB_RND_NEAR = Cint(4)   # to nearest
 ################################################################################
 
 mutable struct arf_struct
-  exp::Int # fmpz
-  size::UInt # mp_size_t
-  d1::UInt # mantissa_struct
+  exp::Int    # fmpz
+  size::UInt  # mp_size_t
+  d1::UInt    # mantissa_struct
   d2::UInt
 
   function arf_struct(exp, size, d1, d2)
@@ -53,7 +60,7 @@ function _arf_clear_fn(x::arf_struct)
 end
 
 mutable struct mag_struct
-  exp::Int # fmpz
+  exp::Int  # fmpz
   man::UInt # mp_limb_t
 end
 
@@ -86,6 +93,58 @@ end
 #  Types and memory management for ArbField
 #
 ################################################################################
+
+struct RealField <: Field
+end
+
+mutable struct RealElem <: FieldElem
+  mid_exp::Int    # fmpz
+  mid_size::UInt  # mp_size_t
+  mid_d1::UInt    # mantissa_struct
+  mid_d2::UInt
+  rad_exp::Int    # fmpz
+  rad_man::UInt
+
+  function RealElem()
+    z = new()
+    ccall((:arb_init, libarb), Nothing, (Ref{RealElem}, ), z)
+    finalizer(_arb_clear_fn, z)
+    return z
+  end
+
+  function RealElem(x::Union{Int, UInt, Float64, fmpz, fmpq,
+                        BigFloat, AbstractString, RealElem}, p::Int)
+    z = new()
+    ccall((:arb_init, libarb), Nothing, (Ref{RealElem}, ), z)
+    _arb_set(z, x, p)
+    finalizer(_arb_clear_fn, z)
+    return z
+  end
+
+  function RealElem(x::Union{Int, UInt, Float64, fmpz, BigFloat})
+    z = new()
+    ccall((:arb_init, libarb), Nothing, (Ref{RealElem}, ), z)
+    _arb_set(z, x)
+    finalizer(_arb_clear_fn, z)
+    return z
+  end
+
+  function RealElem(mid::RealElem, rad::RealElem)
+    z = new()
+    ccall((:arb_init, libarb), Nothing, (Ref{RealElem}, ), z)
+    ccall((:arb_set, libarb), Nothing, (Ref{RealElem}, Ref{RealElem}), z, mid)
+    ccall((:arb_add_error, libarb), Nothing, (Ref{RealElem}, Ref{RealElem}), z, rad)
+    finalizer(_arb_clear_fn, z)
+    return z
+  end
+
+end
+
+function _arb_clear_fn(x::RealElem)
+  ccall((:arb_clear, libarb), Nothing, (Ref{RealElem}, ), x)
+end
+
+# fixed precision
 
 mutable struct ArbField <: Field
   prec::Int
@@ -157,11 +216,157 @@ function _arb_clear_fn(x::arb)
   ccall((:arb_clear, libarb), Nothing, (Ref{arb}, ), x)
 end
 
+
 ################################################################################
 #
 #  Types and memory management for AcbField
 #
 ################################################################################
+
+struct ComplexField <: Field
+end
+
+mutable struct ComplexElem <: FieldElem
+  real_mid_exp::Int     # fmpz
+  real_mid_size::UInt   # mp_size_t
+  real_mid_d1::UInt     # mantissa_struct
+  real_mid_d2::UInt
+  real_rad_exp::Int     # fmpz
+  real_rad_man::UInt
+  imag_mid_exp::Int     # fmpz
+  imag_mid_size::UInt   # mp_size_t
+  imag_mid_d1::UInt     # mantissa_struct
+  imag_mid_d2::UInt
+  imag_rad_exp::Int     # fmpz
+  imag_rad_man::UInt
+
+  function ComplexElem()
+    z = new()
+    ccall((:acb_init, libarb), Nothing, (Ref{ComplexElem}, ), z)
+    finalizer(_acb_clear_fn, z)
+    return z
+  end
+
+  function ComplexElem(x::Union{Int, UInt, Float64, fmpz, BigFloat, RealElem, ComplexElem})
+    z = new()
+    ccall((:acb_init, libarb), Nothing, (Ref{ComplexElem}, ), z)
+    _acb_set(z, x)
+    finalizer(_acb_clear_fn, z)
+    return z
+  end
+
+  function ComplexElem(x::Union{Int, UInt, Float64, fmpz, fmpq,
+                        BigFloat, RealElem, ComplexElem, AbstractString}, p::Int)
+    z = new()
+    ccall((:acb_init, libarb), Nothing, (Ref{ComplexElem}, ), z)
+    _acb_set(z, x, p)
+    finalizer(_acb_clear_fn, z)
+    return z
+  end
+
+  function ComplexElem(x::T, y::T, p::Int) where {T <: Union{Int, UInt, Float64, fmpz, fmpq, BigFloat, AbstractString, RealElem}}
+    z = new()
+    ccall((:acb_init, libarb), Nothing, (Ref{ComplexElem}, ), z)
+    _acb_set(z, x, y, p)
+    finalizer(_acb_clear_fn, z)
+    return z
+  end
+end
+
+function _acb_clear_fn(x::ComplexElem)
+  ccall((:acb_clear, libarb), Nothing, (Ref{ComplexElem}, ), x)
+end
+
+################################################################################
+#
+#  Precision management
+#
+################################################################################
+
+struct Balls
+end
+
+# arb as in arblib
+const ARB_DEFAULT_PRECISION = Ref{Int}(64)
+
+@doc Markdown.doc"""
+    set_precision!(::Type{Balls}, n::Int)
+
+Set the precision for all ball arithemtic to be `n`.
+
+# Examples
+
+```julia
+julia> const_pi(RealField())
+[3.141592653589793239 +/- 5.96e-19]
+
+julia> set_precision!(Balls, 200); const_pi(RealField())
+[3.14159265358979323846264338327950288419716939937510582097494 +/- 5.73e-60]
+```
+"""
+function set_precision!(::Type{Balls}, n::Int)
+  arb_check_precision(n)
+  ARB_DEFAULT_PRECISION[] = n
+end
+
+@doc Markdown.doc"""
+    precision(::Type{Balls})
+
+Return the precision for ball arithemtic.
+
+# Examples
+
+```julia
+julia> set_precision!(Balls, 200); precision(Balls)
+200
+```
+"""
+function Base.precision(::Type{Balls})
+  return ARB_DEFAULT_PRECISION[]
+end
+
+@doc Markdown.doc"""
+    set_precision!(f, ::Type{Balls}, n::Int)
+
+Change ball arithmetic precision to `n` for the duration of `f`..
+
+# Examples
+
+```julia
+julia> set_precision!(Balls, 4) do
+         const_pi(RealField())
+       end
+[3e+0 +/- 0.376]
+
+julia> set_precision!(Balls, 200) do
+         const_pi(RealField())
+       end
+[3.14159265358979323846264338327950288419716939937510582097494 +/- 5.73e-60]
+```
+"""
+function set_precision!(f, ::Type{Balls}, prec::Int)
+  arb_check_precision(prec)
+  old = precision(Balls)
+  set_precision!(Balls, prec)
+  x = f()
+  set_precision!(Balls, old)
+  return x
+end
+
+for T in [RealField, ComplexField]
+  @eval begin
+    precision(::$T) = precision(Balls)
+    precision(::Type{$T}) = precision(Balls)
+
+    set_precision!(::$T, n) = set_precision!(Balls, n)
+    set_precision!(::Type{$T}, n) = set_precision!(Balls, n)
+
+    set_precision!(f, ::$T, n) = set_precision!(f, Balls, n)
+    set_precision!(f, ::Type{$T}, n) = set_precision!(f, Balls, n)
+  end
+end
+
+# fixed precision
 
 mutable struct AcbField <: Field
   prec::Int
@@ -238,6 +443,12 @@ function _acb_clear_fn(x::acb)
   ccall((:acb_clear, libarb), Nothing, (Ref{acb}, ), x)
 end
 
+################################################################################
+#
+#  Integration things
+#
+################################################################################
+
 mutable struct acb_calc_integrate_opts
   deg_limit::Int   # <= 0: default of 0.5*min(prec, rel_goal) + 10
   eval_limit::Int  # <= 0: default of 1000*prec*prec^2
@@ -263,6 +474,99 @@ end
 #  Types and memory management for ArbPolyRing
 #
 ################################################################################
+
+mutable struct RealPolyRing <: PolyRing{RealElem}
+  S::Symbol
+
+  function RealPolyRing(R::RealField, S::Symbol, cached::Bool = true)
+    return get_cached!(RealPolyRingID, (S, ), cached) do
+      return new(S)
+    end
+  end
+end
+
+const RealPolyRingID = Dict{Tuple{Symbol}, RealPolyRing}()
+
+mutable struct RealPoly <: PolyElem{RealElem}
+  coeffs::Ptr{Nothing}
+  length::Int
+  alloc::Int
+  parent::RealPolyRing
+
+  function RealPoly()
+    z = new()
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::RealElem, p::Int)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    ccall((:arb_poly_set_coeff_arb, libarb), Nothing,
+                (Ref{RealPoly}, Int, Ref{RealElem}), z, 0, x)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::Vector{RealElem}, p::Int)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    for i = 1:length(x)
+        ccall((:arb_poly_set_coeff_arb, libarb), Nothing,
+                (Ref{RealPoly}, Int, Ref{RealElem}), z, i - 1, x[i])
+    end
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::RealPoly)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    ccall((:arb_poly_set, libarb), Nothing, (Ref{RealPoly}, Ref{RealPoly}), z, x)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::RealPoly, p::Int)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    ccall((:arb_poly_set_round, libarb), Nothing,
+                (Ref{RealPoly}, Ref{RealPoly}, Int), z, x, p)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::fmpz_poly, p::Int)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    ccall((:arb_poly_set_fmpz_poly, libarb), Nothing,
+                (Ref{RealPoly}, Ref{fmpz_poly}, Int), z, x, p)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+
+  function RealPoly(x::fmpq_poly, p::Int)
+    z = new() 
+    ccall((:arb_poly_init, libarb), Nothing, (Ref{RealPoly}, ), z)
+    ccall((:arb_poly_set_fmpq_poly, libarb), Nothing,
+                (Ref{RealPoly}, Ref{fmpq_poly}, Int), z, x, p)
+    finalizer(_RealPoly_clear_fn, z)
+    return z
+  end
+end
+
+function _RealPoly_clear_fn(x::RealPoly)
+  ccall((:arb_poly_clear, libarb), Nothing, (Ref{RealPoly}, ), x)
+end
+
+parent(x::RealPoly) = x.parent
+
+var(x::RealPolyRing) = x.S
+
+base_ring(a::RealPolyRing) = RealField()
+
+# fixed precison
 
 mutable struct ArbPolyRing <: PolyRing{arb}
   base_ring::ArbField
@@ -363,6 +667,110 @@ base_ring(a::ArbPolyRing) = a.base_ring
 #  Types and memory management for AcbPolyRing
 #
 ################################################################################
+
+mutable struct ComplexPolyRing <: PolyRing{acb}
+  S::Symbol
+
+  function ComplexPolyRing(R::ComplexField, S::Symbol, cached::Bool = true)
+    return get_cached!(ComplexPolyRingID, (S, ), cached) do
+      return new(S)
+    end
+  end
+end
+
+const ComplexPolyRingID = Dict{Tuple{Symbol}, ComplexPolyRing}()
+
+mutable struct ComplexPoly <: PolyElem{ComplexElem}
+  coeffs::Ptr{Nothing}
+  length::Int
+  alloc::Int
+  parent::ComplexPolyRing
+
+  function ComplexPoly()
+    z = new()
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::ComplexElem, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set_coeff_acb, libarb), Nothing,
+                (Ref{ComplexPoly}, Int, Ref{ComplexElem}), z, 0, x)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::Vector{ComplexElem}, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    for i = 1:length(x)
+        ccall((:acb_poly_set_coeff_acb, libarb), Nothing,
+                (Ref{ComplexPoly}, Int, Ref{ComplexElem}), z, i - 1, x[i])
+    end
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::ComplexPoly)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set, libarb), Nothing, (Ref{ComplexPoly}, Ref{ComplexPoly}), z, x)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::RealPoly, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set_arb_poly, libarb), Nothing,
+                (Ref{ComplexPoly}, Ref{arb_poly}, Int), z, x, p)
+    ccall((:acb_poly_set_round, libarb), Nothing,
+                (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, z, p)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::ComplexPoly, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set_round, libarb), Nothing,
+                (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, x, p)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::fmpz_poly, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set_fmpz_poly, libarb), Nothing,
+                (Ref{ComplexPoly}, Ref{fmpz_poly}, Int), z, x, p)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+
+  function ComplexPoly(x::fmpq_poly, p::Int)
+    z = new() 
+    ccall((:acb_poly_init, libarb), Nothing, (Ref{ComplexPoly}, ), z)
+    ccall((:acb_poly_set_fmpq_poly, libarb), Nothing,
+                (Ref{ComplexPoly}, Ref{fmpq_poly}, Int), z, x, p)
+    finalizer(_acb_poly_clear_fn, z)
+    return z
+  end
+end
+
+function _acb_poly_clear_fn(x::ComplexPoly)
+  ccall((:acb_poly_clear, libarb), Nothing, (Ref{ComplexPoly}, ), x)
+end
+
+parent(x::ComplexPoly) = x.parent
+
+var(x::ComplexPolyRing) = x.S
+
+base_ring(a::ComplexPolyRing) = ComplexField()
+
+# fixed precision
 
 mutable struct AcbPolyRing <: PolyRing{acb}
   base_ring::AcbField
@@ -469,11 +877,137 @@ precision(x::AcbPolyRing) = precision(x.base_ring)
 
 base_ring(a::AcbPolyRing) = a.base_ring
 
+
+
 ################################################################################
 #
 #  Types and memory management for ArbMatSpace
 #
 ################################################################################
+
+mutable struct RealMatSpace <: MatSpace{RealElem}
+  nrows::Int
+  ncols::Int
+
+  function RealMatSpace(R::RealField, r::Int, c::Int, cached::Bool = true)
+    return get_cached!(RealMatSpaceID, (r, c), cached) do
+      return new(r, c)
+    end
+  end
+end
+
+const RealMatSpaceID = Dict{Tuple{Int, Int}, RealMatSpace}()
+
+mutable struct RealMat <: MatElem{RealElem}
+  entries::Ptr{Nothing}
+  r::Int
+  c::Int
+  rows::Ptr{Nothing}
+  #base_ring::ArbField
+
+  function RealMat(r::Int, c::Int)
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing, (Ref{RealMat}, Int, Int), z, r, c)
+    finalizer(_arb_mat_clear_fn, z)
+    return z
+  end
+
+  function RealMat(a::fmpz_mat)
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing,
+                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+    ccall((:arb_mat_set_fmpz_mat, libarb), Nothing,
+                (Ref{RealMat}, Ref{fmpz_mat}), z, a)
+    finalizer(_arb_mat_clear_fn, z)
+    return z
+  end
+  
+  function RealMat(a::fmpz_mat, prec::Int)
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing,
+                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+    ccall((:arb_mat_set_round_fmpz_mat, libarb), Nothing,
+                (Ref{RealMat}, Ref{fmpz_mat}, Int), z, a, prec)
+    finalizer(_arb_mat_clear_fn, z)
+    return z
+  end
+
+  function RealMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, fmpz, Float64, BigFloat, RealElem}}
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing, 
+                (Ref{RealMat}, Int, Int), z, r, c)
+    finalizer(_arb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:arb_mat_entry_ptr, libarb), Ptr{RealElem},
+                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+        Nemo._arb_set(el, arr[i, j])
+      end
+    end
+    return z
+  end
+
+  function RealMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, fmpz, Float64, BigFloat, RealElem}}
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing, 
+                (Ref{RealMat}, Int, Int), z, r, c)
+    finalizer(_arb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:arb_mat_entry_ptr, libarb), Ptr{RealElem},
+                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+        Nemo._arb_set(el, arr[(i-1)*c+j])
+      end
+    end
+    return z
+  end
+
+  function RealMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, fmpz, fmpq, Float64, BigFloat, RealElem, AbstractString}}
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing, 
+                (Ref{RealMat}, Int, Int), z, r, c)
+    finalizer(_arb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:arb_mat_entry_ptr, libarb), Ptr{RealElem},
+                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+        _arb_set(el, arr[i, j], prec)
+      end
+    end
+    return z
+  end
+     
+  function RealMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, fmpz, fmpq, Float64, BigFloat, RealElem, AbstractString}}
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing, 
+                (Ref{RealMat}, Int, Int), z, r, c)
+    finalizer(_arb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:arb_mat_entry_ptr, libarb), Ptr{RealElem},
+                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+        _arb_set(el, arr[(i-1)*c+j], prec)
+      end
+    end
+    return z
+  end
+
+  function RealMat(a::fmpq_mat, prec::Int)
+    z = new()
+    ccall((:arb_mat_init, libarb), Nothing,
+                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+    ccall((:arb_mat_set_fmpq_mat, libarb), Nothing,
+                (Ref{RealMat}, Ref{fmpq_mat}, Int), z, a, prec)
+    finalizer(_arb_mat_clear_fn, z)
+    return z
+  end
+end
+
+function _arb_mat_clear_fn(x::RealMat)
+  ccall((:arb_mat_clear, libarb), Nothing, (Ref{RealMat}, ), x)
+end
+
+# fixed precision
 
 mutable struct ArbMatSpace <: MatSpace{arb}
   nrows::Int
@@ -603,6 +1137,275 @@ end
 #  Types and memory management for AcbMatSpace
 #
 ################################################################################
+
+mutable struct ComplexMatSpace <: MatSpace{ComplexElem}
+  nrows::Int
+  ncols::Int
+  #base_ring::AcbField
+
+  function ComplexMatSpace(R::ComplexField, r::Int, c::Int, cached::Bool = true)
+    return get_cached!(ComplexMatSpaceID, (r, c), cached) do
+      return new(r, c)
+    end
+  end
+end
+
+const ComplexMatSpaceID = Dict{Tuple{Int, Int}, ComplexMatSpace}()
+
+mutable struct ComplexMat <: MatElem{ComplexElem}
+  entries::Ptr{Nothing}
+  r::Int
+  c::Int
+  rows::Ptr{Nothing}
+  #base_ring::AcbField
+
+  function ComplexMat(r::Int, c::Int)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+
+  function ComplexMat(a::fmpz_mat)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing,
+                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+    ccall((:acb_mat_set_fmpz_mat, libarb), Nothing,
+                (Ref{ComplexMat}, Ref{fmpz_mat}), z, a)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+  
+  function ComplexMat(a::fmpz_mat, prec::Int)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing,
+                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+    ccall((:acb_mat_set_round_fmpz_mat, libarb), Nothing,
+                (Ref{ComplexMat}, Ref{fmpz_mat}, Int), z, a, prec)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+
+  function ComplexMat(a::RealMat)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing,
+                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+    ccall((:acb_mat_set_arb_mat, libarb), Nothing,
+                (Ref{ComplexMat}, Ref{arb_mat}), z, a)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+
+  function ComplexMat(a::arb_mat, prec::Int)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing,
+                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+    ccall((:acb_mat_set_round_arb_mat, libarb), Nothing,
+                (Ref{ComplexMat}, Ref{arb_mat}, Int), z, a, prec)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+   
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, Float64, fmpz}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{acb},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j])
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{BigFloat, ComplexElem, RealElem}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{acb},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j])
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, Float64, fmpz}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{acb},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j])
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{BigFloat, ComplexElem, RealElem}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{acb},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j])
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, fmpz, fmpq, Float64}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{acb},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{BigFloat, RealElem, AbstractString, ComplexElem}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, fmpz, fmpq, Float64}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{BigFloat, RealElem, AbstractString, ComplexElem}}
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{Tuple{T, T}}, prec::Int) where {T <: Union{Int, UInt, Float64, fmpz}}
+
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{Tuple{T, T}}, prec::Int) where {T <: Union{fmpq, BigFloat, RealElem, AbstractString}}
+
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{Tuple{T, T}}, prec::Int) where {T <: Union{Int, UInt, Float64, fmpz}}
+
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(r::Int, c::Int, arr::AbstractVector{Tuple{T, T}}, prec::Int) where {T <: Union{fmpq, BigFloat, RealElem, AbstractString}}
+
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing, 
+                (Ref{ComplexMat}, Int, Int), z, r, c)
+    finalizer(_acb_mat_clear_fn, z)
+    GC.@preserve z for i = 1:r
+      for j = 1:c
+        el = ccall((:acb_mat_entry_ptr, libarb), Ptr{ComplexElem},
+                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+        _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
+      end
+    end
+    return z
+  end
+
+  function ComplexMat(a::fmpq_mat, prec::Int)
+    z = new()
+    ccall((:acb_mat_init, libarb), Nothing,
+                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+    ccall((:acb_mat_set_fmpq_mat, libarb), Nothing,
+                (Ref{ComplexMat}, Ref{fmpq_mat}, Int), z, a, prec)
+    finalizer(_acb_mat_clear_fn, z)
+    return z
+  end
+end
+
+function _acb_mat_clear_fn(x::ComplexMat)
+  ccall((:acb_mat_clear, libarb), Nothing, (Ref{ComplexMat}, ), x)
+end
+
+# fixed precision
 
 mutable struct AcbMatSpace <: MatSpace{acb}
   nrows::Int
