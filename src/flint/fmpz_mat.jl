@@ -12,7 +12,7 @@ export ZZMatrix, ZZMatrixSpace, getindex, getindex!, setindex!,
        nullspace, rank, rref, reduce_mod, similar, snf, snf_diagonal, is_snf,
        solve, solve_rational, cansolve, cansolve_with_nullspace, solve_dixon,
        tr, transpose, content, hcat, vcat, addmul!, zero!, pseudo_inv,
-       hnf_modular_eldiv, nullspace_right_rational
+       hnf_modular_eldiv, nullspace_right_rational, is_zero_entry
 
 ###############################################################################
 #
@@ -1125,6 +1125,17 @@ function solve(a::ZZMatrix, b::ZZMatrix)
    return z
 end
 
+@inline mat_entry_ptr(A::ZZMatrix, i::Int, j::Int) = 
+    ccall((:fmpz_mat_entry, libflint), 
+       Ptr{ZZRingElem}, (Ref{ZZMatrix}, Int, Int), A, i-1, j-1)
+
+@inline function is_zero_entry(A::ZZMatrix, i::Int, j::Int)
+   GC.@preserve A begin
+     x = mat_entry_ptr(A, i, j)
+     return ccall((:fmpz_is_zero, libflint), Bool, (Ptr{ZZRingElem},), x)
+   end
+end
+
 @doc Markdown.doc"""
     cansolve(a::ZZMatrix, b::ZZMatrix) -> Bool, ZZMatrix
 
@@ -1137,10 +1148,12 @@ function cansolve(a::ZZMatrix, b::ZZMatrix)
    b = deepcopy(b)
    z = similar(a, ncols(b), ncols(a))
    l = min(nrows(a), ncols(a))
+   t = fmpz() # temp. variable
+
    for i = 1:ncols(b)
      for j = 1:l
        k = 1
-       while k <= ncols(H) && iszero(H[j, k])
+       while k <= ncols(H) && is_zero_entry(H, j, k)
          k += 1
        end
        if k > ncols(H)
@@ -1150,8 +1163,18 @@ function cansolve(a::ZZMatrix, b::ZZMatrix)
        if !iszero(r)
          return false, b
        end
-       for h = k:ncols(H)
-         b[h, i] -= q*H[j, h]
+       if !iszero(q)
+          GC.@preserve b H q t begin
+             H_ptr = mat_entry_ptr(H, j, k)
+             for h = k:ncols(H)
+               b_ptr = mat_entry_ptr(b, h, i)
+               ccall((:fmpz_mul, libflint), Cvoid, (Ref{ZZRingElem}, Ref{ZZRingElem}, Ptr{ZZRingElem}), t, q, H_ptr)
+               ccall((:fmpz_sub, libflint), Cvoid, (Ptr{ZZRingElem}, Ptr{ZZRingElem}, Ref{ZZRingElem}), b_ptr, b_ptr, t)
+               H_ptr += sizeof(ZZRingElem)
+
+#                b[h, i] -= q*H[j, h]
+             end
+          end   
        end
        z[i, j] = q
      end
@@ -1161,6 +1184,75 @@ function cansolve(a::ZZMatrix, b::ZZMatrix)
    end
    return true, transpose(z*T)
 end
+
+function Base.cat(A::ZZMatrix...;dims)
+  @assert dims == (1,2) || isa(dims, Int)
+
+  if isa(dims, Int)
+    if dims == 1
+      return hcat(A...)
+    elseif dims == 2
+      return vcat(A...)
+    else
+      error("dims must be 1, 2, or (1,2)")
+    end
+  end
+
+  X = zero_matrix(ZZ, sum(nrows(x) for x = A), sum(ncols(x) for x = A))
+  start_row = start_col = 0
+  for i in 1:length(A)
+    Ai = A[i]
+    for k = 1:nrows(Ai)
+      GC.@preserve Ai X begin
+        A_ptr = mat_entry_ptr(Ai, k, 1)
+        X_ptr = mat_entry_ptr(X, start_row + k, start_col+1)
+        for l = 1:ncols(Ai)
+          ccall((:fmpz_set, libflint), Cvoid, (Ptr{ZZRingElem}, Ptr{ZZRingElem}), X_ptr, A_ptr)
+          X_ptr += sizeof(ZZRingElem)
+          A_ptr += sizeof(ZZRingElem)
+        end
+      end
+    end
+    start_row += nrows(Ai)
+    start_col += ncols(Ai)
+  end
+  return X
+end
+
+
+function AbstractAlgebra._vcat(A::NTuple{<:Any, ZZMatrix})
+  if any(x -> ncols(x) != ncols(A[1]), A)
+    error("Matrices must have the same number of columns")
+  end
+
+  M = zero_matrix(ZZ, sum(nrows, A, init = 0), ncols(A[1]))
+  s = 0
+  for N in A
+    GC.@preserve M N begin
+      for j in 1:nrows(N)
+        M_ptr = mat_entry_ptr(M, s+j, 1)
+        N_ptr = mat_entry_ptr(N, j, 1)
+        for k in 1:ncols(N)
+          ccall((:fmpz_set, libflint), Cvoid, (Ptr{ZZRingElem}, Ptr{ZZRingElem}), M_ptr, N_ptr)
+          M_ptr += sizeof(ZZRingElem)
+          N_ptr += sizeof(ZZRingElem)
+        end
+      end
+    end
+    s += nrows(N)
+  end
+  return M
+end
+
+#to override the generic one in AA
+function can_solve_with_solution(a::ZZMatrix, b::ZZMatrix; side::Symbol = :right)
+   if side == :left
+      fl, x = Nemo.cansolve(transpose(a), transpose(b))
+      return fl, transpose(x)
+   end
+   return Nemo.cansolve(a, b)
+end
+
 
 @doc Markdown.doc"""
     cansolve_with_nullspace(a::ZZMatrix, b::ZZMatrix) -> Bool, ZZMatrix, ZZMatrix
@@ -1172,12 +1264,13 @@ and two arbitrary matrices are returned.
 function cansolve_with_nullspace(a::ZZMatrix, b::ZZMatrix)
    nrows(b) != nrows(a) && error("Incompatible dimensions in cansolve_with_nullspace")
    H, T = hnf_with_transform(transpose(a))
+   b = deepcopy(b)
    z = similar(a, ncols(b), ncols(a))
    l = min(nrows(a), ncols(a))
    for i=1:ncols(b)
      for j=1:l
        k = 1
-       while k <= ncols(H) && iszero(H[j, k])
+       while k <= ncols(H) && is_zero_entry(H, j, k)
          k += 1
        end
        if k > ncols(H)
@@ -1187,8 +1280,10 @@ function cansolve_with_nullspace(a::ZZMatrix, b::ZZMatrix)
        if !iszero(r)
          return false, b, b
        end
-       for h=k:ncols(H)
-         b[h, i] -= q*H[j, h]
+       if !iszero(q)
+         for h=k:ncols(H)
+           b[h, i] -= q*H[j, h]
+         end
        end
        z[i, k] = q
      end
@@ -1199,7 +1294,7 @@ function cansolve_with_nullspace(a::ZZMatrix, b::ZZMatrix)
 
    for i = nrows(H):-1:1
      for j = 1:ncols(H)
-       if !iszero(H[i,j])
+       if !is_zero_entry(H, i, j)
          N = similar(a, ncols(a), nrows(H) - i)
          for k = 1:nrows(N)
            for l = 1:ncols(N)
