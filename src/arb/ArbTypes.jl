@@ -292,7 +292,7 @@ const ARB_DEFAULT_PRECISION = Ref{Int}(64)
 @doc Markdown.doc"""
     set_precision!(::Type{Balls}, n::Int)
 
-Set the precision for all ball arithemtic to be `n`.
+Set the precision for all ball arithmetic to be `n`.
 
 # Examples
 
@@ -312,7 +312,7 @@ end
 @doc Markdown.doc"""
     precision(::Type{Balls})
 
-Return the precision for ball arithemtic.
+Return the precision for ball arithmetic.
 
 # Examples
 
@@ -566,7 +566,7 @@ var(x::RealPolyRing) = x.S
 
 base_ring(a::RealPolyRing) = RealField()
 
-# fixed precison
+# fixed precision
 
 mutable struct ArbPolyRing <: PolyRing{arb}
   base_ring::ArbField
