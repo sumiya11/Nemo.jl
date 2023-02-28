@@ -262,5 +262,5 @@ Oscar project.
 
 See the Oscar website for further details:
 
-<https://oscar.computeralgebra.de/>
+<https://www.oscar-system.org/>
 
