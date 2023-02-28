@@ -1522,8 +1522,6 @@ function (a::ZZMatrixSpace)(d::Integer)
    return z
 end
 
-(a::ZZMatrixSpace)(d::ZZMatrix) = d
-
 ###############################################################################
 #
 #   Conversions and promotions
