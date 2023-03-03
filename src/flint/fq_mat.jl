@@ -710,19 +710,16 @@ end
 function (a::FqPolyRepMatrixSpace)(arr::AbstractVector{T}) where {T <: Integer}
   _check_dim(nrows(a), ncols(a), arr)
   return FqPolyRepMatrix(nrows(a), ncols(a), arr, base_ring(a))
-  return z
 end
 
 function (a::FqPolyRepMatrixSpace)(arr::AbstractMatrix{ZZRingElem})
   _check_dim(nrows(a), ncols(a), arr)
   return FqPolyRepMatrix(nrows(a), ncols(a), arr, base_ring(a))
-  return z
 end
 
 function (a::FqPolyRepMatrixSpace)(arr::AbstractVector{ZZRingElem})
   _check_dim(nrows(a), ncols(a), arr)
   return FqPolyRepMatrix(nrows(a), ncols(a), arr, base_ring(a))
-  return z
 end
 
 function (a::FqPolyRepMatrixSpace)(arr::AbstractMatrix{FqPolyRepFieldElem})
