@@ -5,6 +5,17 @@
    F, b = NGFiniteField(f, "b")
    @test defining_polynomial(F) == f
 
+   ff = defining_polynomial(Rx, F)
+   @test ff == f
+
+   Rt, t = R["t"]
+   ff = defining_polynomial(Rt, F)
+   @test parent(ff) === Rt
+
+   Rt, t = F["t"]
+   @test_throws ErrorException defining_polynomial(Rt, F)
+
+
    @test F isa FqField
    @test base_field(F) === R
 
@@ -55,6 +66,17 @@
    f = x^2 + 1
    F, b = NGFiniteField(f, "b")
    @test F isa FqField
+
+   # check caching
+   R, a = NGFiniteField(3, 1, "a")
+   Rx, x = R["x"]
+   f = x^2 + 2x + 2
+   F, b = NGFiniteField(f, "b", cached = false)
+   FF, bb = NGFiniteField(f, "b", cached = false)
+   @test F !== FF
+   F, b = NGFiniteField(f, "b")
+   FF, bb = NGFiniteField(f, "b")
+   @test F === FF
 end
 
 @testset "FqFieldElem.printing" begin
@@ -145,4 +167,57 @@ end
    F, _ = NGFiniteField(f, "b")
    AbstractAlgebra.test_iterate(F)
    @test length(collect(F)) == order(F)
+end
+
+@testset "FqFieldElem._residue_field" begin
+   R, a = NGFiniteField(ZZRingElem(2), 2, "a")
+   Rx, x = R["x"]
+   f = x^3 + x + 1
+   F, RxtoF = Nemo._residue_field(f)
+   @test (@inferred domain(RxtoF)) === Rx
+   @test (@inferred codomain(RxtoF)) === F
+   @test (@inferred degree(F)) == 3
+   @test (@inferred base_field(F)) === R
+   @test @inferred isone(RxtoF(one(Rx)))
+   @test @inferred iszero(RxtoF(zero(Rx)))
+   for i in 1:10
+      a = rand(Rx, 1:10)
+      b = rand(Rx, 1:10)
+      @test RxtoF(a * b) == RxtoF(a) * RxtoF(b)
+      @test RxtoF(a + b) == RxtoF(a) + RxtoF(b)
+      c = rand(F)
+      @test RxtoF(preimage(RxtoF, c)) == c
+   end
+
+   F, RxtoF = Nemo._residue_field(f, absolute = true)
+   @test degree(F) == 6
+   @test base_field(F) === R
+   @test isone(RxtoF(one(Rx)))
+   @test iszero(RxtoF(zero(Rx)))
+   for i in 1:10
+      a = rand(Rx, 1:10)
+      b = rand(Rx, 1:10)
+      @test RxtoF(a * b) == RxtoF(a) * RxtoF(b)
+      @test RxtoF(a + b) == RxtoF(a) + RxtoF(b)
+      c = rand(F)
+      @test RxtoF(preimage(RxtoF, c)) == c
+   end
+
+   R, a = NGFiniteField(ZZRingElem(7), 1, "a")
+   Rx, x = R["x"]
+   f = x + 2
+   F, RxtoF = Nemo._residue_field(f)
+   @test defining_polynomial(Rx, F) == x + 2
+
+   R, a = NGFiniteField(ZZRingElem(7), 1, "a")
+   Rx, x = R["x"]
+   f = x + 2
+   F, RxtoF = Nemo._residue_field(f)
+   @test defining_polynomial(Rx, F) == x + 2
+
+   R, a = NGFiniteField(ZZRingElem(18446744073709551629), 1, "a")
+   Rx, x = R["x"]
+   f = x + 2
+   F, RxtoF = Nemo._residue_field(f)
+   @test defining_polynomial(Rx, F) == x + 2
 end
