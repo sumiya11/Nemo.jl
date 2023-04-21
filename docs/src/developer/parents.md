@@ -145,7 +145,7 @@ the integer 7, the other by the integer 3).
 
 In order to perform such a check in a function one uses `check_parent(a, b)`
 where `a` and `b` are the objects one wishes to assert must have the same
-parent. If not, an exception is raised by `parent_check`.
+parent. If not, an exception is raised by `check_parent`.
 
 ### Parent object constructors
 
