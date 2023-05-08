@@ -180,6 +180,10 @@ zero(a::CalciumQQBarField) = a(0)
 
 one(a::CalciumQQBarField) = a(1)
 
+zero(::Type{qqbar}) = CalciumQQBar(0)
+
+one(::Type{qqbar}) = CalciumQQBar(1)
+
 @doc raw"""
     degree(x::qqbar)
 
