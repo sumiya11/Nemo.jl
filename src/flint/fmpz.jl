@@ -42,11 +42,11 @@ export ZZRingElem, FlintZZ, ZZRing, parent, show, convert, hash, bell,
        gcdinv, gcd_with_cofactors,
        is_probable_prime, jacobi_symbol, kronecker_symbol, remove, root, size,
        isqrtrem, sqrtmod, trailing_zeros, divisor_sigma, euler_phi, fibonacci,
-       moebius_mu, primorial, rising_factorial, number_of_partitions,
+       mod!, moebius_mu, primorial, rising_factorial, number_of_partitions,
        canonical_unit, is_unit, isequal, addeq!, mul!, fmma!, fmms!, is_square,
        sqrt, is_square_with_sqrt, next_prime, ndivrem, iszero, rand, rand_bits,
        binomial, factorial, rand_bits_prime, iroot, tdivrem, fdivrem, cdivrem,
-       ntdivrem, nfdivrem, ncdivrem, tstbit
+       ntdivrem, nfdivrem, ncdivrem, tstbit, neg!, lcm!, gcd!, submul!
 
 ###############################################################################
 #
@@ -158,13 +158,17 @@ end
 
 characteristic(R::ZZRing) = 0
 
-one(_::ZZRing) = ZZRingElem(1)
+one(::ZZRing) = ZZRingElem(1)
 
-zero(_::ZZRing) = ZZRingElem(0)
+zero(::ZZRing) = ZZRingElem(0)
+
+one(::Type{ZZRingElem}) = ZZRingElem(1)
 
 zero(::Type{ZZRingElem}) = ZZRingElem(0)
 
-one(::Type{ZZRingElem}) = ZZRingElem(1)
+one(::ZZRingElem) = ZZRingElem(1)
+
+zero(::ZZRingElem) = ZZRingElem(0)
 
 @doc raw"""
     sign(a::ZZRingElem)
@@ -209,6 +213,10 @@ is_unit(a::ZZRingElem) = ccall((:fmpz_is_pm1, libflint), Bool, (Ref{ZZRingElem},
 iszero(a::ZZRingElem) = ccall((:fmpz_is_zero, libflint), Bool, (Ref{ZZRingElem},), a)
 
 isone(a::ZZRingElem) = ccall((:fmpz_is_one, libflint), Bool, (Ref{ZZRingElem},), a)
+
+isinteger(::ZZRingElem) = true
+
+isfinite(::ZZRingElem) = true
 
 @doc raw"""
     denominator(a::ZZRingElem)
@@ -303,6 +311,10 @@ end
 floor(x::ZZRingElem) = x
 
 ceil(x::ZZRingElem) = x
+
+floor(::Type{ZZRingElem}, x::ZZRingElem) = x
+
+ceil(::Type{ZZRingElem}, x::ZZRingElem) = x
 
 ###############################################################################
 #
@@ -416,6 +428,10 @@ function rem(x::ZZRingElem, c::ZZRingElem)
     ccall((:fmpz_tdiv_qr, libflint), Nothing,
           (Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), q, r, x, c)
     return r
+end
+
+function rem(a::ZZRingElem, b::UInt)
+   return ccall((:fmpz_fdiv_ui, libflint), UInt, (Ref{ZZRingElem}, UInt), a, b)
 end
 
 ###############################################################################
@@ -584,6 +600,8 @@ Base.div(x::ZZRingElem, y::Integer) = Base.div(x, ZZRingElem(y))
 divrem(x::ZZRingElem, y::Integer) = divrem(x, ZZRingElem(y))
 
 divrem(x::Integer, y::ZZRingElem) = divrem(ZZRingElem(x), y)
+
+Base.divrem(x::ZZRingElem, y::Int) = (Base.div(x, y), Base.rem(x, y))
 
 ###############################################################################
 #
@@ -882,6 +900,25 @@ function powermod(x::ZZRingElem, p::Int, m::ZZRingElem)
           (Ref{ZZRingElem}, Ref{ZZRingElem}, Int, Ref{ZZRingElem}),
           r, x, p, m)
     return r
+end
+
+#square-and-multiply algorithm to compute f^e mod g
+function powermod(f::T, e::ZZRingElem, g::T) where {T}
+   #small exponent -> use powermod
+   if nbits(e) <= 63
+      return powermod(f, Int(e), g)
+   else
+      #go through binary representation of exponent and multiply with res
+      #or (res and f)
+      res = parent(f)(1)
+      for b = bits(e)
+         res = mod(res^2, g)
+         if b
+            res = mod(res * f, g)
+         end
+      end
+      return res
+   end
 end
 
 @doc raw"""
@@ -1678,6 +1715,11 @@ end
 
 function next_prime(x::Int, proved::Bool = true)
    return x < 2 ? 2 : Int(next_prime(x % UInt, proved))
+end
+
+function remove!(a::ZZRingElem, b::ZZRingElem)
+   v = ccall((:fmpz_remove, libflint), Clong, (Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), a, a, b)
+   return v, a
 end
 
 function remove(x::ZZRingElem, y::ZZRingElem)
@@ -2492,6 +2534,11 @@ function add!(z::ZZRingElem, a::ZZRingElem, b::UInt)
    return z
 end
 
+function add!(a::ZZRingElem, b::ZZRingElem, c::Ptr{Int})
+   ccall((:fmpz_add, Nemo.libflint), Nothing, (Ref{ZZRingElem}, Ref{ZZRingElem}, Ptr{Int}), a, b, c)
+   return a
+end
+
 add!(z::ZZRingElem, a::ZZRingElem, b::Integer) = add!(z, a, ZZRingElem(b))
 add!(z::ZZRingElem, x::Int, y::ZZRingElem) = add!(z, y, x)
 
@@ -2500,6 +2547,10 @@ function neg!(z::ZZRingElem, a::ZZRingElem)
          (Ref{ZZRingElem}, Ref{ZZRingElem}),
          z, a)
    return z
+end
+
+function neg!(a::ZZRingElem)
+   return neg!(a,a)
 end
 
 function sub!(z::ZZRingElem, a::ZZRingElem, b::ZZRingElem)
@@ -2555,6 +2606,11 @@ end
 mul!(z::ZZRingElem, a::ZZRingElem, b::Integer) = mul!(z, a, ZZRingElem(b))
 
 mul!(z::ZZRingElem, x::Int, y::ZZRingElem) = mul!(z, y, x)
+
+function mul!(a::ZZRingElem, b::ZZRingElem, c::Ptr{Int})
+   ccall((:fmpz_mul, Nemo.libflint), Nothing, (Ref{ZZRingElem}, Ref{ZZRingElem}, Ptr{Int}), a, b, c)
+   return a
+end
 
 function addmul!(z::ZZRingElem, x::ZZRingElem, y::ZZRingElem)
    ccall((:fmpz_addmul, libflint), Nothing,
@@ -2620,6 +2676,18 @@ function pow!(z::ZZRingElem, a::ZZRingElem, b::Union{Int, UInt})
    ccall((:fmpz_pow_ui, libflint), Nothing,
          (Ref{ZZRingElem}, Ref{ZZRingElem}, UInt),
          z, a, UInt(b))
+   return z
+end
+
+function lcm!(z::ZZRingElem, x::ZZRingElem, y::ZZRingElem)
+   ccall((:fmpz_lcm, libflint), Nothing,
+       (Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), z, x, y)
+   return z
+end
+
+function gcd!(z::ZZRingElem, x::ZZRingElem, y::ZZRingElem)
+   ccall((:fmpz_gcd, libflint), Nothing,
+       (Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), z, x, y)
    return z
 end
 
