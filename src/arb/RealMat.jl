@@ -502,7 +502,6 @@ end
 ###############################################################################
 
 function lu!(P::Generic.Perm, x::RealMat)
-  ncols(x) != nrows(x) && error("Matrix must be square")
   parent(P).n != nrows(x) && error("Permutation does not match matrix")
   P.d .-= 1
   r = ccall((:arb_mat_lu, libarb), Cint,
@@ -511,29 +510,7 @@ function lu!(P::Generic.Perm, x::RealMat)
   r == 0 && error("Could not find $(nrows(x)) invertible pivot elements")
   P.d .+= 1
   inv!(P)
-  return nrows(x)
-end
-
-function lu(x::RealMat, P = SymmetricGroup(nrows(x)))
-  p = one(P)
-  R = base_ring(x)
-  L = similar(x)
-  U = deepcopy(x)
-  n = ncols(x)
-  r = lu!(p, U)
-  for i = 1:n
-    for j = 1:n
-      if i > j
-        L[i, j] = U[i, j]
-        U[i, j] = R()
-      elseif i == j
-        L[i, j] = one(R)
-      else
-        L[i, j] = R()
-      end
-    end
-  end
-  return r, p, L, U
+  return min(nrows(x), ncols(x))
 end
 
 function solve!(z::RealMat, x::RealMat, y::RealMat)

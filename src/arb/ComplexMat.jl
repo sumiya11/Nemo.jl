@@ -568,30 +568,7 @@ function lu!(P::Generic.Perm, x::ComplexMat)
   r == 0 && error("Could not find $(nrows(x)) invertible pivot elements")
   P.d .+= 1
   inv!(P)
-  return nrows(x)
-end
-
-function lu(P::Generic.Perm, x::ComplexMat)
-  ncols(x) != nrows(x) && error("Matrix must be square")
-  parent(P).n != nrows(x) && error("Permutation does not match matrix")
-  R = base_ring(x)
-  L = similar(x)
-  U = deepcopy(x)
-  n = ncols(x)
-  lu!(P, U)
-  for i = 1:n
-    for j = 1:n
-      if i > j
-        L[i, j] = U[i, j]
-        U[i, j] = R()
-      elseif i == j
-        L[i, j] = one(R)
-      else
-        L[i, j] = R()
-      end
-    end
-  end
-  return L, U
+  return min(nrows(x), ncols(x))
 end
 
 function solve!(z::ComplexMat, x::ComplexMat, y::ComplexMat)

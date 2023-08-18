@@ -369,6 +369,18 @@ end
    @test overlaps(B, C)
 end
 
+@testset "arb_mat.lu_nonsquare" begin
+   S = matrix_space(RR, 2, 3)
+
+   A = S(["1.0 +/- 0.01" "1.0 +/- 0.01" "1.0 +/- 0.01";
+          "1.0 +/- 0.01" "0.0 +/- 0.01" "-1.0 +/- 0.01"])
+
+    r, p, L, U = lu(A)
+
+    @test overlaps(L*U, p*A)
+    @test r == 2
+end
+
 @testset "arb_mat.linear_solving" begin
    S = matrix_space(RR, 3, 3)
    T = matrix_space(ZZ, 3, 3)
