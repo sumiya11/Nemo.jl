@@ -1,86 +1,9 @@
 export is_zero_row, is_diagonal, is_lower_triangular, is_positive_entry, is_upper_triangular, diagonal
 
-import LinearAlgebra
-LinearAlgebra.dot(a::RingElem, b::RingElem) = a * b
-
-################################################################################
-#
-#  Dense matrix types
-#
-################################################################################
-
-dense_matrix_type(::Type{T}) where {T} = Generic.MatSpaceElem{T}
-
-################################################################################
-#
-#  Unsafe functions for generic matrices
-#
-################################################################################
-
-#function zero!(a::MatElem)
-#  for i in 1:nrows(a)
-#    for j in 1:ncols(a)
-#      a[i, j] = zero!(a[i, j])
-#    end
-#  end
-#  return a
-#end
-
-function mul!(c::MatElem, a::MatElem, b::MatElem)
-    ncols(a) != nrows(b) && error("Incompatible matrix dimensions")
-    nrows(c) != nrows(a) && error("Incompatible matrix dimensions")
-    ncols(c) != ncols(b) && error("Incompatible matrix dimensions")
-
-    if c === a || c === b
-        d = parent(a)()
-        return mul!(d, a, b)
-    end
-
-    t = base_ring(a)()
-    for i = 1:nrows(a)
-        for j = 1:ncols(b)
-            c[i, j] = zero!(c[i, j])
-            for k = 1:ncols(a)
-                c[i, j] = addmul_delayed_reduction!(c[i, j], a[i, k], b[k, j], t)
-            end
-            c[i, j] = reduce!(c[i, j])
-        end
-    end
-    return c
-end
-
-function add!(c::MatElem, a::MatElem, b::MatElem)
-    parent(a) != parent(b) && error("Parents don't match.")
-    parent(c) != parent(b) && error("Parents don't match.")
-    for i = 1:nrows(c)
-        for j = 1:ncols(c)
-            c[i, j] = add!(c[i, j], a[i, j], b[i, j])
-        end
-    end
-    return c
-end
-
 function mul!(a::zzModMatrix, b::zzModMatrix, c::zzModRingElem)
     ccall((:nmod_mat_scalar_mul, libflint), Nothing,
         (Ref{zzModMatrix}, Ref{zzModMatrix}, UInt), a, b, c.data)
     return a
-end
-
-function mul!(c::MatElem, a::MatElem, b::RingElement)
-    nrows(c) != nrows(a) && error("Incompatible matrix dimensions")
-
-    if c === a || c === b
-        d = parent(a)()
-        return mul!(d, a, b)
-    end
-
-    t = base_ring(a)()
-    for i = 1:nrows(a)
-        for j = 1:ncols(a)
-            c[i, j] = mul!(c[i, j], a[i, j], b)
-        end
-    end
-    return c
 end
 
 ################################################################################
@@ -100,8 +23,7 @@ function denominator(M::QQMatrix)
     return d
 end
 
-transpose!(A::Union{ZZMatrix, QQMatrix}) = is_square(A) ? transpose!(A, A) : transpose(A)
-transpose!(A::MatrixElem) = transpose(A)
+transpose!(A::Union{ZZMatrix,QQMatrix}) = is_square(A) ? transpose!(A, A) : transpose(A)
 
 function transpose!(A::ZZMatrix, B::ZZMatrix)
     ccall((:fmpz_mat_transpose, libflint), Nothing,
@@ -115,46 +37,9 @@ function transpose!(A::QQMatrix, B::QQMatrix)
     return A
 end
 
-################################################################################
-#
-#  Zero matrix constructors
-#
-################################################################################
-
-function zero_matrix(::Type{MatElem}, R::Ring, n::Int)
-    return zero_matrix(R, n)
-end
-
-function zero_matrix(::Type{MatElem}, R::Ring, n::Int, m::Int)
-    return zero_matrix(R, n, m)
-end
-
-
 function matrix(A::Matrix{ZZRingElem})
     m = matrix(FlintZZ, A)
     return m
-end
-
-function matrix(A::Matrix{T}) where {T<:RingElem}
-    r, c = size(A)
-    (r < 0 || c < 0) && error("Array must be non-empty")
-    m = matrix(parent(A[1, 1]), A)
-    return m
-end
-
-function matrix(A::Vector{T}) where {T<:RingElem}
-    return matrix(reshape(A, length(A), 1))
-end
-
-export scalar_matrix
-
-function scalar_matrix(R::Ring, n::Int, a::RingElement)
-    b = R(a)
-    z = zero_matrix(R, n, n)
-    for i in 1:n
-        z[i, i] = b
-    end
-    return z
 end
 
 function Array(a::ZZMatrix; S::Type{T}=ZZRingElem) where {T}
@@ -188,8 +73,6 @@ function is_positive_entry(M::ZZMatrix, i::Int, j::Int)
     end
 end
 
-
-
 function is_zero_row(M::zzModMatrix, i::Int)
     zero = UInt(0)
     for j in 1:ncols(M)
@@ -201,35 +84,8 @@ function is_zero_row(M::zzModMatrix, i::Int)
     return true
 end
 
-function is_zero_row(M::MatElem{T}, i::Int) where {T}
-    for j in 1:ncols(M)
-        if !iszero(M[i, j])
-            return false
-        end
-    end
-    return true
-end
-
-function is_zero_row(M::Matrix{T}, i::Int) where {T<:Integer}
-    for j = 1:Base.size(M, 2)
-        if M[i, j] != 0
-            return false
-        end
-    end
-    return true
-end
-
 function is_zero_row(M::Matrix{ZZRingElem}, i::Int)
     for j = 1:Base.size(M, 2)
-        if M[i, j] != 0
-            return false
-        end
-    end
-    return true
-end
-
-function is_zero_row(M::Matrix{T}, i::Int) where {T<:RingElem}
-    for j in 1:Base.size(M, 2)
         if !iszero(M[i, j])
             return false
         end
@@ -238,7 +94,6 @@ function is_zero_row(M::Matrix{T}, i::Int) where {T<:RingElem}
 end
 
 export divexact!
-export mul!
 
 function divexact!(a::ZZMatrix, b::ZZMatrix, d::ZZRingElem)
     ccall((:fmpz_mat_scalar_divexact_fmpz, libflint), Nothing,
@@ -355,22 +210,6 @@ end
 #
 ################################################################################
 
-@doc raw"""
-    kernel(a::MatElem{T}; side::Symbol = :right) -> Int, MatElem{T}
-
-It returns a tuple $(n, M)$, where $n$ is the rank of the kernel and $M$ is a basis for it. If side is $:right$ or not
-specified, the right kernel is computed. If side is $:left$, the left kernel is computed.
-"""
-function kernel(A::MatElem; side::Symbol=:right)
-    if side == :right
-        return right_kernel(A)
-    elseif side == :left
-        return left_kernel(A)
-    else
-        error("Unsupported argument: :$side for side: Must be :left or :right")
-    end
-end
-
 function right_kernel(x::fpMatrix)
     z = zero_matrix(base_ring(x), ncols(x), max(nrows(x), ncols(x)))
     n = ccall((:nmod_mat_nullspace, libflint), Int, (Ref{fpMatrix}, Ref{fpMatrix}), z, x)
@@ -407,13 +246,6 @@ function left_kernel(x::ZZMatrix)
     end
 end
 
-right_kernel(M::MatElem) = nullspace(M)
-
-function left_kernel(M::MatElem)
-    rk, M1 = nullspace(transpose(M))
-    return rk, transpose(M1)
-end
-
 function right_kernel(x::ZZMatrix)
     n, M = left_kernel(transpose(x))
     return n, transpose(M)
@@ -447,11 +279,6 @@ function right_kernel(M::zzModMatrix)
     return 0, zero_matrix(R, nrows(M), 0)
 end
 
-function left_kernel(a::zzModMatrix)
-    n, M = right_kernel(transpose(a))
-    return n, transpose(M)
-end
-
 function right_kernel(M::ZZModMatrix)
     R = base_ring(M)
     N = hcat(transpose(M), identity_matrix(R, ncols(M)))
@@ -473,93 +300,6 @@ function right_kernel(M::ZZModMatrix)
         end
     end
     return 0, zero_matrix(R, nrows(M), 0)
-end
-
-function left_kernel(a::ZZModMatrix)
-    n, M = right_kernel(transpose(a))
-    return n, transpose(M)
-end
-
-################################################################################
-#
-#  Kernel over different rings
-#
-################################################################################
-
-@doc raw"""
-kernel(a::MatrixElem{T}, R::Ring; side::Symbol = :right) -> n, MatElem{elem_type(R)}
-
-It returns a tuple $(n, M)$, where $n$ is the rank of the kernel over $R$ and $M$ is a basis for it. If side is $:right$ or not
-specified, the right kernel is computed. If side is $:left$, the left kernel is computed.
-"""
-function kernel(M::MatrixElem, R::Ring; side::Symbol=:right)
-    MP = change_base_ring(R, M)
-    return kernel(MP, side=side)
-end
-
-################################################################################
-#
-#  Diagonal (block) matrix creation
-#
-################################################################################
-
-@doc raw"""
-    diagonal_matrix(x::T...) where T <: RingElem -> MatElem{T}
-    diagonal_matrix(x::Vector{T}) where T <: RingElem -> MatElem{T}
-    diagonal_matrix(Q, x::Vector{T}) where T <: RingElem -> MatElem{T}
-
-Returns a diagonal matrix whose diagonal entries are the elements of $x$.
-
-# Examples
-
-```jldoctest
-julia> diagonal_matrix(QQ(1), QQ(2))
-[1   0]
-[0   2]
-
-julia> diagonal_matrix([QQ(3), QQ(4)])
-[3   0]
-[0   4]
-
-julia> diagonal_matrix(QQ, [5, 6])
-[5   0]
-[0   6]
-```
-"""
-function diagonal_matrix(R::Ring, x::Vector{<:RingElement})
-    x = R.(x)
-    M = zero_matrix(R, length(x), length(x))
-    for i = 1:length(x)
-        M[i, i] = x[i]
-    end
-    return M
-end
-
-function diagonal_matrix(x::T, xs::T...) where {T<:RingElem}
-    return diagonal_matrix(collect((x, xs...)))
-end
-
-diagonal_matrix(x::Vector{<:RingElement}) = diagonal_matrix(parent(x[1]), x)
-
-@doc raw"""
-    diagonal_matrix(x::Vector{T}) where T <: MatElem -> MatElem
-
-Returns a block diagonal matrix whose diagonal blocks are the matrices in $x$.
-"""
-function diagonal_matrix(x::Vector{T}) where {T<:MatElem}
-    return cat(x..., dims=(1, 2))::T
-end
-
-function diagonal_matrix(x::T, xs::T...) where {T<:MatElem}
-    return cat(x, xs..., dims=(1, 2))::T
-end
-
-function diagonal_matrix(R::Ring, x::Vector{<:MatElem})
-    if length(x) == 0
-        return zero_matrix(R, 0, 0)
-    end
-    x = [change_base_ring(R, i) for i in x]
-    return diagonal_matrix(x)
 end
 
 ################################################################################
@@ -647,164 +387,6 @@ function map_entries(R::zzModRing, M::ZZMatrix)
     ccall((:fmpz_mat_get_nmod_mat, libflint), Cvoid, (Ref{zzModMatrix}, Ref{ZZMatrix}), MR, M)
     return MR
 end
-
-################################################################################
-#
-#  Concatenation of matrices
-#
-################################################################################
-
-@doc raw"""
-vcat(A::Vector{Generic.Mat}) -> Generic.Mat
-vcat(A::Vector{ZZMatrix}) -> ZZMatrix
-
-Forms a big matrix by vertically concatenating the matrices in $A$.
-All component matrices need to have the same number of columns.
-"""
-function Base.vcat(A::Vector{T}) where {S<:RingElem,T<:MatElem{S}}
-    if any(x -> ncols(x) != ncols(A[1]), A)
-        error("Matrices must have same number of columns")
-    end
-    M = zero_matrix(base_ring(A[1]), sum(nrows, A), ncols(A[1]))
-    s = 0
-    for i = A
-        for j = 1:nrows(i)
-            for k = 1:ncols(i)
-                M[s+j, k] = i[j, k]
-            end
-        end
-        s += nrows(i)
-    end
-    return M
-end
-
-function Base.vcat(A::Vector{ZZMatrix})
-    if any(x -> ncols(x) != ncols(A[1]), A)
-        error("Matrices must have same number of columns")
-    end
-    M = zero_matrix(base_ring(A[1]), sum(nrows, A), ncols(A[1]))
-    s = 0
-    for i = A
-        for j = 1:nrows(i)
-            for k = 1:ncols(i)
-                M[s+j, k] = i[j, k]
-            end
-        end
-        s += nrows(i)
-    end
-    return M
-end
-
-function Base.vcat(A::Vector{zzModMatrix})
-    if any(x -> ncols(x) != ncols(A[1]), A)
-        error("Matrices must have same number of columns")
-    end
-    M = zero_matrix(base_ring(A[1]), sum(nrows, A), ncols(A[1]))
-    s = 0
-    for i = A
-        for j = 1:nrows(i)
-            for k = 1:ncols(i)
-                M[s+j, k] = i[j, k]
-            end
-        end
-        s += nrows(i)
-    end
-    return M
-end
-
-function Base.vcat(A::MatElem...)
-    r = nrows(A[1])
-    c = ncols(A[1])
-    R = base_ring(A[1])
-    for i = 2:length(A)
-        @assert ncols(A[i]) == c
-        @assert base_ring(A[i]) == R
-        r += nrows(A[i])
-    end
-    X = zero_matrix(R, r, c)
-    o = 1
-    for i = 1:length(A)
-        for j = 1:nrows(A[i])
-            X[o, :] = A[i][j, :]
-            o += 1
-        end
-    end
-    return X
-end
-
-function Base.hcat(A::Vector{T}) where {S<:RingElem,T<:MatElem{S}}
-    if any(x -> nrows(x) != nrows(A[1]), A)
-        error("Matrices must have same number of rows")
-    end
-    M = zero_matrix(base_ring(A[1]), nrows(A[1]), sum(ncols, A))
-    s = 0
-    for i = A
-        for j = 1:ncols(i)
-            for k = 1:nrows(i)
-                M[k, s+j] = i[k, j]
-            end
-        end
-        s += ncols(i)
-    end
-    return M
-end
-
-function Base.hcat(A::MatElem...)
-    r = nrows(A[1])
-    c = ncols(A[1])
-    R = base_ring(A[1])
-    for i = 2:length(A)
-        @assert nrows(A[i]) == r
-        @assert base_ring(A[i]) == R
-        c += ncols(A[i])
-    end
-    X = zero_matrix(R, r, c)
-    o = 1
-    for i = 1:length(A)
-        for j = 1:ncols(A[i])
-            X[:, o] = A[i][:, j]
-            o += 1
-        end
-    end
-    return X
-end
-
-function Base.cat(A::MatElem...; dims)
-    @assert dims == (1, 2) || isa(dims, Int)
-
-    if isa(dims, Int)
-        if dims == 1
-            return hcat(A...)
-        elseif dims == 2
-            return vcat(A...)
-        else
-            error("dims must be 1, 2, or (1,2)")
-        end
-    end
-
-    local X
-    for i = 1:length(A)
-        if i == 1
-            X = hcat(A[1], zero_matrix(base_ring(A[1]), nrows(A[1]), sum(Int[ncols(A[j]) for j = 2:length(A)])))
-        else
-            X = vcat(X, hcat(zero_matrix(base_ring(A[1]), nrows(A[i]), sum(ncols(A[j]) for j = 1:i-1)), A[i], zero_matrix(base_ring(A[1]), nrows(A[i]), sum(Int[ncols(A[j]) for j = i+1:length(A)]))))
-        end
-    end
-    return X
-end
-
-#= seems to be in AA now
-function Base.hvcat(rows::Tuple{Vararg{Int}}, A::MatElem...)
-  B = hcat([A[i] for i=1:rows[1]]...)
-  o = rows[1]
-  for j=2:length(rows)
-    C = hcat([A[i+o] for i=1:rows[j]]...)
-    o += rows[j]
-    B = vcat(B, C)
-  end
-  return B
-end
-=#
 
 export hnf!
 
@@ -934,18 +516,6 @@ end
 #  IsUpper\Lower triangular
 #
 ################################################################################
-
-function is_upper_triangular(M::MatElem)
-    n = nrows(M)
-    for i = 2:n
-        for j = 1:min(i - 1, ncols(M))
-            if !iszero(M[i, j])
-                return false
-            end
-        end
-    end
-    return true
-end
 
 function is_upper_triangular(M::ZZMatrix)
     GC.@preserve M begin
@@ -1155,49 +725,9 @@ function to_array(M::QQMatrix)
     return A
 end
 
-################################################################################
-#
-#  Minpoly and Charpoly
-#
-################################################################################
 
-function minpoly(M::MatElem)
-    k = base_ring(M)
-    kx, x = polynomial_ring(k, cached=false)
-    return minpoly(kx, M)
-end
 
-function charpoly(M::MatElem)
-    k = base_ring(M)
-    kx, x = polynomial_ring(k, cached=false)
-    return charpoly(kx, M)
-end
 
-###############################################################################
-#
-#  Sub
-#
-###############################################################################
-
-function sub(M::MatElem, rows::Vector{Int}, cols::Vector{Int})
-    N = zero_matrix(base_ring(M), length(rows), length(cols))
-    for i = 1:length(rows)
-        for j = 1:length(cols)
-            N[i, j] = M[rows[i], cols[j]]
-        end
-    end
-    return N
-end
-
-function sub(M::MatElem{T}, r::AbstractUnitRange{<:Integer}, c::AbstractUnitRange{<:Integer}) where {T}
-    z = similar(M, length(r), length(c))
-    for i in 1:length(r)
-        for j in 1:length(c)
-            z[i, j] = M[r[i], c[j]]
-        end
-    end
-    return z
-end
 
 ################################################################################
 #

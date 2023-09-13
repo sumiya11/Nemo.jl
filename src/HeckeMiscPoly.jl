@@ -1,11 +1,3 @@
-function polynomial_ring(R::Ring; cached::Bool=false)
-    return polynomial_ring(R, "x", cached=cached)
-end
-
-function content(a::PolyElem{<:FieldElem})
-    return one(base_ring(a))
-end
-
 function ZZRingElem(a::Generic.ResidueRingElem{ZZRingElem})
     return a.data
 end
@@ -40,15 +32,6 @@ end
 
 function (::ZZRing)(a::ZZModRingElem)
     return a.data
-end
-
-function Base.div(f::PolyElem, g::PolyElem)
-    q, r = divrem(f, g)
-    return q
-end
-
-function Base.rem(f::PolyElem, g::PolyElem)
-    return mod(f, g)
 end
 
 function rem!(z::T, f::T, g::T) where {T<:PolyElem}
