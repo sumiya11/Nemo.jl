@@ -49,7 +49,6 @@ makedocs(
                 "developer/parents.md",
                 "developer/interfaces.md",
                 "developer/topics.md",
-                "developer/future.md",
             ]
          ]
 )
