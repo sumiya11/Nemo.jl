@@ -191,9 +191,15 @@ end
    @test trunc(QQFieldElem(-1, 3)) == 0
    @test trunc(QQFieldElem(2, 1)) == 2
 
+   vals = vcat(
+        Any[d//3 for d in -15:15],
+        Any[Rational{BigInt}(d//3) for d in -15:15],
+        Any[Rational{Int16}(d//3) for d in -15:15],
+        Any[true//true, false//true],
+    )
+
    @testset "$func" for func in (trunc, round, ceil, floor)
-      for d in -15:15
-         val = d//3
+      for val in vals
          valQ = QQFieldElem(val)
          @test func(valQ) isa QQFieldElem
          @test func(valQ) == func(val)
@@ -213,8 +219,7 @@ end
    end
 
    @testset "$mode" for mode in (RoundUp, RoundDown, RoundNearest, RoundNearestTiesAway)
-      for d in -5:5
-         val = d//3
+      for val in vals
          valQ = QQFieldElem(val)
          @test round(valQ, mode) isa QQFieldElem
          @test round(valQ, mode) == round(val, mode)
