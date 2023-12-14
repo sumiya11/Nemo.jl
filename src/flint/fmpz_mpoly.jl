@@ -487,6 +487,7 @@ function (::Type{Fac{ZZMPolyRingElem}})(fac::fmpz_mpoly_factor, preserve_input::
 end
 
 function factor(a::ZZMPolyRingElem)
+   iszero(a) && throw(ArgumentError("Argument must be non-zero"))
    R = parent(a)
    fac = fmpz_mpoly_factor(R)
    ok = ccall((:fmpz_mpoly_factor, libflint), Cint,
@@ -497,6 +498,7 @@ function factor(a::ZZMPolyRingElem)
 end
 
 function factor_squarefree(a::ZZMPolyRingElem)
+   iszero(a) && throw(ArgumentError("Argument must be non-zero"))
    R = parent(a)
    fac = fmpz_mpoly_factor(R)
    ok = ccall((:fmpz_mpoly_factor_squarefree, libflint), Cint,
