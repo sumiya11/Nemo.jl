@@ -759,6 +759,19 @@ reconstruct(a::Integer, b::ZZRingElem) =  reconstruct(ZZRingElem(a), b)
 
 reconstruct(a::Integer, b::Integer) =  reconstruct(ZZRingElem(a), ZZRingElem(b))
 
+@doc raw"""
+   unsafe_reconstruct(a::ZZRingElem, b::ZZRingElem)
+
+Same as [`reconstruct`](@ref), but does not throw if the reconstruction fails.
+Returns a tuple (`success`, `n/d`), where `success` signals the success of reconstruction.
+"""
+function unsafe_reconstruct(a::ZZRingElem, b::ZZRingElem)
+   c = QQFieldElem()
+   success = Bool(ccall((:fmpq_reconstruct_fmpz, libflint), Cint,
+                     (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), c, a, b))
+   return success, c
+end
+
 ###############################################################################
 #
 #   Rational enumeration
