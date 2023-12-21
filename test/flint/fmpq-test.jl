@@ -530,6 +530,14 @@ end
    @test reconstruct(ZZRingElem(123), ZZRingElem(237)) == ZZRingElem(9)//2
 
    @test reconstruct(123, ZZRingElem(237)) == ZZRingElem(9)//2
+
+   flag, nd = Nemo.unsafe_reconstruct(ZZRingElem(123), ZZRingElem(237))
+   @test flag && nd == ZZRingElem(9)//2
+
+   a, m = ZZRingElem(643465418), ZZRingElem(2^31-1)
+   @test_throws ErrorException reconstruct(a, m)
+   flag, nd = Nemo.unsafe_reconstruct(a, m)
+   @test !flag
 end
 
 @testset "QQFieldElem.rational_enumeration" begin
