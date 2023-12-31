@@ -4,11 +4,6 @@
 #
 ###############################################################################
 
-export isreal, derivative, integral, evaluate,
-       evaluate2, compose, from_roots, evaluate_iter, evaluate_fast, evaluate,
-       interpolate_newton, interpolate_barycentric, interpolate_fast,
-       interpolate, roots
-
 ###############################################################################
 #
 #   Basic manipulation

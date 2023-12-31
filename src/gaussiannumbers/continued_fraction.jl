@@ -1,5 +1,3 @@
-export continued_fraction, continued_fraction_with_matrix, convergents
-
 mutable struct _fmpq_ball
    left_num::Int
    left_den::Int

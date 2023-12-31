@@ -4,11 +4,6 @@
 #
 ###############################################################################
 
-export ca, CalciumField, complex_normal_form, const_euler, const_pi, csgn, erf,
-       erfc, erfi, gamma, infinity, is_algebraic, is_imaginary, isinf, is_number,
-       is_signed_inf, is_uinf, is_undefined, is_unknown, onei, pow, undefined,
-       unknown, unsigned_infinity
-
 ###############################################################################
 #
 #   Data type and parent methods

@@ -31,22 +31,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# do not export div and divrem
-export ZZRingElem, FlintZZ, ZZRing, parent, show, convert, hash, bell,
-       is_perfect_power, is_prime, is_prime_power_with_data, fdiv, cdiv, tdiv, rem, mod, gcd, lcm, invmod, powermod, abs,
-       isqrt, popcount, prevpow2, nextpow2, ndigits, dec, bin, oct, hex, base,
-       one, zero, divexact, fits, sign, nbits, deepcopy, tdivpow2, fdivpow2,
-       cdivpow2, flog, clog, cmpabs, clrbit!, setbit!, combit!, crt,
-       crt_with_lcm, divisible, divisors, prime_divisors, divisor_lenstra,
-       fmodpow2, integer_ring,
-       gcdinv, gcd_with_cofactors,
-       is_probable_prime, jacobi_symbol, kronecker_symbol, remove, root, size,
-       isqrtrem, sqrtmod, trailing_zeros, divisor_sigma, euler_phi, fibonacci,
-       mod!, moebius_mu, primorial, rising_factorial, number_of_partitions,
-       canonical_unit, is_unit, isequal, addeq!, mul!, fmma!, fmms!, is_square,
-       sqrt, is_square_with_sqrt, next_prime, ndivrem, iszero, rand, rand_bits,
-       binomial, factorial, rand_bits_prime, iroot, tdivrem, fdivrem, cdivrem,
-       ntdivrem, nfdivrem, ncdivrem, tstbit, neg!, lcm!, gcd!, submul!
 
 ###############################################################################
 #

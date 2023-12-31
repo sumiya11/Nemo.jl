@@ -1,5 +1,3 @@
-export Fac, unit
-
 ################################################################################
 #
 #   Special functions for Fac{ZZRingElem}

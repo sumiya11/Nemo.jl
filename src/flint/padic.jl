@@ -4,9 +4,6 @@
 #
 ###############################################################################
 
-export FlintPadicField, padic, prime, teichmuller, log, get_printing_mode,
-       set_printing_mode
-
 ###############################################################################
 #
 #   Data type and parent object methods

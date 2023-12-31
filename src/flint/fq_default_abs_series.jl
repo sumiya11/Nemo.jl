@@ -4,8 +4,6 @@
 #
 ###############################################################################
 
-export FqAbsPowerSeriesRingElem, FqAbsPowerSeriesRing
-
 ###############################################################################
 #
 #   Data type and parent object methods

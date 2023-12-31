@@ -4,15 +4,6 @@
 #
 ################################################################################
 
-export zzModPolyRing, zzModPolyRingElem, parent, base_ring, elem_type, length, zero,
-       one, gen, is_gen, iszero, var, deepcopy, show, truncate, mullow, reverse,
-       shift_left, shift_right, divexact, rem, gcd, resultant,
-       evaluate, derivative, compose, interpolate, inflate, deflate, lift,
-       is_irreducible, is_squarefree, factor, factor_squarefree,
-       factor_distinct_deg, factor_shape, setcoeff!, canonical_unit,
-       add!, sub!, mul!, polynomial_ring, check_parent, gcdx, mod,
-       invmod, gcdinv, mulmod, powermod, zero!, one!
-
 ################################################################################
 #
 #  Type and parent object methods

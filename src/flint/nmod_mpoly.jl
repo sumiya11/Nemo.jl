@@ -4,9 +4,6 @@
 #
 ###############################################################################
 
-export zzModMPolyRing, zzModMPolyRingElem
-export fpMPolyRing, fpMPolyRingElem
-
 for (etype, rtype, ftype, ctype, utype) in (
                         (zzModMPolyRingElem, zzModMPolyRing, nmod_mpoly_factor, zzModRingElem, zzModPolyRingElem),
                         (fpMPolyRingElem, fpMPolyRing, gfp_mpoly_factor, fpFieldElem, fpPolyRingElem))

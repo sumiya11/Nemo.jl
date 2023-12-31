@@ -4,8 +4,6 @@
 #
 ###############################################################################
 
-export ZZMPolyRing, ZZMPolyRingElem, trailing_coefficient
-
 ###############################################################################
 #
 #   Data type and parent object methods

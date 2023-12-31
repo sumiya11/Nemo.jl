@@ -4,8 +4,6 @@
 #
 ###############################################################################
 
-export ZZAbsPowerSeriesRingElem, ZZAbsPowerSeriesRing, power_series_ring
-
 ###############################################################################
 #
 #   Data type and parent object methods

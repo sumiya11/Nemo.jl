@@ -4,11 +4,6 @@
 #
 ###############################################################################
 
-export zero, one, deepcopy, -, transpose, +, *, &, ==, !=,
-       overlaps, contains, inv, divexact, charpoly, det, lu, lu!, solve,
-       solve!, solve_lu_precomp, solve_lu_precomp!, swap_rows, swap_rows!,
-       bound_inf_norm, isreal, eigvals, eigvals_simple
-
 ###############################################################################
 #
 #   Similar & zero

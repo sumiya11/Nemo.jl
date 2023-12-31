@@ -4,10 +4,6 @@
 #
 ###############################################################################
 
-export FlintPuiseuxSeriesRing, FlintPuiseuxSeriesField,
-       FlintPuiseuxSeriesRingElem, FlintPuiseuxSeriesFieldElem,
-       FlintPuiseuxSeriesElem
-
 ###############################################################################
 #
 #   Data type and parent object methods

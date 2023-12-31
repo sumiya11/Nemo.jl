@@ -6,9 +6,6 @@
 #
 ###############################################################################
 
-export FqPolyRepRelPowerSeriesRingElem, FqPolyRepRelPowerSeriesRing,
-       fqPolyRepRelPowerSeriesRingElem, fqPolyRepRelPowerSeriesRing
-
 for (etype, rtype, ctype, btype, flint_fn, flint_tail) in (
    (FqPolyRepRelPowerSeriesRingElem, FqPolyRepRelPowerSeriesRing, FqPolyRepField, FqPolyRepFieldElem, "fq_poly", "fq"),
    (fqPolyRepRelPowerSeriesRingElem, fqPolyRepRelPowerSeriesRing, fqPolyRepField, fqPolyRepFieldElem, "fq_nmod_poly", "fq_nmod"))

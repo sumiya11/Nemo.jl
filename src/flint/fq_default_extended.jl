@@ -1,8 +1,3 @@
-export absolute_degree, absolute_norm, absolute_tr, absolute_frobenius,
-       absolute_charpoly, prime_field
-
-import AbstractAlgebra: _absolute_basis
-
 ################################################################################
 #
 #  Additional predicate

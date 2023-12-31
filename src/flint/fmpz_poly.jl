@@ -4,9 +4,6 @@
 #
 ###############################################################################
 
-export ZZPolyRing, ZZPolyRingElem, cyclotomic, theta_qexp, eta_qexp, cos_minpoly,
-       swinnerton_dyer, signature, height
-
 ###############################################################################
 #
 #   Data type and parent methods

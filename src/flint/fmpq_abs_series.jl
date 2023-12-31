@@ -4,9 +4,6 @@
 #
 ###############################################################################
 
-export QQAbsPowerSeriesRingElem, QQAbsPowerSeriesRing, tan, tanh, sin, sinh, asin, asinh,
-       atan, atanh, log
-
 ###############################################################################
 #
 #   Data type and parent object methods

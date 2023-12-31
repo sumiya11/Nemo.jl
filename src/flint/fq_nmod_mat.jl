@@ -4,12 +4,6 @@
 #
 ################################################################################
 
-export fqPolyRepMatrix, fqPolyRepMatrixSpace, getindex, setindex!, deepcopy,
-       parent, base_ring, zero, one, show, transpose,
-       transpose!, rref, rref!, tr, det, rank, inv, solve,
-       sub, hcat, vcat, Array, lift, lift!, matrix_space, check_parent,
-       howell_form, howell_form!, strong_echelon_form, strong_echelon_form!
-
 ################################################################################
 #
 #  Data type and parent object methods

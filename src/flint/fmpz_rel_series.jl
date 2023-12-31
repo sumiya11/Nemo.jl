@@ -4,8 +4,6 @@
 #
 ###############################################################################
 
-export ZZRelPowerSeriesRingElem, ZZRelPowerSeriesRing
-
 ###############################################################################
 #
 #   Data type and parent object methods

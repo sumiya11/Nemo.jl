@@ -1,5 +1,3 @@
-export fmpzi, FlintZZi, FlintZZiRing
-
 ###############################################################################
 #
 #   Data type and parent methods

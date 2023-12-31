@@ -4,11 +4,6 @@
 #
 ###############################################################################
 
-export AnticNumberField, defining_polynomial, nf_elem, norm,
-       representation_matrix, representation_matrix_q, tr, cyclotomic_field,
-       cyclotomic_real_subfield, add!, sub!, mul!, signature, sqr_classical,
-       is_rational, isinteger
-
 ###############################################################################
 #
 #   Type and parent object methods

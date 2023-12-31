@@ -4,17 +4,6 @@
 #
 ###############################################################################
 
-export ZZMatrix, ZZMatrixSpace, getindex, getindex!, setindex!,
-       charpoly, det, det_divisor, det_given_divisor, gram, hadamard,
-       is_hadamard, hadamard_bound2, hnf, is_hnf, hnf_with_transform,
-       hnf_modular, lll, lll!, lll_ctx, lll_gram, lll_gram!,
-       lll_with_transform, lll_gram_with_transform, lll_with_removal,
-       lll_with_removal_transform, nullspace, rank, rref, reduce_mod, similar,
-       snf, snf_diagonal, is_snf, solve, solve_rational, cansolve,
-       cansolve_with_nullspace, solve_dixon, tr, transpose, content, hcat,
-       vcat, addmul!, zero!, pseudo_inv, hnf_modular_eldiv,
-       nullspace_right_rational, is_zero_entry
-
 ###############################################################################
 #
 #   Data type and parent object methods

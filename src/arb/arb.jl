@@ -7,24 +7,6 @@
 #
 ###############################################################################
 
-import Base: ceil, isinteger
-
-export add_error!, ball, radius, midpoint, contains, contains_zero, contains_negative,
-       contains_positive, contains_nonnegative, contains_nonpositive, convert,
-       iszero, is_nonzero, is_exact, is_positive, isfinite, is_nonnegative,
-       is_negative, is_nonpositive, add!, mul!, sub!, div!, overlaps,
-       unique_integer, accuracy_bits, trim, ldexp, setunion, setintersection,
-       const_pi, const_e, const_log2, const_log10, const_euler, const_catalan,
-       const_khinchin, const_glaisher, floor, ceil, hypot, rsqrt, sqrt1pm1,
-       sqrtpos, root, log, log1p, expm1, sin, cos, sinpi, cospi, tan, cot,
-       tanpi, cotpi, sinh, cosh, tanh, coth, atan, asin, acos, atanh, asinh,
-       acosh, gamma, lgamma, rgamma, digamma, gamma_regularized, gamma_lower,
-       gamma_lower_regularized, zeta, sincos, sincospi, sinhcosh, atan2, agm,
-       factorial, binomial, fibonacci, bernoulli, rising_factorial,
-       rising_factorial2, polylog, chebyshev_t, chebyshev_t2, chebyshev_u,
-       chebyshev_u2, bell, numpart, lindep, airy_ai, airy_bi, airy_ai_prime,
-       airy_bi_prime, canonical_unit, simplest_rational_inside
-
 ###############################################################################
 #
 #   Basic manipulation

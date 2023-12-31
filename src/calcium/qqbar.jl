@@ -4,15 +4,6 @@
 #
 ###############################################################################
 
-export qqbar, CalciumQQBar, CalciumQQBarField, is_algebraic_integer, rand, abs2,
-       csgn, sign_real, sign_imag, QQFieldElem, ZZRingElem, exp_pi_i, atanpi, asinpi, acospi,
-       conjugates, eigenvalues, guess, root_of_unity_as_args, is_root_of_unity,
-       log_pi_i, rand
-
-export is_equal_real, is_equal_imag, is_equal_abs, is_equal_abs_real,
-       is_equal_abs_imag, is_less_real, is_less_imag, is_less_abs, is_less_abs_real,
-       is_less_abs_imag, is_less_root_order
-
 ###############################################################################
 #
 #   Data type and parent methods
