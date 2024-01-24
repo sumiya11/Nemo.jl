@@ -77,21 +77,21 @@ function deepcopy_internal(a::FqMatrix, dict::IdDict)
   return z
 end
 
-function nrows(a::FqMatrix)
+function number_of_rows(a::FqMatrix)
    return ccall((:fq_default_mat_nrows, libflint), Int,
    (Ref{FqMatrix}, Ref{FqField}),
     a, base_ring(a))
 end
 
-function ncols(a::FqMatrix)
+function number_of_columns(a::FqMatrix)
    return ccall((:fq_default_mat_ncols, libflint), Int,
    (Ref{FqMatrix}, Ref{FqField}),
     a, base_ring(a))
 end
 
-nrows(a::FqMatrixSpace) = a.nrows
+number_of_rows(a::FqMatrixSpace) = a.nrows
 
-ncols(a::FqMatrixSpace) = a.ncols
+number_of_columns(a::FqMatrixSpace) = a.ncols
 
 parent(a::FqMatrix) = matrix_space(base_ring(a), nrows(a), ncols(a))
 

@@ -450,7 +450,6 @@ export NALocalFieldElem
 export Native
 export nbits
 export ncdivrem
-export ndigits
 export ndivrem
 export neg!
 export NegInf

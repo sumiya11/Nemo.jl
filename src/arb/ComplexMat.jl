@@ -105,13 +105,13 @@ function one(x::ComplexMatSpace)
   return z
 end
 
-nrows(a::ComplexMat) = a.r
+number_of_rows(a::ComplexMat) = a.r
 
-ncols(a::ComplexMat) = a.c
+number_of_columns(a::ComplexMat) = a.c
 
-nrows(a::ComplexMatSpace) = a.nrows
+number_of_rows(a::ComplexMatSpace) = a.nrows
 
-ncols(a::ComplexMatSpace) = a.ncols
+number_of_columns(a::ComplexMatSpace) = a.ncols
 
 function deepcopy_internal(x::ComplexMat, dict::IdDict)
   z = similar(x)
