@@ -201,13 +201,11 @@ export flint_cleanup
 export flint_set_num_threads
 export FlintLocalField
 export FlintLocalFieldElem
-export FlintPadicField
 export FlintPuiseuxSeriesElem
 export FlintPuiseuxSeriesField
 export FlintPuiseuxSeriesFieldElem
 export FlintPuiseuxSeriesRing
 export FlintPuiseuxSeriesRingElem
-export FlintQadicField
 export FlintQQ
 export FlintQQi
 export FlintQQiField
@@ -480,8 +478,8 @@ export onei
 export options
 export order
 export overlaps
-export padic
 export PadicField
+export PadicFieldElem
 export parent
 export Partition
 export Perm
@@ -504,8 +502,8 @@ export prod_diagonal
 export pseudo_inv
 export pth_root
 export puiseux_series_ring
-export qadic
 export QadicField
+export QadicFieldElem
 export QQ
 export QQAbsPowerSeriesRing
 export QQAbsPowerSeriesRingElem
