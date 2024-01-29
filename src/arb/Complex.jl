@@ -1,6 +1,6 @@
 ###############################################################################
 #
-#   acb.jl : Arb complex numbers
+#   Complex.jl : Arb complex numbers
 #
 #   Copyright (C) 2015 Tommy Hofmann
 #   Copyright (C) 2015 Fredrik Johansson
@@ -169,7 +169,7 @@ end
 #
 ################################################################################
 
-# acb - acb
+# AcbFieldElem - AcbFieldElem
 
 for (s,f) in ((:+,"acb_add"), (:*,"acb_mul"), (://, "acb_div"), (:-,"acb_sub"), (:^,"acb_pow"))
   @eval begin
@@ -615,7 +615,7 @@ end
 @doc raw"""
     trim(x::ComplexFieldElem)
 
-Return an `acb` box containing $x$ but which may be more economical,
+Return an `AcbFieldElem` box containing $x$ but which may be more economical,
 by rounding off insignificant bits from midpoints.
 """
 function trim(x::ComplexFieldElem)
