@@ -493,8 +493,14 @@ end
    @test nullspace(A) == (1, T([QQFieldElem(1, 5); QQFieldElem(-9, 5); QQFieldElem(1)]))
 
    r, N = nullspace(A)
-
    @test iszero(A*N)
+   @test r == 1
+
+   # A "properly" rational example (since the implementation works over ZZ)
+   A = QQ[ 1//2 1//3 1//5 ]
+   r, N = nullspace(A)
+   @test is_zero(A*N)
+   @test r == 2
 end
 
 @testset "QQMatrix.rank" begin

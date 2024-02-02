@@ -1023,3 +1023,50 @@ end
 @inline mat_entry_ptr(A::QQMatrix, i::Int, j::Int) = 
    ccall((:fmpq_mat_entry, libflint), 
       Ptr{QQFieldElem}, (Ref{QQMatrix}, Int, Int), A, i-1, j-1)
+
+################################################################################
+#
+#  Nullspace
+#
+################################################################################
+
+function nullspace(A::QQMatrix)
+   AZZ = zero_matrix(FlintZZ, nrows(A), ncols(A))
+   ccall((:fmpq_mat_get_fmpz_mat_rowwise, libflint), Nothing,
+         (Ref{ZZMatrix}, Ptr{Nothing}, Ref{QQMatrix}), AZZ, C_NULL, A)
+   N = similar(AZZ, ncols(A), ncols(A))
+   nullity = ccall((:fmpz_mat_nullspace, libflint), Int,
+                   (Ref{ZZMatrix}, Ref{ZZMatrix}), N, AZZ)
+   NQQ = similar(A, ncols(A), ncols(A))
+   ccall((:fmpq_mat_set_fmpz_mat, libflint), Nothing,
+         (Ref{QQMatrix}, Ref{ZZMatrix}), NQQ, N)
+
+   # Now massage the result until it looks like what the generic AbstractAlgebra
+   # nullspace would return: remove zero columns and rescale the columns so that
+   # the lowest non-zero entry is 1.
+   # This is necessary because code in Hecke expects this structure, see e.g.
+   # https://github.com/thofma/Hecke.jl/issues/1385 .
+
+   NQQ = view(NQQ, 1:nrows(NQQ), 1:nullity)
+
+   # Produce a 1 in the lowest non-zero entry of any column
+   s = FlintQQ()
+   t = FlintQQ()
+   for j in 1:nullity
+      # Find lowest non-zero entry
+      for i in nrows(NQQ):-1:1
+         getindex!(s, NQQ, i, j)
+         !is_zero(s) && break
+      end
+      # Scale the column by the inverse
+      s = inv(s)
+      for i in nrows(NQQ):-1:1
+         is_zero_entry(NQQ, i, j) && continue
+         getindex!(t, NQQ, i, j)
+         mul!(t, t, s)
+         NQQ[i, j] = t # creates a copy of t
+      end
+   end
+
+   return nullity, NQQ
+end
