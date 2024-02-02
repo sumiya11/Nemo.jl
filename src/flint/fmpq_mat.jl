@@ -704,6 +704,22 @@ function can_solve(a::QQMatrix, b::QQMatrix; side::Symbol = :right)
    return fl
 end
 
+function AbstractAlgebra.Solve._can_solve_internal_no_check(A::QQMatrix, b::QQMatrix, task::Symbol; side::Symbol = :right)
+   if side === :left
+      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      return fl, transpose(sol), transpose(K)
+   end
+
+   x = similar(A, ncols(A), ncols(b))
+   fl = ccall((:fmpq_mat_can_solve_multi_mod, libflint), Cint,
+              (Ref{QQMatrix}, Ref{QQMatrix}, Ref{QQMatrix}), x, A, b)
+
+   if task === :only_check || task === :with_solution
+      return Bool(fl), x, zero(A, 0, 0)
+   end
+   return Bool(fl), x, kernel(A)[2]
+end
+
 ###############################################################################
 #
 #   Trace
