@@ -704,7 +704,7 @@ function can_solve(a::QQMatrix, b::QQMatrix; side::Symbol = :right)
    return fl
 end
 
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::QQMatrix, b::QQMatrix, task::Symbol; side::Symbol = :right)
+function AbstractAlgebra.Solve._can_solve_internal_no_check(A::QQMatrix, b::QQMatrix, task::Symbol; side::Symbol = :left)
    if side === :left
       fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
@@ -1069,4 +1069,15 @@ function nullspace(A::QQMatrix)
    end
 
    return nullity, NQQ
+end
+
+# For compatibility with the generic `kernel` method in AbstractAlgebra:
+# Otherwise the generic nullspace would be used for a "lazy transposed QQMatrix"
+# instead of flint.
+function nullspace(A::AbstractAlgebra.Solve.LazyTransposeMatElem{QQFieldElem, QQMatrix})
+   B = transpose(AbstractAlgebra.Solve.data(A))
+   n, N = nullspace(B)
+   # Looks worse than it is: we have to transpose here, the lazy_transpose is
+   # just for type stability
+   return n, AbstractAlgebra.Solve.lazy_transpose(transpose(N))
 end

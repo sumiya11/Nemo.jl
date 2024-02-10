@@ -500,7 +500,7 @@ end
 
 =#
 
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZModMatrix, b::ZZModMatrix, task::Symbol; side::Symbol = :right)
+function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZModMatrix, b::ZZModMatrix, task::Symbol; side::Symbol = :left)
    check_parent(A, b)
    if side === :left
       fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
@@ -513,7 +513,7 @@ function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZModMatrix, b::Z
    if task === :only_check || task === :with_solution
      return Bool(fl), x, zero(A, 0, 0)
    end
-   return Bool(fl), x, AbstractAlgebra.Solve.kernel(A)
+   return Bool(fl), x, AbstractAlgebra.Solve.kernel(A, side = :right)
 end
 
 ################################################################################
@@ -916,3 +916,38 @@ function matrix_space(R::ZZModRing, r::Int, c::Int; cached::Bool = true)
   ZZModMatrixSpace(R, r, c)
 end
 
+################################################################################
+#
+#  Kernel
+#
+################################################################################
+
+function AbstractAlgebra.Solve.kernel(M::ZZModMatrix; side::Symbol = :left)
+   AbstractAlgebra.Solve.check_option(side, [:right, :left], "side")
+
+   if side === :left
+      K = AbstractAlgebra.Solve.kernel(transpose(M), side = :right)
+      return transpose(K)
+   end
+
+   R = base_ring(M)
+   N = hcat(transpose(M), identity_matrix(R, ncols(M)))
+   if nrows(N) < ncols(N)
+      N = vcat(N, zero_matrix(R, ncols(N) - nrows(N), ncols(N)))
+   end
+   howell_form!(N)
+   H = N
+   nr = 1
+   while nr <= nrows(H) && !is_zero_row(H, nr)
+      nr += 1
+   end
+   nr -= 1
+   h = view(H, 1:nr, 1:nrows(M))
+   for i = 1:nrows(h)
+      if is_zero_row(h, i)
+         k = view(H, i:nrows(h), nrows(M) + 1:ncols(H))
+         return transpose(k)
+      end
+   end
+   return zero_matrix(R, ncols(M), 0)
+end

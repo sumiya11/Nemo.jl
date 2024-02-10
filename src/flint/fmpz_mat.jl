@@ -1110,6 +1110,27 @@ function nullspace(x::ZZMatrix)
   return ncols(x), identity_matrix(x, ncols(x))
 end
 
+function AbstractAlgebra.Solve.kernel(A::ZZMatrix; side::Symbol = :left)
+   AbstractAlgebra.Solve.check_option(side, [:right, :left], "side")
+
+   if side === :left
+      K = AbstractAlgebra.Solve.kernel(transpose(A), side = :right)
+      return transpose(K)
+   end
+
+   A = transpose(hnf(A))
+   H, U = hnf_with_transform(A)
+   r = nrows(H)
+   while r > 0 && is_zero_row(H, r)
+      r -= 1
+   end
+   if is_zero(r)
+      return transpose(U)
+   else
+      return transpose(view(U, r + 1:nrows(U), 1:ncols(U)))
+   end
+end
+
 @doc raw"""
     nullspace_right_rational(x::ZZMatrix)
 
@@ -1293,7 +1314,7 @@ function cansolve(a::ZZMatrix, b::ZZMatrix)
    return true, transpose(z*T)
 end
 
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZMatrix, b::ZZMatrix, task::Symbol; side::Symbol = :right)
+function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZMatrix, b::ZZMatrix, task::Symbol; side::Symbol = :left)
    if side === :left
       fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
@@ -1303,7 +1324,7 @@ function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZMatrix, b::ZZMa
    if task === :only_check || task === :with_solution
      return fl, sol, zero(A, 0, 0)
    end
-   return fl, sol, AbstractAlgebra.Solve.kernel(A)
+   return fl, sol, AbstractAlgebra.Solve.kernel(A, side = :right)
  end
 
 Base.reduce(::typeof(hcat), A::AbstractVector{ZZMatrix}) = AbstractAlgebra._hcat(A)
