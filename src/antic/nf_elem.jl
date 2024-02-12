@@ -251,11 +251,12 @@ end
 ###############################################################################
 
 function Base.show(io::IO, ::MIME"text/plain", a::AbsSimpleNumField)
+   @show_name(io, a)
+   @show_special(io, MIME"text/plain"(), a)
    print(io, "Number field with defining polynomial ", defining_polynomial(a))
    println(io)
-   io = AbstractAlgebra.pretty(io)
-   print(io, AbstractAlgebra.Indent(), "over ", AbstractAlgebra.Lowercase(), QQ)
-   print(io, Dedent())
+   io = pretty(io)
+   print(io, Indent(), "over ", Lowercase(), QQ, Dedent())
    #print(IOContext(io, :supercompact => true))
 end
 
@@ -267,8 +268,9 @@ function Base.show(io::IO, a::AbsSimpleNumField)
     print(io, "Number field")
   else
     # nested printing allowed, preferably supercompact
+    io = pretty(io)
     print(io, "Number field of degree $(degree(a))")
-    print(IOContext(io, :supercompact => true), " over ", Nemo.QQ)
+    print(IOContext(io, :supercompact => true), " over ", Lowercase(), QQ)
   end
 end
 
@@ -1202,6 +1204,15 @@ end
 function show_cyclo(io::IO, a::AbsSimpleNumField)
   @assert is_cyclo_type(a)
   print(io, "Cyclotomic field of order $(get_attribute(a, :cyclo))")
+end
+
+function show_cyclo(io::IO, ::MIME"text/plain", a::AbsSimpleNumField)
+   # TODO: change to print something with "cyclotomic" in it
+   @assert is_cyclo_type(a)
+   print(io, "Number field with defining polynomial ", defining_polynomial(a))
+   println(io)
+   io = pretty(io)
+   print(io, Indent(), "over ", Lowercase(), QQ, Dedent())
 end
 
 
