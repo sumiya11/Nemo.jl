@@ -290,32 +290,10 @@ end
 #
 ################################################################################
 
-function _can_solve_with_solution(a::fpMatrix, b::fpMatrix; side::Symbol = :right)
-   (base_ring(a) != base_ring(b)) && error("Matrices must have same base ring")
-   if side == :left
-      (ncols(a) != ncols(b)) && error("Matrices must have same number of columns")
-      (f, x) = _can_solve_with_solution(transpose(a), transpose(b); side=:right)
-      return (f, transpose(x))
-   elseif side == :right
-      (nrows(a) != nrows(b)) && error("Matrices must have same number of rows")
-      x = similar(a, ncols(a), ncols(b))
-      r = ccall((:nmod_mat_can_solve, libflint), Cint,
-                (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}), x, a, b)
-      return Bool(r), x
-   else
-      error("Unsupported argument :$side for side: Must be :left or :right.")
-   end
-end
-
-function _can_solve(a::fpMatrix, b::fpMatrix; side::Symbol = :right)
-   fl, _ = _can_solve_with_solution(a, b, side = side)
-   return fl
-end
-
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::fpMatrix, b::fpMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(A::fpMatrix, b::fpMatrix, task::Symbol; side::Symbol = :left)
    check_parent(A, b)
    if side === :left
-      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
    end
 
@@ -515,15 +493,9 @@ end
 #
 ################################################################################
 
-function kernel(A::fpMatrix; side::Symbol = :left)
-   AbstractAlgebra.Solve.check_option(side, [:right, :left], "side")
-
-   if side === :left
-      K = kernel(transpose(A), side = :right)
-      return transpose(K)
-   end
-
-   K = zero_matrix(base_ring(A), ncols(A), max(nrows(A), ncols(A)))
-   n = ccall((:nmod_mat_nullspace, libflint), Int, (Ref{fpMatrix}, Ref{fpMatrix}), K, A)
-   return view(K, 1:nrows(K), 1:n)
+function nullspace(M::fpMatrix)
+  N = similar(M, ncols(M), ncols(M))
+  nullity = ccall((:nmod_mat_nullspace, libflint), Int,
+                  (Ref{fpMatrix}, Ref{fpMatrix}), N, M)
+  return nullity, view(N, 1:nrows(N), 1:nullity)
 end

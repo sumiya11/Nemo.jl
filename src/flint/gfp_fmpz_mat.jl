@@ -363,3 +363,38 @@ function matrix_space(R::FpField, r::Int, c::Int; cached::Bool = true)
   # TODO/FIXME: `cached` is ignored and only exists for backwards compatibility
   FpMatrixSpace(R, r, c)
 end
+
+################################################################################
+#
+#  Kernel
+#
+################################################################################
+
+function nullspace(M::FpMatrix)
+  N = similar(M, ncols(M), ncols(M))
+  nullity = ccall((:fmpz_mod_mat_nullspace, libflint), Int,
+                  (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpField}), N, M, base_ring(M))
+  return nullity, view(N, 1:nrows(N), 1:nullity)
+end
+
+################################################################################
+#
+#  Linear solving
+#
+################################################################################
+
+function Solve._can_solve_internal_no_check(A::FpMatrix, b::FpMatrix, task::Symbol; side::Symbol = :left)
+   check_parent(A, b)
+   if side === :left
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      return fl, transpose(sol), transpose(K)
+   end
+
+   x = similar(A, ncols(A), ncols(b))
+   fl = ccall((:fmpz_mod_mat_can_solve, libflint), Cint,
+              (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}), x, A, b)
+   if task === :only_check || task === :with_solution
+     return Bool(fl), x, zero(A, 0, 0)
+   end
+   return Bool(fl), x, kernel(A, side = :right)
+end

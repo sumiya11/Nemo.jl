@@ -486,17 +486,6 @@ end
 #
 ################################################################################
 
-function _solve(x::T, y::T) where T <: Zmodn_mat
-  (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
-  !is_square(x)&& error("First argument not a square matrix in _solve")
-  (y.r != x.r) || y.c != 1 && ("Not a column vector in _solve")
-  z = similar(y)
-  r = ccall((:nmod_mat_solve, libflint), Int,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
-  !Bool(r) && error("Singular matrix in _solve")
-  return z
-end
-
 function AbstractAlgebra._solve_triu(x::T, y::T) where T <: Zmodn_mat
    (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
    is_upper_trangular(x) || error("Matrix must be upper triangular")
@@ -521,6 +510,24 @@ end
 #and the diagonal is assumed to be 1
 function AbstractAlgebra._solve_tril!(A::T, B::T, C::T, unit::Int = 0) where T <: Zmodn_mat
    ccall((:nmod_mat_solve_tril, Nemo.libflint), Cvoid, (Ref{T}, Ref{T}, Ref{T}, Cint), A, B, C, unit)
+end
+
+function Solve._can_solve_internal_no_check(A::zzModMatrix, b::zzModMatrix, task::Symbol; side::Symbol = :left)
+   check_parent(A, b)
+   if side === :left
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      return fl, transpose(sol), transpose(K)
+   end
+
+   x = similar(A, ncols(A), ncols(b))
+   # This is probably only correct if the characteristic is prime
+   fl = ccall((:nmod_mat_can_solve, libflint), Cint,
+             (Ref{zzModMatrix}, Ref{zzModMatrix}, Ref{zzModMatrix}),
+              x, A, b)
+   if task === :only_check || task === :with_solution
+      return Bool(fl), x, zero(A, 0, 0)
+   end
+   return Bool(fl), x, kernel(A, side = :right)
 end
 
 ################################################################################
@@ -925,8 +932,16 @@ end
 #
 ################################################################################
 
+function nullspace(M::zzModMatrix)
+  # Apparently this only works correctly if base_ring(M) is a field
+  N = similar(M, ncols(M), ncols(M))
+  nullity = ccall((:nmod_mat_nullspace, libflint), Int,
+                  (Ref{zzModMatrix}, Ref{zzModMatrix}), N, M)
+  return nullity, view(N, 1:nrows(N), 1:nullity)
+end
+
 function kernel(M::zzModMatrix; side::Symbol = :left)
-   AbstractAlgebra.Solve.check_option(side, [:right, :left], "side")
+   Solve.check_option(side, [:right, :left], "side")
 
    if side === :left
       K = kernel(transpose(M), side = :right)
@@ -935,9 +950,7 @@ function kernel(M::zzModMatrix; side::Symbol = :left)
 
    R = base_ring(M)
    if is_prime(modulus(R))
-      k = zero_matrix(R, ncols(M), ncols(M))
-      n = ccall((:nmod_mat_nullspace, libflint), Int, (Ref{zzModMatrix}, Ref{zzModMatrix}), k, M)
-      return view(k, 1:nrows(k), 1:n)
+      return nullspace(M)[2]
    end
 
    H = hcat(transpose(M), identity_matrix(R, ncols(M)))

@@ -529,14 +529,6 @@ function _solve!(z::ArbMatrix, x::ArbMatrix, y::ArbMatrix)
   nothing
 end
 
-function _solve(x::ArbMatrix, y::ArbMatrix)
-  ncols(x) != nrows(x) && error("First argument must be square")
-  ncols(x) != nrows(y) && error("Matrix dimensions are wrong")
-  z = similar(y)
-  _solve!(z, x, y)
-  return z
-end
-
 function _solve_lu_precomp!(z::ArbMatrix, P::Generic.Perm, LU::ArbMatrix, y::ArbMatrix)
   Q = inv(P)
   ccall((:arb_mat_solve_lu_precomp, libarb), Nothing,
@@ -566,10 +558,10 @@ function _solve_cholesky_precomp(cho::ArbMatrix, y::ArbMatrix)
   return z
 end
 
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ArbMatrix, b::ArbMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(A::ArbMatrix, b::ArbMatrix, task::Symbol; side::Symbol = :left)
    nrows(A) != ncols(A) && error("Only implemented for square matrices")
    if side === :left
-      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
    end
 
@@ -592,10 +584,10 @@ end
 ################################################################################
 
 function solve_init(A::ArbMatrix)
-   return AbstractAlgebra.Solve.SolveCtx{ArbFieldElem, ArbMatrix, ArbMatrix}(A)
+   return Solve.SolveCtx{ArbFieldElem, ArbMatrix, ArbMatrix}(A)
 end
 
-function AbstractAlgebra.Solve._init_reduce(C::AbstractAlgebra.Solve.SolveCtx{ArbFieldElem})
+function Solve._init_reduce(C::Solve.SolveCtx{ArbFieldElem})
    if isdefined(C, :red) && isdefined(C, :lu_perm)
       return nothing
    end
@@ -618,7 +610,7 @@ function AbstractAlgebra.Solve._init_reduce(C::AbstractAlgebra.Solve.SolveCtx{Ar
    return nothing
 end
 
-function AbstractAlgebra.Solve._init_reduce_transpose(C::AbstractAlgebra.Solve.SolveCtx{ArbFieldElem})
+function Solve._init_reduce_transpose(C::Solve.SolveCtx{ArbFieldElem})
    if isdefined(C, :red_transp) && isdefined(C, :lu_perm_transp)
       return nothing
    end
@@ -641,13 +633,13 @@ function AbstractAlgebra.Solve._init_reduce_transpose(C::AbstractAlgebra.Solve.S
    return nothing
 end
 
-function AbstractAlgebra.Solve._can_solve_internal_no_check(C::AbstractAlgebra.Solve.SolveCtx{ArbFieldElem}, b::ArbMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(C::Solve.SolveCtx{ArbFieldElem}, b::ArbMatrix, task::Symbol; side::Symbol = :left)
    if side === :right
-      LU = AbstractAlgebra.Solve.reduced_matrix(C)
-      p = AbstractAlgebra.Solve.lu_permutation(C)
+      LU = Solve.reduced_matrix(C)
+      p = Solve.lu_permutation(C)
    else
-      LU = AbstractAlgebra.Solve.reduced_matrix_of_transpose(C)
-      p = AbstractAlgebra.Solve.lu_permutation_of_transpose(C)
+      LU = Solve.reduced_matrix_of_transpose(C)
+      p = Solve.lu_permutation_of_transpose(C)
       b = transpose(b)
    end
 

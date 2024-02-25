@@ -660,13 +660,6 @@ end
 #
 ###############################################################################
 
-function _solve(a::QQMatrix, b::QQMatrix)
-   nrows(b) != nrows(a) && error("Incompatible dimensions in solve")
-   fl, z = _can_solve_with_solution(a, b)
-   !fl && error("System is inconsistent")
-   return z
-end
-
 @doc raw"""
     _solve_dixon(a::QQMatrix, b::QQMatrix)
 
@@ -683,30 +676,9 @@ function _solve_dixon(a::QQMatrix, b::QQMatrix)
    return z
 end
 
-function _can_solve_with_solution(a::QQMatrix, b::QQMatrix; side::Symbol = :right)
-   if side == :left
-      (ncols(a) != ncols(b)) && error("Matrices must have same number of columns")
-      (f, x) = _can_solve_with_solution(transpose(a), transpose(b); side=:right)
-      return (f, transpose(x))
-   elseif side == :right
-      (nrows(a) != nrows(b)) && error("Matrices must have same number of rows")
-      x = similar(a, ncols(a), ncols(b))
-      r = ccall((:fmpq_mat_can_solve_multi_mod, libflint), Cint,
-                (Ref{QQMatrix}, Ref{QQMatrix}, Ref{QQMatrix}), x, a, b)
-      return Bool(r), x
-   else
-      error("Unsupported argument :$side for side: Must be :left or :right.")
-   end
-end
-
-function _can_solve(a::QQMatrix, b::QQMatrix; side::Symbol = :right)
-   fl, _ = _can_solve_with_solution(a, b, side = side)
-   return fl
-end
-
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::QQMatrix, b::QQMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(A::QQMatrix, b::QQMatrix, task::Symbol; side::Symbol = :left)
    if side === :left
-      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
    end
 
@@ -1069,15 +1041,4 @@ function nullspace(A::QQMatrix)
    end
 
    return nullity, NQQ
-end
-
-# For compatibility with the generic `kernel` method in AbstractAlgebra:
-# Otherwise the generic nullspace would be used for a "lazy transposed QQMatrix"
-# instead of flint.
-function nullspace(A::AbstractAlgebra.Solve.LazyTransposeMatElem{QQFieldElem, QQMatrix})
-   B = transpose(AbstractAlgebra.Solve.data(A))
-   n, N = nullspace(B)
-   # Looks worse than it is: we have to transpose here, the lazy_transpose is
-   # just for type stability
-   return n, AbstractAlgebra.Solve.lazy_transpose(transpose(N))
 end

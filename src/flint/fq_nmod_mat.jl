@@ -410,45 +410,10 @@ end
 #
 ################################################################################
 
-function _solve(x::fqPolyRepMatrix, y::fqPolyRepMatrix)
-   (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
-   !is_square(x)&& error("First argument not a square matrix in _solve")
-   (nrows(y) != nrows(x)) || ncols(y) != 1 && ("Not a column vector in _solve")
-   z = similar(y)
-   r = ccall((:fq_nmod_mat_solve, libflint), Int,
-             (Ref{fqPolyRepMatrix}, Ref{fqPolyRepMatrix}, Ref{fqPolyRepMatrix}, Ref{fqPolyRepField}),
-             z, x, y, base_ring(x))
-   !Bool(r) && error("Singular matrix in _solve")
-   return z
-end
-
-function _can_solve_with_solution(a::fqPolyRepMatrix, b::fqPolyRepMatrix; side::Symbol = :right)
-   (base_ring(a) != base_ring(b)) && error("Matrices must have same base ring")
-   if side == :left
-      (ncols(a) != ncols(b)) && error("Matrices must have same number of columns")
-      (f, x) = _can_solve_with_solution(transpose(a), transpose(b); side=:right)
-      return (f, transpose(x))
-   elseif side == :right
-      (nrows(a) != nrows(b)) && error("Matrices must have same number of rows")
-      x = similar(a, ncols(a), ncols(b))
-      r = ccall((:fq_nmod_mat_can_solve, libflint), Cint,
-                (Ref{fqPolyRepMatrix}, Ref{fqPolyRepMatrix}, Ref{fqPolyRepMatrix},
-                 Ref{fqPolyRepField}), x, a, b, base_ring(a))
-      return Bool(r), x
-   else
-      error("Only side = :right or :left is supported (:$side)")
-   end
-end
-
-function _can_solve(a::fqPolyRepMatrix, b::fqPolyRepMatrix; side::Symbol = :right)
-   fl, _ = _can_solve_with_solution(a, b, side = side)
-   return fl
-end
-
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::fqPolyRepMatrix, b::fqPolyRepMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(A::fqPolyRepMatrix, b::fqPolyRepMatrix, task::Symbol; side::Symbol = :left)
    check_parent(A, b)
    if side === :left
-      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
    end
 
@@ -792,4 +757,17 @@ end
 function matrix_space(R::fqPolyRepField, r::Int, c::Int; cached::Bool = true)
   # TODO/FIXME: `cached` is ignored and only exists for backwards compatibility
   fqPolyRepMatrixSpace(R, r, c)
+end
+
+################################################################################
+#
+#  Kernel
+#
+################################################################################
+
+function nullspace(M::fqPolyRepMatrix)
+  N = similar(M, ncols(M), ncols(M))
+  nullity = ccall((:fq_nmod_mat_nullspace, libflint), Int,
+                  (Ref{fqPolyRepMatrix}, Ref{fqPolyRepMatrix}, Ref{fqPolyRepField}), N, M, base_ring(M))
+  return nullity, view(N, 1:nrows(N), 1:nullity)
 end

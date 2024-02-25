@@ -196,6 +196,7 @@ import AbstractAlgebra: promote_rule
 import AbstractAlgebra: Ring
 import AbstractAlgebra: Set
 import AbstractAlgebra: set_attribute!
+import AbstractAlgebra: Solve
 
 include("Exports.jl")
 
@@ -485,7 +486,7 @@ include("embedding/embedding.jl")
 
 include("Rings.jl")
 
-include("view.jl")
+include("matrix.jl")
 
 include("HeckeMiscFiniteField.jl")
 include("HeckeMiscInfinity.jl")

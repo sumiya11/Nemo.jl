@@ -485,29 +485,15 @@ end
 #
 ################################################################################
 
-#= Not implemented in Flint yet
-
-function _solve(x::T, y::T) where T <: Zmod_fmpz_mat
-  (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
-  !is_square(x)&& error("First argument not a square matrix in solve")
-  (y.r != x.r) || y.c != 1 && ("Not a column vector in solve")
-  z = similar(y)
-  r = ccall((:fmpz_mod_mat_solve, libflint), Int,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
-  !Bool(r) && error("Singular matrix in solve")
-  return z
-end
-
-=#
-
-function AbstractAlgebra.Solve._can_solve_internal_no_check(A::ZZModMatrix, b::ZZModMatrix, task::Symbol; side::Symbol = :left)
+function Solve._can_solve_internal_no_check(A::ZZModMatrix, b::ZZModMatrix, task::Symbol; side::Symbol = :left)
    check_parent(A, b)
    if side === :left
-      fl, sol, K = AbstractAlgebra.Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
       return fl, transpose(sol), transpose(K)
    end
 
    x = similar(A, ncols(A), ncols(b))
+   # This is probably only correct if the characteristic is prime
    fl = ccall((:fmpz_mod_mat_can_solve, libflint), Cint,
               (Ref{ZZModMatrix}, Ref{ZZModMatrix}, Ref{ZZModMatrix}), x, A, b)
    if task === :only_check || task === :with_solution
@@ -923,7 +909,7 @@ end
 ################################################################################
 
 function kernel(M::ZZModMatrix; side::Symbol = :left)
-   AbstractAlgebra.Solve.check_option(side, [:right, :left], "side")
+   Solve.check_option(side, [:right, :left], "side")
 
    if side === :left
       K = kernel(transpose(M), side = :right)
@@ -931,6 +917,10 @@ function kernel(M::ZZModMatrix; side::Symbol = :left)
    end
 
    R = base_ring(M)
+   if is_prime(modulus(R))
+     return nullspace(M)[2]
+   end
+
    N = hcat(transpose(M), identity_matrix(R, ncols(M)))
    if nrows(N) < ncols(N)
       N = vcat(N, zero_matrix(R, ncols(N) - nrows(N), ncols(N)))
@@ -950,4 +940,12 @@ function kernel(M::ZZModMatrix; side::Symbol = :left)
       end
    end
    return zero_matrix(R, ncols(M), 0)
+end
+
+function nullspace(M::ZZModMatrix)
+  # Apparently this only works correctly if base_ring(M) is a field
+  N = similar(M, ncols(M), ncols(M))
+  nullity = ccall((:fmpz_mod_mat_nullspace, libflint), Int,
+                  (Ref{ZZModMatrix}, Ref{ZZModMatrix}), N, M)
+  return nullity, view(N, 1:nrows(N), 1:nullity)
 end
