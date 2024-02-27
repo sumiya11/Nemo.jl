@@ -9,8 +9,7 @@ import AbstractAlgebra
 
 using Libdl
 
-using Random
-using Random: SamplerTrivial
+using Random: Random, AbstractRNG, SamplerTrivial
 import Random: rand!
 
 using RandomExtensions: RandomExtensions, make, Make2, Make3
@@ -51,7 +50,6 @@ import Base: atanh
 import Base: bin
 import Base: binomial
 import Base: ceil
-import Base: checkbounds
 import Base: cispi
 import Base: cmp
 import Base: conj
@@ -79,7 +77,6 @@ import Base: hex
 import Base: hypot
 import Base: imag
 import Base: in
-import Base: intersect
 import Base: inv
 import Base: invmod
 import Base: isequal
@@ -132,8 +129,6 @@ import Base: trailing_zeros
 import Base: transpose
 import Base: trunc
 import Base: truncate
-import Base: typed_hcat
-import Base: typed_hvcat
 import Base: vcat
 import Base: xor
 import Base: zero
@@ -146,7 +141,6 @@ end
 import LinearAlgebra: cholesky
 import LinearAlgebra: det
 import LinearAlgebra: eigvals
-import LinearAlgebra: hessenberg
 import LinearAlgebra: lu
 import LinearAlgebra: lu!
 import LinearAlgebra: norm
@@ -208,14 +202,12 @@ const eigenvalues = eigvals # alternative name for the function from LinearAlgeb
 #
 ###############################################################################
 
-using Arb_jll
-using Antic_jll
-using Calcium_jll
-using FLINT_jll
+using Arb_jll: libarb
+using Antic_jll: libantic
+using Calcium_jll: libcalcium
+using FLINT_jll: libflint
 
 const pkgdir = realpath(joinpath(dirname(@__DIR__)))
-
-const libflint = FLINT_jll.libflint
 
 function flint_abort()
   error("Problem in the Flint-Subsystem")
