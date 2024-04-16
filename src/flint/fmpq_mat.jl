@@ -150,6 +150,14 @@ Base.@propagate_inbounds setindex!(a::QQMatrix, d::Integer,
    end
 end
 
+function setindex!(a::QQMatrix, b::QQMatrix, r::UnitRange{Int64}, c::UnitRange{Int64})
+  _checkbounds(a, r, c)
+  size(b) == (length(r), length(c)) || throw(DimensionMismatch("tried to assign a $(size(b, 1))x$(size(b, 2)) matrix to a $(length(r))x$(length(c)) destination"))
+  A = view(a, r, c)
+  ccall((:fmpq_mat_set, libflint), Nothing,
+        (Ref{QQMatrix}, Ref{QQMatrix}), A, b)
+end
+
 Base.@propagate_inbounds setindex!(a::QQMatrix, d::Rational,
                                  r::Int, c::Int) =
          setindex!(a, QQFieldElem(d), r, c)
@@ -891,6 +899,17 @@ function zero!(z::QQMatrix)
    ccall((:fmpq_mat_zero, libflint), Nothing,
                 (Ref{QQMatrix},), z)
    return z
+end
+
+function Generic.add_one!(a::QQMatrix, i::Int, j::Int)
+  @boundscheck Generic._checkbounds(a, i, j)
+  GC.@preserve a begin
+    x = mat_entry_ptr(a, i, j)
+    ccall((:fmpq_add_si, libflint), Nothing,
+          (Ptr{QQFieldElem}, Ptr{QQFieldElem}, Int),
+          x, x, 1)
+  end
+  return a
 end
 
 ###############################################################################
