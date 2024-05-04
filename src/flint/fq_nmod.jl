@@ -104,10 +104,7 @@ is_unit(a::fqPolyRepFieldElem) = ccall((:fq_nmod_is_invertible, libflint), Bool,
                      (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), a, a.parent)
 
 function characteristic(a::fqPolyRepField)
-   d = ZZRingElem()
-   ccall((:__fq_nmod_ctx_prime, libflint), Nothing,
-         (Ref{ZZRingElem}, Ref{fqPolyRepField}), d, a)
-   return d
+   return ZZ(a.n)
 end
 
 function order(a::fqPolyRepField)
@@ -118,8 +115,7 @@ function order(a::fqPolyRepField)
 end
 
 function degree(a::fqPolyRepField)
-   return ccall((:fq_nmod_ctx_degree, libflint), Int,
-                (Ref{fqPolyRepField},), a)
+   return ccall((:fq_nmod_ctx_degree, libflint), Int, (Ref{fqPolyRepField},), a)
 end
 
 function deepcopy_internal(d::fqPolyRepFieldElem, dict::IdDict)
