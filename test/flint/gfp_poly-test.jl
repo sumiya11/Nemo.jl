@@ -1,6 +1,6 @@
 @testset "fpPolyRingElem.constructors" begin
   R = Native.GF(17)
-  
+
   S1 = PolyRing(R)
   S2 = PolyRing(R)
 
@@ -94,38 +94,38 @@
 end
 
 @testset "fpPolyRingElem.polynomial" begin
-   R = Native.GF(23)
+  R = Native.GF(23)
 
-   f = polynomial(R, [])
-   g = polynomial(R, [1, 2, 3])
-   h = polynomial(R, ZZRingElem[1, 2, 3])
-   k = polynomial(R, [R(1), R(2), R(3)])
-   p = polynomial(R, [1, 2, 3], "y")
+  f = polynomial(R, [])
+  g = polynomial(R, [1, 2, 3])
+  h = polynomial(R, ZZRingElem[1, 2, 3])
+  k = polynomial(R, [R(1), R(2), R(3)])
+  p = polynomial(R, [1, 2, 3], "y")
 
-   @test isa(f, fpPolyRingElem)
-   @test isa(g, fpPolyRingElem)
-   @test isa(h, fpPolyRingElem)
-   @test isa(k, fpPolyRingElem)
-   @test isa(p, fpPolyRingElem)
+  @test isa(f, fpPolyRingElem)
+  @test isa(g, fpPolyRingElem)
+  @test isa(h, fpPolyRingElem)
+  @test isa(k, fpPolyRingElem)
+  @test isa(p, fpPolyRingElem)
 
-   q = polynomial(R, [1, 2, 3], cached=false)
+  q = polynomial(R, [1, 2, 3], cached=false)
 
-   @test parent(g) !== parent(q)
+  @test parent(g) !== parent(q)
 end
 
 @testset "zzModPolyRingElem.similar" begin
-   R = Native.GF(23)
+  R = Native.GF(23)
 
-   f = polynomial(R, [1, 2, 3])
-   g = similar(f)
-   h = similar(f, "y")
+  f = polynomial(R, [1, 2, 3])
+  g = similar(f)
+  h = similar(f, "y")
 
-   @test isa(g, fpPolyRingElem)
-   @test isa(h, fpPolyRingElem)
+  @test isa(g, fpPolyRingElem)
+  @test isa(h, fpPolyRingElem)
 
-   q = similar(g, cached=false)
+  q = similar(g, cached=false)
 
-   @test parent(g) === parent(q)
+  @test parent(g) === parent(q)
 end
 
 @testset "fpPolyRingElem.printing" begin
@@ -255,22 +255,22 @@ end
 end
 
 @testset "fpPolyRingElem.adhoc_comparison" begin
-   R = Native.GF(7)
-   S, x = polynomial_ring(R, "x")
+  R = Native.GF(7)
+  S, x = polynomial_ring(R, "x")
 
-   f = x^2 + 2x + 1
+  f = x^2 + 2x + 1
 
-   @test f != 1
+  @test f != 1
 
-   @test 1 != f
+  @test 1 != f
 
-   @test S(5) == ZZRingElem(5)
+  @test S(5) == ZZRingElem(5)
 
-   @test ZZRingElem(5) != f
+  @test ZZRingElem(5) != f
 
-   @test S(5) == R(5)
+  @test S(5) == R(5)
 
-   @test R(5) != x + 1
+  @test R(5) != x + 1
 end
 
 @testset "fpPolyRingElem.truncation" begin
@@ -375,16 +375,16 @@ end
 end
 
 @testset "fpPolyRingElem.adhoc_exact_division" begin
-   R = Native.GF(23)
-   S, x = polynomial_ring(R, "x")
+  R = Native.GF(23)
+  S, x = polynomial_ring(R, "x")
 
-   f = x^2 + 2x + 1
+  f = x^2 + 2x + 1
 
-   @test divexact(3*f, ZZRingElem(3)) == f
+  @test divexact(3*f, ZZRingElem(3)) == f
 
-   @test divexact(3*f, 3) == f
+  @test divexact(3*f, 3) == f
 
-   @test divexact(R(7)*f, R(7)) == f
+  @test divexact(R(7)*f, R(7)) == f
 end
 
 @testset "fpPolyRingElem.gcd" begin
@@ -583,37 +583,37 @@ end
 end
 
 @testset "fpPolyRingElem.square_root" begin
-   for R in [Native.GF(2), Native.GF(23)]
-      S, x = polynomial_ring(R, "x")
+  for R in [Native.GF(2), Native.GF(23)]
+    S, x = polynomial_ring(R, "x")
 
-      for iter in 1:1000
-         f = rand(S, -1:10)
-         while is_square(f)
-            f = rand(S, -1:10)
-         end
-
-         g0 = rand(S, -1:10)
-         g = g0^2
-
-         @test is_square(g)
-         @test sqrt(g)^2 == g
-
-         if !iszero(g)
-            @test !is_square(f*g)
-            @test_throws ErrorException sqrt(f*g)
-         end
-
-         f1, s1 = is_square_with_sqrt(g)
-
-         @test f1 && s1^2 == g
-
-         if !iszero(g)
-            f2, s2 = is_square_with_sqrt(f*g)
-
-            @test !f2
-         end
+    for iter in 1:1000
+      f = rand(S, -1:10)
+      while is_square(f)
+        f = rand(S, -1:10)
       end
-   end
+
+      g0 = rand(S, -1:10)
+      g = g0^2
+
+      @test is_square(g)
+      @test sqrt(g)^2 == g
+
+      if !iszero(g)
+        @test !is_square(f*g)
+        @test_throws ErrorException sqrt(f*g)
+      end
+
+      f1, s1 = is_square_with_sqrt(g)
+
+      @test f1 && s1^2 == g
+
+      if !iszero(g)
+        f2, s2 = is_square_with_sqrt(f*g)
+
+        @test !f2
+      end
+    end
+  end
 end
 
 @testset "fpPolyRingElem.factor" begin
@@ -673,12 +673,12 @@ end
   @test n == 10
   @test p == (x+2)*(x+3)
 
-   v, q = divides(f*g, f)
+  v, q = divides(f*g, f)
 
-   @test v
-   @test q == g
+  @test v
+  @test q == g
 
-   v, q = divides(f*g + 1, f)
+  v, q = divides(f*g + 1, f)
 
-   @test !v
+  @test !v
 end

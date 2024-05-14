@@ -19,9 +19,9 @@ dense_matrix_type(::Type{fpFieldElem}) = fpMatrix
 ###############################################################################
 
 function similar(::fpMatrix, R::fpField, r::Int, c::Int)
-   z = fpMatrix(r, c, R.n)
-   z.base_ring = R
-   return z
+  z = fpMatrix(r, c, R.n)
+  z.base_ring = R
+  return z
 end
 
 zero(m::fpMatrix, R::fpField, r::Int, c::Int) = similar(m, R, r, c)
@@ -62,7 +62,7 @@ function deepcopy_internal(a::fpMatrix, dict::IdDict)
     z.base_ring = a.base_ring
   end
   ccall((:nmod_mat_set, libflint), Nothing,
-          (Ref{fpMatrix}, Ref{fpMatrix}), z, a)
+        (Ref{fpMatrix}, Ref{fpMatrix}), z, a)
   return z
 end
 
@@ -74,10 +74,10 @@ function one(a::fpMatrixSpace)
 end
 
 @inline function is_zero_entry(A::fpMatrix, i::Int, j::Int)
-   @boundscheck Generic._checkbounds(A, i, j)
-   x = ccall((:nmod_mat_get_entry, libflint), UInt,
-             (Ref{fpMatrix}, Int, Int), A, i - 1, j - 1)
-   return x == 0
+  @boundscheck Generic._checkbounds(A, i, j)
+  x = ccall((:nmod_mat_get_entry, libflint), UInt,
+            (Ref{fpMatrix}, Int, Int), A, i - 1, j - 1)
+  return x == 0
 end
 
 ################################################################################
@@ -143,7 +143,7 @@ many rows as columns.
 """
 function strong_echelon_form(a::fpMatrix)
   (nrows(a) < ncols(a)) &&
-              error("Matrix must have at least as many rows as columns")
+  error("Matrix must have at least as many rows as columns")
   r, z = rref(a)
   j_new =  1
   for i in 1:r
@@ -167,7 +167,7 @@ many rows as columns.
 """
 function howell_form(a::fpMatrix)
   (nrows(a) < ncols(a)) &&
-              error("Matrix must have at least as many rows as columns")
+  error("Matrix must have at least as many rows as columns")
   return rref(a)[2]
 end
 
@@ -191,27 +191,27 @@ end
 
 function Base.view(x::fpMatrix, r1::Int, c1::Int, r2::Int, c2::Int)
 
-   _checkrange_or_empty(nrows(x), r1, r2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(nrows(x), r1, r2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   _checkrange_or_empty(ncols(x), c1, c2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(ncols(x), c1, c2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   if (r1 > r2)
-     r1 = 1
-     r2 = 0
-   end
-   if (c1 > c2)
-     c1 = 1
-     c2 = 0
-   end
+  if (r1 > r2)
+    r1 = 1
+    r2 = 0
+  end
+  if (c1 > c2)
+    c1 = 1
+    c2 = 0
+  end
 
   z = fpMatrix()
   z.base_ring = x.base_ring
   z.view_parent = x
   ccall((:nmod_mat_window_init, libflint), Nothing,
-          (Ref{fpMatrix}, Ref{fpMatrix}, Int, Int, Int, Int),
-          z, x, r1 - 1, c1 - 1, r2, c2)
+        (Ref{fpMatrix}, Ref{fpMatrix}, Int, Int, Int, Int),
+        z, x, r1 - 1, c1 - 1, r2, c2)
   finalizer(_gfp_mat_window_clear_fn, z)
   return z
 end
@@ -251,7 +251,7 @@ entries of the returned matrix are those of $a$ lifted to $\mathbb{Z}$.
 function lift(a::fpMatrix)
   z = ZZMatrix(nrows(a), ncols(a))
   ccall((:fmpz_mat_set_nmod_mat, libflint), Nothing,
-          (Ref{ZZMatrix}, Ref{fpMatrix}), z, a)
+        (Ref{ZZMatrix}, Ref{fpMatrix}), z, a)
   return z
 end
 
@@ -265,7 +265,7 @@ function charpoly(R::fpPolyRing, a::fpMatrix)
   m = deepcopy(a)
   p = R()
   ccall((:nmod_mat_charpoly, libflint), Nothing,
-          (Ref{fpPolyRingElem}, Ref{fpMatrix}), p, m)
+        (Ref{fpPolyRingElem}, Ref{fpMatrix}), p, m)
   return p
 end
 
@@ -278,7 +278,7 @@ end
 function minpoly(R::fpPolyRing, a::fpMatrix)
   p = R()
   ccall((:nmod_mat_minpoly, libflint), Nothing,
-          (Ref{fpPolyRingElem}, Ref{fpMatrix}), p, a)
+        (Ref{fpPolyRingElem}, Ref{fpMatrix}), p, a)
   return p
 end
 
@@ -304,7 +304,7 @@ function inv(a::fpMatrix)
   !is_square(a) && error("Matrix must be a square matrix")
   z = similar(a)
   r = ccall((:nmod_mat_inv, libflint), Int,
-          (Ref{fpMatrix}, Ref{fpMatrix}), z, a)
+            (Ref{fpMatrix}, Ref{fpMatrix}), z, a)
   !Bool(r) && error("Matrix not invertible")
   return z
 end
@@ -316,36 +316,36 @@ end
 ################################################################################
 
 function Solve._can_solve_internal_no_check(A::fpMatrix, b::fpMatrix, task::Symbol; side::Symbol = :left)
-   check_parent(A, b)
-   if side === :left
-      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
-      return fl, transpose(sol), transpose(K)
-   end
+  check_parent(A, b)
+  if side === :left
+    fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+    return fl, transpose(sol), transpose(K)
+  end
 
-   x = similar(A, ncols(A), ncols(b))
-   fl = ccall((:nmod_mat_can_solve, libflint), Cint,
+  x = similar(A, ncols(A), ncols(b))
+  fl = ccall((:nmod_mat_can_solve, libflint), Cint,
              (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}),
-              x, A, b)
-   if task === :only_check || task === :with_solution
-      return Bool(fl), x, zero(A, 0, 0)
-   end
-   return Bool(fl), x, kernel(A, side = :right)
+             x, A, b)
+  if task === :only_check || task === :with_solution
+    return Bool(fl), x, zero(A, 0, 0)
+  end
+  return Bool(fl), x, kernel(A, side = :right)
 end
 
 # Direct interface to the C functions to be able to write 'generic' code for
 # different matrix types
 function _solve_tril_right_flint!(x::fpMatrix, L::fpMatrix, B::fpMatrix, unit::Bool)
-   ccall((:nmod_mat_solve_tril, libflint), Nothing,
-         (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}, Cint),
-         x, L, B, Cint(unit))
-   return nothing
+  ccall((:nmod_mat_solve_tril, libflint), Nothing,
+        (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}, Cint),
+        x, L, B, Cint(unit))
+  return nothing
 end
 
 function _solve_triu_right_flint!(x::fpMatrix, U::fpMatrix, B::fpMatrix, unit::Bool)
-   ccall((:nmod_mat_solve_triu, libflint), Nothing,
-         (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}, Cint),
-         x, U, B, Cint(unit))
-   return nothing
+  ccall((:nmod_mat_solve_triu, libflint), Nothing,
+        (Ref{fpMatrix}, Ref{fpMatrix}, Ref{fpMatrix}, Cint),
+        x, U, B, Cint(unit))
+  return nothing
 end
 
 ################################################################################
@@ -432,16 +432,16 @@ end
 ###############################################################################
 
 function matrix(R::fpField, arr::AbstractMatrix{<: Union{fpFieldElem, ZZRingElem, Integer}})
-   z = fpMatrix(size(arr, 1), size(arr, 2), R.n, arr)
-   z.base_ring = R
-   return z
+  z = fpMatrix(size(arr, 1), size(arr, 2), R.n, arr)
+  z.base_ring = R
+  return z
 end
 
 function matrix(R::fpField, r::Int, c::Int, arr::AbstractVector{<: Union{fpFieldElem, ZZRingElem, Integer}})
-   _check_dim(r, c, arr)
-   z = fpMatrix(r, c, R.n, arr)
-   z.base_ring = R
-   return z
+  _check_dim(r, c, arr)
+  z = fpMatrix(r, c, R.n, arr)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -451,12 +451,12 @@ end
 ###############################################################################
 
 function zero_matrix(R::fpField, r::Int, c::Int)
-   if r < 0 || c < 0
-     error("dimensions must not be negative")
-   end
-   z = fpMatrix(r, c, R.n)
-   z.base_ring = R
-   return z
+  if r < 0 || c < 0
+    error("dimensions must not be negative")
+  end
+  z = fpMatrix(r, c, R.n)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -466,12 +466,12 @@ end
 ###############################################################################
 
 function identity_matrix(R::fpField, n::Int)
-   z = zero_matrix(R, n, n)
-   for i in 1:n
-      z[i, i] = one(R)
-   end
-   z.base_ring = R
-   return z
+  z = zero_matrix(R, n, n)
+  for i in 1:n
+    z[i, i] = one(R)
+  end
+  z.base_ring = R
+  return z
 end
 
 ################################################################################
@@ -494,43 +494,43 @@ end
 ################################################################################
 
 function lu!(P::Generic.Perm, x::fpMatrix)
-   P.d .-= 1
+  P.d .-= 1
 
-   rank = ccall((:nmod_mat_lu, libflint), Int,
-                (Ptr{Int}, Ref{fpMatrix}, Cint),
-                P.d, x, Cint(false))
+  rank = ccall((:nmod_mat_lu, libflint), Int,
+               (Ptr{Int}, Ref{fpMatrix}, Cint),
+               P.d, x, Cint(false))
 
-   P.d .+= 1
+  P.d .+= 1
 
-   # flint does x == PLU instead of Px == LU (docs are wrong)
-   inv!(P)
+  # flint does x == PLU instead of Px == LU (docs are wrong)
+  inv!(P)
 
-   return rank
+  return rank
 end
 
 function lu(x::fpMatrix, P = SymmetricGroup(nrows(x)))
-   m = nrows(x)
-   n = ncols(x)
-   P.n != m && error("Permutation does not match matrix")
-   p = one(P)
-   R = base_ring(x)
-   U = deepcopy(x)
+  m = nrows(x)
+  n = ncols(x)
+  P.n != m && error("Permutation does not match matrix")
+  p = one(P)
+  R = base_ring(x)
+  U = deepcopy(x)
 
-   L = similar(x, m, m)
+  L = similar(x, m, m)
 
-   rank = lu!(p, U)
+  rank = lu!(p, U)
 
-   for i = 1:m
-      for j = 1:n
-         if i > j
-            L[i, j] = U[i, j]
-            U[i, j] = R()
-         elseif i == j
-            L[i, j] = one(R)
-         elseif j <= m
-            L[i, j] = R()
-         end
+  for i = 1:m
+    for j = 1:n
+      if i > j
+        L[i, j] = U[i, j]
+        U[i, j] = R()
+      elseif i == j
+        L[i, j] = one(R)
+      elseif j <= m
+        L[i, j] = R()
       end
-   end
-   return rank, p, L, U
+    end
+  end
+  return rank, p, L, U
 end

@@ -67,13 +67,13 @@ function deepcopy_internal(a::ComplexFieldElem, dict::IdDict)
 end
 
 function canonical_unit(x::ComplexFieldElem)
-   return x
+  return x
 end
 
 # TODO: implement hash
 
 function check_parent(a::ComplexFieldElem, b::ComplexFieldElem)
-   return true
+  return true
 end
 
 characteristic(::ComplexField) = 0
@@ -85,16 +85,16 @@ characteristic(::ComplexField) = 0
 ################################################################################
 
 function convert(::Type{ComplexF64}, x::ComplexFieldElem)
-    GC.@preserve x begin
-      re = ccall((:acb_real_ptr, libflint), Ptr{arb_struct}, (Ref{ComplexFieldElem}, ), x)
-      im = ccall((:acb_imag_ptr, libflint), Ptr{arb_struct}, (Ref{ComplexFieldElem}, ), x)
-      t = ccall((:arb_mid_ptr, libflint), Ptr{arf_struct}, (Ptr{RealFieldElem}, ), re)
-      u = ccall((:arb_mid_ptr, libflint), Ptr{arf_struct}, (Ptr{RealFieldElem}, ), im)
-      # 4 == round to nearest
-      v = ccall((:arf_get_d, libflint), Float64, (Ptr{arf_struct}, Int), t, 4)
-      w = ccall((:arf_get_d, libflint), Float64, (Ptr{arf_struct}, Int), u, 4)
-    end
-    return complex(v, w)
+  GC.@preserve x begin
+    re = ccall((:acb_real_ptr, libflint), Ptr{arb_struct}, (Ref{ComplexFieldElem}, ), x)
+    im = ccall((:acb_imag_ptr, libflint), Ptr{arb_struct}, (Ref{ComplexFieldElem}, ), x)
+    t = ccall((:arb_mid_ptr, libflint), Ptr{arf_struct}, (Ptr{RealFieldElem}, ), re)
+    u = ccall((:arb_mid_ptr, libflint), Ptr{arf_struct}, (Ptr{RealFieldElem}, ), im)
+    # 4 == round to nearest
+    v = ccall((:arf_get_d, libflint), Float64, (Ptr{arf_struct}, Int), t, 4)
+    w = ccall((:arf_get_d, libflint), Float64, (Ptr{arf_struct}, Int), u, 4)
+  end
+  return complex(v, w)
 end
 
 ################################################################################
@@ -122,32 +122,32 @@ end
 ################################################################################
 
 function expressify(z::ComplexFieldElem; context = nothing)
-   x = real(z)
-   y = imag(z)
-   if iszero(y) # is exact zero!
-      return expressify(x, context = context)
-   else
-      y = Expr(:call, :*, expressify(y, context = context), :im)
-      if iszero(x)
-         return y
-      else
-         x = expressify(x, context = context)
-         return Expr(:call, :+, x, y)
-      end
-   end
+  x = real(z)
+  y = imag(z)
+  if iszero(y) # is exact zero!
+    return expressify(x, context = context)
+  else
+    y = Expr(:call, :*, expressify(y, context = context), :im)
+    if iszero(x)
+      return y
+    else
+      x = expressify(x, context = context)
+      return Expr(:call, :+, x, y)
+    end
+  end
 end
 
 function Base.show(io::IO, ::MIME"text/plain", z::ComplexFieldElem)
-   print(io, AbstractAlgebra.obj_to_string(z, context = io))
+  print(io, AbstractAlgebra.obj_to_string(z, context = io))
 end
 
 function Base.show(io::IO, z::ComplexFieldElem)
-   print(io, AbstractAlgebra.obj_to_string(z, context = io))
+  print(io, AbstractAlgebra.obj_to_string(z, context = io))
 end
 
 function show(io::IO, x::ComplexField)
   # deliberately no @show_name or @show_special here as this is a singleton type
-   if is_terse(io)
+  if is_terse(io)
     print(io, LowercaseOff(), "CC")
   else
     print(io, "Complex field")
@@ -179,7 +179,7 @@ for (s,f) in ((:+,"acb_add"), (:*,"acb_mul"), (://, "acb_div"), (:-,"acb_sub"), 
     function ($s)(x::ComplexFieldElem, y::ComplexFieldElem, prec::Int = precision(Balls))
       z = ComplexFieldElem()
       ccall(($f, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
-                           z, x, y, prec)
+            z, x, y, prec)
       return z
     end
   end
@@ -191,31 +191,31 @@ for (f,s) in ((:+, "add"), (:-, "sub"), (:*, "mul"), (://, "div"), (:^, "pow"))
     function ($f)(x::ComplexFieldElem, y::UInt, prec::Int = precision(Balls))
       z = ComplexFieldElem()
       ccall(($("acb_"*s*"_ui"), libflint), Nothing,
-                  (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int),
-                  z, x, y, prec)
+            (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int),
+            z, x, y, prec)
       return z
     end
 
     function ($f)(x::ComplexFieldElem, y::Int, prec::Int = precision(Balls))
       z = ComplexFieldElem()
       ccall(($("acb_"*s*"_si"), libflint), Nothing,
-      (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, y, prec)
+            (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, y, prec)
       return z
     end
 
     function ($f)(x::ComplexFieldElem, y::ZZRingElem, prec::Int = precision(Balls))
       z = ComplexFieldElem()
       ccall(($("acb_"*s*"_fmpz"), libflint), Nothing,
-                  (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ZZRingElem}, Int),
-                  z, x, y, prec)
+            (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ZZRingElem}, Int),
+            z, x, y, prec)
       return z
     end
 
     function ($f)(x::ComplexFieldElem, y::RealFieldElem, prec::Int = precision(Balls))
       z = ComplexFieldElem()
       ccall(($("acb_"*s*"_arb"), libflint), Nothing,
-                  (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{RealFieldElem}, Int),
-                  z, x, y, prec)
+            (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{RealFieldElem}, Int),
+            z, x, y, prec)
       return z
     end
   end
@@ -452,7 +452,7 @@ contains(x::ComplexFieldElem, y::Rational{T}) where {T <: Integer} = contains(x,
 Returns `true` if the box $x$ contains zero, otherwise return `false`.
 """
 function contains_zero(x::ComplexFieldElem)
-   return Bool(ccall((:acb_contains_zero, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_contains_zero, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 ################################################################################
@@ -462,7 +462,7 @@ end
 ################################################################################
 
 function is_unit(x::ComplexFieldElem)
-   !iszero(x)
+  !iszero(x)
 end
 
 @doc raw"""
@@ -471,7 +471,7 @@ end
 Return `true` if $x$ is certainly zero, otherwise return `false`.
 """
 function iszero(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_zero, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_zero, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 @doc raw"""
@@ -480,7 +480,7 @@ end
 Return `true` if $x$ is certainly one, otherwise return `false`.
 """
 function isone(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_one, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_one, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 @doc raw"""
@@ -490,7 +490,7 @@ Return `true` if $x$ is finite, i.e. its real and imaginary parts have finite
 midpoint and radius, otherwise return `false`.
 """
 function isfinite(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_finite, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_finite, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 @doc raw"""
@@ -500,7 +500,7 @@ Return `true` if $x$ is exact, i.e. has its real and imaginary parts have
 zero radius, otherwise return `false`.
 """
 function is_exact(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_exact, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_exact, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 @doc raw"""
@@ -509,11 +509,11 @@ end
 Return `true` if $x$ is an exact integer, otherwise return `false`.
 """
 function isinteger(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_int, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_int, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 function isreal(x::ComplexFieldElem)
-   return Bool(ccall((:acb_is_real, libflint), Cint, (Ref{ComplexFieldElem},), x))
+  return Bool(ccall((:acb_is_real, libflint), Cint, (Ref{ComplexFieldElem},), x))
 end
 
 is_negative(x::ComplexFieldElem) = isreal(x) && is_negative(real(x))
@@ -527,7 +527,7 @@ is_negative(x::ComplexFieldElem) = isreal(x) && is_negative(real(x))
 function abs(x::ComplexFieldElem, prec::Int = precision(Balls))
   z = RealFieldElem()
   ccall((:acb_abs, libflint), Nothing,
-                (Ref{RealFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+        (Ref{RealFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
   return z
 end
 
@@ -552,14 +552,14 @@ end
 function ldexp(x::ComplexFieldElem, y::Int)
   z = ComplexFieldElem()
   ccall((:acb_mul_2exp_si, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, y)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, y)
   return z
 end
 
 function ldexp(x::ComplexFieldElem, y::ZZRingElem)
   z = ComplexFieldElem()
   ccall((:acb_mul_2exp_fmpz, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ZZRingElem}), z, x, y)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ZZRingElem}), z, x, y)
   return z
 end
 
@@ -592,7 +592,7 @@ integer.
 function unique_integer(x::ComplexFieldElem)
   z = ZZRingElem()
   unique = ccall((:acb_get_unique_fmpz, libflint), Int,
-    (Ref{ZZRingElem}, Ref{ComplexFieldElem}), z, x)
+                 (Ref{ZZRingElem}, Ref{ComplexFieldElem}), z, x)
   return (unique != 0, z)
 end
 
@@ -605,7 +605,7 @@ end
 function angle(x::ComplexFieldElem, prec::Int = precision(Balls))
   z = RealFieldElem()
   ccall((:acb_arg, libflint), Nothing,
-                (Ref{RealFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+        (Ref{RealFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
   return z
 end
 
@@ -635,9 +635,9 @@ end
 # complex - complex functions
 
 function Base.sqrt(x::ComplexFieldElem, prec::Int = precision(Balls); check::Bool=true)
-   z = ComplexFieldElem()
-   ccall((:acb_sqrt, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_sqrt, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -646,9 +646,9 @@ end
 Return the reciprocal of the square root of $x$, i.e. $1/\sqrt{x}$.
 """
 function rsqrt(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_rsqrt, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_rsqrt, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -657,39 +657,39 @@ end
 Return the principal $n$-th root of $x$.
 """
 function root(x::ComplexFieldElem, n::Int, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   n == 0 && error("cannot take 0-th root")
-   if n < 0
-     n = -n
-     x = inv(x)
-   end
-   ccall((:acb_root_ui, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, x, UInt(n), prec)
-   return z
+  z = ComplexFieldElem()
+  n == 0 && error("cannot take 0-th root")
+  if n < 0
+    n = -n
+    x = inv(x)
+  end
+  ccall((:acb_root_ui, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, x, UInt(n), prec)
+  return z
 end
 
 
 function log(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_log, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_log, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function log1p(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_log1p, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_log1p, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function Base.exp(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_exp, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_exp, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function Base.expm1(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_expm1, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_expm1, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -698,9 +698,9 @@ end
 Return the exponential of $\pi i x$.
 """
 function cispi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_exp_pi_i, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_exp_pi_i, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -709,88 +709,88 @@ end
 Return $\exp(2\pi i/k)$.
 """
 function root_of_unity(C::ComplexField, k::Int, prec::Int = precision(Balls))
-   k <= 0 && throw(ArgumentError("Order must be positive ($k)"))
-   z = C()
-   ccall((:acb_unit_root, libflint), Nothing, (Ref{ComplexFieldElem}, UInt, Int), z, k, prec)
-   return z
+  k <= 0 && throw(ArgumentError("Order must be positive ($k)"))
+  z = C()
+  ccall((:acb_unit_root, libflint), Nothing, (Ref{ComplexFieldElem}, UInt, Int), z, k, prec)
+  return z
 end
 
 function sin(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_sin, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_sin, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function cos(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_cos, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_cos, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function tan(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_tan, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_tan, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function cot(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_cot, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_cot, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function sinpi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_sin_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_sin_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function cospi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_cos_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_cos_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function tanpi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_tan_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_tan_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function cotpi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_cot_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_cot_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function sinh(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_sinh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_sinh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function cosh(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_cosh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_cosh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function tanh(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_tanh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_tanh, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function coth(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_coth, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_coth, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function atan(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_atan, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_atan, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -799,9 +799,9 @@ end
 Return $\log\sin(\pi x)$, constructed without branch cuts off the real line.
 """
 function log_sinpi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_log_sin_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_log_sin_pi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -810,9 +810,9 @@ end
 Return the Gamma function evaluated at $x$.
 """
 function gamma(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_gamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_gamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -821,9 +821,9 @@ end
 Return the reciprocal of the Gamma function evaluated at $x$.
 """
 function rgamma(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_rgamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_rgamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -832,9 +832,9 @@ end
 Return the logarithm of the Gamma function evaluated at $x$.
 """
 function lgamma(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_lgamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_lgamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -844,9 +844,9 @@ Return the  logarithmic derivative of the gamma function evaluated at $x$,
 i.e. $\psi(x)$.
 """
 function digamma(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_digamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_digamma, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -855,9 +855,9 @@ end
 Return the Riemann zeta function evaluated at $x$.
 """
 function zeta(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_zeta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_zeta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -866,9 +866,9 @@ end
 Return the Barnes $G$-function, evaluated at $x$.
 """
 function barnes_g(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_barnes_g, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_barnes_g, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -877,9 +877,9 @@ end
 Return the logarithm of the Barnes $G$-function, evaluated at $x$.
 """
 function log_barnes_g(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_log_barnes_g, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_log_barnes_g, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -888,9 +888,9 @@ end
 Return the arithmetic-geometric mean of $1$ and $x$.
 """
 function agm(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_agm1, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_agm1, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -899,9 +899,9 @@ end
 Return the error function evaluated at $x$.
 """
 function erf(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_erf, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_erf, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -910,9 +910,9 @@ end
 Return the imaginary error function evaluated at $x$.
 """
 function erfi(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_erfi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_erfi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -921,9 +921,9 @@ end
 Return the complementary error function evaluated at $x$.
 """
 function erfc(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_erfc, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_erfc, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -932,9 +932,9 @@ end
 Return the exponential integral evaluated at $x$.
 """
 function exp_integral_ei(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_ei, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_ei, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -943,9 +943,9 @@ end
 Return the sine integral evaluated at $x$.
 """
 function sin_integral(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_si, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_si, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -954,9 +954,9 @@ end
 Return the exponential cosine integral evaluated at $x$.
 """
 function cos_integral(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_ci, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_ci, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -965,9 +965,9 @@ end
 Return the hyperbolic sine integral evaluated at $x$.
 """
 function sinh_integral(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_shi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_shi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -976,9 +976,9 @@ end
 Return the hyperbolic cosine integral evaluated at $x$.
 """
 function cosh_integral(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_hypgeom_chi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_hypgeom_chi, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -987,9 +987,9 @@ end
 Return the Dedekind eta function $\eta(\tau)$ at $\tau = x$.
 """
 function dedekind_eta(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_eta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_eta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -1000,9 +1000,9 @@ $\mathfrak{f}(\tau) = \frac{\eta^2(\tau)}{\eta(\tau/2)\eta(2\tau)},$
 at $x$ in the complex upper half plane.
 """
 function modular_weber_f(x::ComplexFieldElem)
-   x_on_2 = divexact(x, 2)
-   x_times_2 = 2*x
-   return divexact(dedekind_eta(x)^2, dedekind_eta(x_on_2)*dedekind_eta(x_times_2))
+  x_on_2 = divexact(x, 2)
+  x_times_2 = 2*x
+  return divexact(dedekind_eta(x)^2, dedekind_eta(x_on_2)*dedekind_eta(x_times_2))
 end
 
 @doc raw"""
@@ -1013,8 +1013,8 @@ $\mathfrak{f}_1(\tau) = \frac{\eta(\tau/2)}{\eta(\tau)},$
 at $x$ in the complex upper half plane.
 """
 function modular_weber_f1(x::ComplexFieldElem)
-   x_on_2 = divexact(x, 2)
-   return divexact(dedekind_eta(x_on_2), dedekind_eta(x))
+  x_on_2 = divexact(x, 2)
+  return divexact(dedekind_eta(x_on_2), dedekind_eta(x))
 end
 
 @doc raw"""
@@ -1025,8 +1025,8 @@ $\mathfrak{f}_2(\tau) = \frac{\sqrt{2}\eta(2\tau)}{\eta(\tau)}$
 at $x$ in the complex upper half plane.
 """
 function modular_weber_f2(x::ComplexFieldElem)
-   x_times_2 = x*2
-   return divexact(dedekind_eta(x_times_2), dedekind_eta(x))*sqrt(parent(x)(2))
+  x_times_2 = x*2
+  return divexact(dedekind_eta(x_times_2), dedekind_eta(x))*sqrt(parent(x)(2))
 end
 
 @doc raw"""
@@ -1035,9 +1035,9 @@ end
 Return the $j$-invariant $j(\tau)$ at $\tau = x$.
 """
 function j_invariant(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_j, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_j, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -1046,9 +1046,9 @@ end
 Return the modular lambda function $\lambda(\tau)$ at $\tau = x$.
 """
 function modular_lambda(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_lambda, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_lambda, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -1057,9 +1057,9 @@ end
 Return the modular delta function $\Delta(\tau)$ at $\tau = x$.
 """
 function modular_delta(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_delta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_delta, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -1092,12 +1092,12 @@ Return in the ring $R$ the Hilbert class polynomial of discriminant $D$,
 which is only defined for $D < 0$ and $D \equiv 0, 1 \pmod 4$.
 """
 function hilbert_class_polynomial(D::Int, R::ZZPolyRing)
-   D < 0 && mod(D, 4) < 2 || throw(ArgumentError("$D is not a negative discriminant"))
-   z = R()
-   ccall((:acb_modular_hilbert_class_poly, Nemo.libflint), Nothing,
-         (Ref{ZZPolyRingElem}, Int),
-         z, D)
-   return z
+  D < 0 && mod(D, 4) < 2 || throw(ArgumentError("$D is not a negative discriminant"))
+  z = R()
+  ccall((:acb_modular_hilbert_class_poly, Nemo.libflint), Nothing,
+        (Ref{ZZPolyRingElem}, Int),
+        z, D)
+  return z
 end
 
 @doc raw"""
@@ -1106,9 +1106,9 @@ end
 Return the complete elliptic integral $K(x)$.
 """
 function elliptic_k(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_elliptic_k, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_elliptic_k, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 @doc raw"""
@@ -1117,16 +1117,16 @@ end
 Return the complete elliptic integral $E(x)$.
 """
 function elliptic_e(x::ComplexFieldElem, prec::Int = precision(Balls))
-   z = ComplexFieldElem()
-   ccall((:acb_modular_elliptic_e, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
-   return z
+  z = ComplexFieldElem()
+  ccall((:acb_modular_elliptic_e, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, x, prec)
+  return z
 end
 
 function sincos(x::ComplexFieldElem, prec::Int = precision(Balls))
   s = ComplexFieldElem()
   c = ComplexFieldElem()
   ccall((:acb_sin_cos, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
   return (s, c)
 end
 
@@ -1134,7 +1134,7 @@ function sincospi(x::ComplexFieldElem, prec::Int = precision(Balls))
   s = ComplexFieldElem()
   c = ComplexFieldElem()
   ccall((:acb_sin_cos_pi, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
   return (s, c)
 end
 
@@ -1147,7 +1147,7 @@ function sinhcosh(x::ComplexFieldElem, prec::Int = precision(Balls))
   s = ComplexFieldElem()
   c = ComplexFieldElem()
   ccall((:acb_sinh_cosh, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), s, c, x, prec)
   return (s, c)
 end
 
@@ -1159,7 +1159,7 @@ Return the Hurwitz zeta function $\zeta(s,a)$.
 function zeta(s::ComplexFieldElem, a::ComplexFieldElem, prec::Int = precision(Balls))
   z = parent(s)()
   ccall((:acb_hurwitz_zeta, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
   return z
 end
 
@@ -1171,14 +1171,14 @@ Return the generalised polygamma function $\psi(s,z)$.
 function polygamma(s::ComplexFieldElem, a::ComplexFieldElem, prec::Int = precision(Balls))
   z = parent(s)()
   ccall((:acb_polygamma, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
   return z
 end
 
 function rising_factorial(x::ComplexFieldElem, n::UInt, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_rising_ui, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, x, n, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, x, n, prec)
   return z
 end
 
@@ -1196,7 +1196,7 @@ function rising_factorial2(x::ComplexFieldElem, n::UInt, prec::Int = precision(B
   z = ComplexFieldElem()
   w = ComplexFieldElem()
   ccall((:acb_rising2_ui, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, w, x, n, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, UInt, Int), z, w, x, n, prec)
   return (z, w)
 end
 
@@ -1214,14 +1214,14 @@ end
 function polylog(s::ComplexFieldElem, a::ComplexFieldElem, prec::Int = precision(Balls))
   z = parent(s)()
   ccall((:acb_polylog, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, a, prec)
   return z
 end
 
 function polylog(s::Int, a::ComplexFieldElem, prec::Int = precision(Balls))
   z = parent(a)()
   ccall((:acb_polylog_si, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Int, Ref{ComplexFieldElem}, Int), z, s, a, prec)
+        (Ref{ComplexFieldElem}, Int, Ref{ComplexFieldElem}, Int), z, s, a, prec)
   return z
 end
 
@@ -1239,7 +1239,7 @@ Return the logarithmic integral, evaluated at $x$.
 function log_integral(x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_li, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, 0, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, 0, prec)
   return z
 end
 
@@ -1251,7 +1251,7 @@ Return the offset logarithmic integral, evaluated at $x$.
 function log_integral_offset(x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_li, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, 1, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, x, 1, prec)
   return z
 end
 
@@ -1263,7 +1263,7 @@ Return the generalised exponential integral $E_s(x)$.
 function exp_integral_e(s::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = parent(s)()
   ccall((:acb_hypgeom_expint, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, s, x, prec)
   return z
 end
 
@@ -1325,7 +1325,7 @@ Return the Bessel function $J_{\nu}(x)$.
 function bessel_j(nu::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_bessel_j, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
   return z
 end
 
@@ -1337,7 +1337,7 @@ Return the Bessel function $Y_{\nu}(x)$.
 function bessel_y(nu::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_bessel_y, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
   return z
 end
 
@@ -1349,7 +1349,7 @@ Return the Bessel function $I_{\nu}(x)$.
 function bessel_i(nu::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_bessel_i, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
   return z
 end
 
@@ -1361,7 +1361,7 @@ Return the Bessel function $K_{\nu}(x)$.
 function bessel_k(nu::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_bessel_k, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, nu, x, prec)
   return z
 end
 
@@ -1373,8 +1373,8 @@ Return the Airy function $\operatorname{Ai}(x)$.
 function airy_ai(x::ComplexFieldElem, prec::Int = precision(Balls))
   ai = ComplexFieldElem()
   ccall((:acb_hypgeom_airy, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
-              ai, C_NULL, C_NULL, C_NULL, x, prec)
+        (Ref{ComplexFieldElem}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
+        ai, C_NULL, C_NULL, C_NULL, x, prec)
   return ai
 end
 
@@ -1386,8 +1386,8 @@ Return the Airy function $\operatorname{Bi}(x)$.
 function airy_bi(x::ComplexFieldElem, prec::Int = precision(Balls))
   bi = ComplexFieldElem()
   ccall((:acb_hypgeom_airy, libflint), Nothing,
-              (Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
-              C_NULL, C_NULL, bi, C_NULL, x, prec)
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
+        C_NULL, C_NULL, bi, C_NULL, x, prec)
   return bi
 end
 
@@ -1399,8 +1399,8 @@ Return the derivative of the Airy function $\operatorname{Ai}^\prime(x)$.
 function airy_ai_prime(x::ComplexFieldElem, prec::Int = precision(Balls))
   ai_prime = ComplexFieldElem()
   ccall((:acb_hypgeom_airy, libflint), Nothing,
-              (Ptr{Cvoid}, Ref{ComplexFieldElem}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
-              C_NULL, ai_prime, C_NULL, C_NULL, x, prec)
+        (Ptr{Cvoid}, Ref{ComplexFieldElem}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Int),
+        C_NULL, ai_prime, C_NULL, C_NULL, x, prec)
   return ai_prime
 end
 
@@ -1412,8 +1412,8 @@ Return the derivative of the Airy function $\operatorname{Bi}^\prime(x)$.
 function airy_bi_prime(x::ComplexFieldElem, prec::Int = precision(Balls))
   bi_prime = ComplexFieldElem()
   ccall((:acb_hypgeom_airy, libflint), Nothing,
-              (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
-              C_NULL, C_NULL, C_NULL, bi_prime, x, prec)
+        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
+        C_NULL, C_NULL, C_NULL, bi_prime, x, prec)
   return bi_prime
 end
 
@@ -1425,7 +1425,7 @@ Return the confluent hypergeometric function ${}_1F_1(a,b,x)$.
 function hypergeometric_1f1(a::ComplexFieldElem, b::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_m, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, x, 0, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, x, 0, prec)
   return z
 end
 
@@ -1438,7 +1438,7 @@ ${}_1F_1(a,b,x) / \Gamma(b)$.
 function hypergeometric_1f1_regularized(a::ComplexFieldElem, b::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_m, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, x, 1, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, x, 1, prec)
   return z
 end
 
@@ -1450,7 +1450,7 @@ Return the confluent hypergeometric function $U(a,b,x)$.
 function hypergeometric_u(a::ComplexFieldElem, b::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls))
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_u, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, a, b, x, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), z, a, b, x, prec)
   return z
 end
 
@@ -1462,7 +1462,7 @@ Return the Gauss hypergeometric function ${}_2F_1(a,b,c,x)$.
 function hypergeometric_2f1(a::ComplexFieldElem, b::ComplexFieldElem, c::ComplexFieldElem, x::ComplexFieldElem, prec::Int = precision(Balls); flags=0)
   z = ComplexFieldElem()
   ccall((:acb_hypgeom_2f1, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, c, x, flags, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int, Int), z, a, b, c, x, flags, prec)
   return z
 end
 
@@ -1478,8 +1478,8 @@ function jacobi_theta(z::ComplexFieldElem, tau::ComplexFieldElem, prec::Int = pr
   t3 = ComplexFieldElem()
   t4 = ComplexFieldElem()
   ccall((:acb_modular_theta, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
-                t1, t2, t3, t4, z, tau, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
+        t1, t2, t3, t4, z, tau, prec)
   return (t1, t2, t3, t4)
 end
 
@@ -1491,7 +1491,7 @@ Return the Weierstrass elliptic function $\wp(z,\tau)$.
 function weierstrass_p(z::ComplexFieldElem, tau::ComplexFieldElem, prec::Int = precision(Balls))
   r = parent(z)()
   ccall((:acb_elliptic_p, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), r, z, tau, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), r, z, tau, prec)
   return r
 end
 
@@ -1503,7 +1503,7 @@ Return the derivative of the Weierstrass elliptic function $\frac{\partial}{\par
 function weierstrass_p_prime(z::ComplexFieldElem, tau::ComplexFieldElem, prec::Int = precision(Balls))
   r = parent(z)()
   ccall((:acb_elliptic_p_prime, libflint), Nothing,
-              (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), r, z, tau, prec)
+        (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int), r, z, tau, prec)
   return r
 end
 
@@ -1565,15 +1565,15 @@ function lindep(A::Matrix{ComplexFieldElem}, bits::Int)
   V = [ldexp(s, bits) for s in A]
   M = zero_matrix(ZZ, n, n + 2*m)
   for i = 1:n
-     M[i, i] = ZZ(1)
+    M[i, i] = ZZ(1)
   end
   for j = 1:m
-     for i = 1:n
-        flag, M[i, n + 2*j - 1] = unique_integer(floor(real(V[j, i]) + 0.5))
-        !flag && error("Insufficient precision in lindep")
-        flag, M[i, n + 2*j] = unique_integer(floor(imag(V[j, i]) + 0.5))
-        !flag && error("Insufficient precision in lindep")
-     end
+    for i = 1:n
+      flag, M[i, n + 2*j - 1] = unique_integer(floor(real(V[j, i]) + 0.5))
+      !flag && error("Insufficient precision in lindep")
+      flag, M[i, n + 2*j] = unique_integer(floor(imag(V[j, i]) + 0.5))
+      !flag && error("Insufficient precision in lindep")
+    end
   end
   L = lll(M)
   return [L[1, i] for i = 1:n]
@@ -1586,19 +1586,19 @@ end
 ################################################################################
 
 function zero!(z::ComplexFieldElem)
-   ccall((:acb_zero, libflint), Nothing, (Ref{ComplexFieldElem},), z)
-   return z
+  ccall((:acb_zero, libflint), Nothing, (Ref{ComplexFieldElem},), z)
+  return z
 end
 
 function add!(z::ComplexFieldElem, x::ComplexFieldElem, y::ComplexFieldElem, prec::Int = precision(Balls))
   ccall((:acb_add, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
-         z, x, y, prec)
+        z, x, y, prec)
   return z
 end
 
 function addeq!(z::ComplexFieldElem, y::ComplexFieldElem, prec::Int = precision(Balls))
   ccall((:acb_add, libflint), Nothing, (Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Ref{ComplexFieldElem}, Int),
-         z, z, y, prec)
+        z, z, y, prec)
   return z
 end
 
@@ -1637,7 +1637,7 @@ for (typeofx, passtoc) in ((ComplexFieldElem, Ref{ComplexFieldElem}), (Ptr{Compl
       function _acb_set(x::($typeofx), y::($t), p::Int)
         _acb_set(x, y)
         ccall((:acb_set_round, libflint), Nothing,
-                    (($passtoc), ($passtoc), Int), x, x, p)
+              (($passtoc), ($passtoc), Int), x, x, p)
       end
     end
   end
@@ -1649,12 +1649,12 @@ for (typeofx, passtoc) in ((ComplexFieldElem, Ref{ComplexFieldElem}), (Ptr{Compl
 
     function _acb_set(x::($typeofx), y::ZZRingElem, p::Int)
       ccall((:acb_set_round_fmpz, libflint), Nothing,
-                  (($passtoc), Ref{ZZRingElem}, Int), x, y, p)
+            (($passtoc), Ref{ZZRingElem}, Int), x, y, p)
     end
 
     function _acb_set(x::($typeofx), y::QQFieldElem, p::Int)
       ccall((:acb_set_fmpq, libflint), Nothing,
-                  (($passtoc), Ref{QQFieldElem}, Int), x, y, p)
+            (($passtoc), Ref{QQFieldElem}, Int), x, y, p)
     end
 
     function _acb_set(x::($typeofx), y::RealFieldElem)
@@ -1664,7 +1664,7 @@ for (typeofx, passtoc) in ((ComplexFieldElem, Ref{ComplexFieldElem}), (Ptr{Compl
     function _acb_set(x::($typeofx), y::RealFieldElem, p::Int)
       _acb_set(x, y)
       ccall((:acb_set_round, libflint), Nothing,
-                  (($passtoc), ($passtoc), Int), x, x, p)
+            (($passtoc), ($passtoc), Int), x, x, p)
     end
 
     function _acb_set(x::($typeofx), y::ComplexFieldElem)
@@ -1673,7 +1673,7 @@ for (typeofx, passtoc) in ((ComplexFieldElem, Ref{ComplexFieldElem}), (Ptr{Compl
 
     function _acb_set(x::($typeofx), y::ComplexFieldElem, p::Int)
       ccall((:acb_set_round, libflint), Nothing,
-                  (($passtoc), Ref{ComplexFieldElem}, Int), x, y, p)
+            (($passtoc), Ref{ComplexFieldElem}, Int), x, y, p)
     end
 
     function _acb_set(x::($typeofx), y::AbstractString, p::Int)
@@ -1699,20 +1699,20 @@ for (typeofx, passtoc) in ((ComplexFieldElem, Ref{ComplexFieldElem}), (Ptr{Compl
 
     function _acb_set(x::($typeofx), y::Int, z::Int, p::Int)
       ccall((:acb_set_si_si, libflint), Nothing,
-                  (($passtoc), Int, Int), x, y, z)
+            (($passtoc), Int, Int), x, y, z)
       ccall((:acb_set_round, libflint), Nothing,
-                  (($passtoc), ($passtoc), Int), x, x, p)
+            (($passtoc), ($passtoc), Int), x, x, p)
     end
 
     function _acb_set(x::($typeofx), y::RealFieldElem, z::RealFieldElem)
       ccall((:acb_set_arb_arb, libflint), Nothing,
-                  (($passtoc), Ref{RealFieldElem}, Ref{RealFieldElem}), x, y, z)
+            (($passtoc), Ref{RealFieldElem}, Ref{RealFieldElem}), x, y, z)
     end
 
     function _acb_set(x::($typeofx), y::RealFieldElem, z::RealFieldElem, p::Int)
       _acb_set(x, y, z)
       ccall((:acb_set_round, libflint), Nothing,
-                  (($passtoc), ($passtoc), Int), x, x, p)
+            (($passtoc), ($passtoc), Int), x, x, p)
     end
 
     function _acb_set(x::($typeofx), y::QQFieldElem, z::QQFieldElem, p::Int)

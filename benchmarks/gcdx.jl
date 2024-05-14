@@ -17,7 +17,7 @@ function run_gcdx_bigint(x::Vector{ZZRingElem}, y::Vector{ZZRingElem})
     gcdx_bigint(ix, iy)
   end
 end
-    
+
 function run_gcdx_fmpz(x::Vector{ZZRingElem}, y::Vector{ZZRingElem})
   for ix in x, iy in y
     gcdx_fmpz(ix, iy)

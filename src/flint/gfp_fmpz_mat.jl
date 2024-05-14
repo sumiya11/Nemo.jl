@@ -19,9 +19,9 @@ dense_matrix_type(::Type{FpFieldElem}) = FpMatrix
 ###############################################################################
 
 function similar(::MatElem, R::FpField, r::Int, c::Int)
-   z = FpMatrix(r, c, R.ninv)
-   z.base_ring = R
-   return z
+  z = FpMatrix(r, c, R.ninv)
+  z.base_ring = R
+  return z
 end
 
 ################################################################################
@@ -31,14 +31,14 @@ end
 ################################################################################
 
 function getindex!(v::FpFieldElem, a::FpMatrix, i::Int, j::Int)
-   @boundscheck Generic._checkbounds(a, i, j)
-   GC.@preserve a begin
-      z = ccall((:fmpz_mod_mat_entry, libflint), Ptr{ZZRingElem},
-                (Ref{FpMatrix}, Int, Int), a, i - 1, j - 1)
-      ccall((:fmpz_mod_set_fmpz, libflint), Nothing,
-            (Ref{ZZRingElem}, Ptr{ZZRingElem}, Ref{FpField}), v.data, z, base_ring(a))
-   end
-   return v
+  @boundscheck Generic._checkbounds(a, i, j)
+  GC.@preserve a begin
+    z = ccall((:fmpz_mod_mat_entry, libflint), Ptr{ZZRingElem},
+              (Ref{FpMatrix}, Int, Int), a, i - 1, j - 1)
+    ccall((:fmpz_mod_set_fmpz, libflint), Nothing,
+          (Ref{ZZRingElem}, Ptr{ZZRingElem}, Ref{FpField}), v.data, z, base_ring(a))
+  end
+  return v
 end
 
 # return plain ZZRingElem, no bounds checking
@@ -68,7 +68,7 @@ end
 end
 
 function setindex!(a::FpMatrix, u::Integer, i::Int, j::Int)
-   setindex!(a, ZZRingElem(u), i, j)
+  setindex!(a, ZZRingElem(u), i, j)
 end
 
 # as per setindex! but no reduction mod n and no bounds checking
@@ -118,11 +118,11 @@ function iszero(a::FpMatrix)
 end
 
 @inline function is_zero_entry(A::FpMatrix, i::Int, j::Int)
-   @boundscheck Generic._checkbounds(A, i, j)
-   GC.@preserve A begin
-      x = mat_entry_ptr(A, i, j)
-      return ccall((:fmpz_is_zero, libflint), Bool, (Ptr{ZZRingElem},), x)
-   end
+  @boundscheck Generic._checkbounds(A, i, j)
+  GC.@preserve A begin
+    x = mat_entry_ptr(A, i, j)
+    return ccall((:fmpz_is_zero, libflint), Bool, (Ptr{ZZRingElem},), x)
+  end
 end
 
 ################################################################################
@@ -180,20 +180,20 @@ end
 
 function Base.view(x::FpMatrix, r1::Int, c1::Int, r2::Int, c2::Int)
 
-   _checkrange_or_empty(nrows(x), r1, r2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(nrows(x), r1, r2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   _checkrange_or_empty(ncols(x), c1, c2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(ncols(x), c1, c2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   if (r1 > r2)
-     r1 = 1
-     r2 = 0
-   end
-   if (c1 > c2)
-     c1 = 1
-     c2 = 0
-   end
+  if (r1 > r2)
+    r1 = 1
+    r2 = 0
+  end
+  if (c1 > c2)
+    c1 = 1
+    c2 = 0
+  end
 
   z = FpMatrix()
   z.base_ring = x.base_ring
@@ -249,8 +249,8 @@ function inv(a::FpMatrix)
   !is_square(a) && error("Matrix must be a square matrix")
   z = similar(a)
   r = ccall((:fmpz_mod_mat_inv, libflint), Int,
-          (Ref{FpMatrix}, Ref{FpMatrix}, Ref{fmpz_mod_ctx_struct}),
-          z, a, base_ring(a).ninv)
+            (Ref{FpMatrix}, Ref{FpMatrix}, Ref{fmpz_mod_ctx_struct}),
+            z, a, base_ring(a).ninv)
   !Bool(r) && error("Matrix not invertible")
   return z
 end
@@ -268,12 +268,12 @@ function (a::FpMatrixSpace)()
 end
 
 function (a::FpMatrixSpace)(b::FpFieldElem)
-   parent(b) != base_ring(a) && error("Unable to coerce to matrix")
-   M = a()  # zero
-   for i in 1:min(nrows(a), ncols(a))
-      M[i, i] = b
-   end
-   return M
+  parent(b) != base_ring(a) && error("Unable to coerce to matrix")
+  M = a()  # zero
+  for i in 1:min(nrows(a), ncols(a))
+    M[i, i] = b
+  end
+  return M
 end
 
 function (a::FpMatrixSpace)(arr::AbstractMatrix{BigInt}, transpose::Bool = false)
@@ -341,16 +341,16 @@ end
 ###############################################################################
 
 function matrix(R::FpField, arr::AbstractMatrix{<: Union{FpFieldElem, ZZRingElem, Integer}})
-   z = FpMatrix(size(arr, 1), size(arr, 2), R.ninv, arr)
-   z.base_ring = R
-   return z
+  z = FpMatrix(size(arr, 1), size(arr, 2), R.ninv, arr)
+  z.base_ring = R
+  return z
 end
 
 function matrix(R::FpField, r::Int, c::Int, arr::AbstractVector{<: Union{FpFieldElem, ZZRingElem, Integer}})
-   _check_dim(r, c, arr)
-   z = FpMatrix(r, c, R.ninv, arr)
-   z.base_ring = R
-   return z
+  _check_dim(r, c, arr)
+  z = FpMatrix(r, c, R.ninv, arr)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -360,12 +360,12 @@ end
 ###############################################################################
 
 function zero_matrix(R::FpField, r::Int, c::Int)
-   if r < 0 || c < 0
-     error("dimensions must not be negative")
-   end
-   z = FpMatrix(r, c, R.ninv)
-   z.base_ring = R
-   return z
+  if r < 0 || c < 0
+    error("dimensions must not be negative")
+  end
+  z = FpMatrix(r, c, R.ninv)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -375,12 +375,12 @@ end
 ###############################################################################
 
 function identity_matrix(R::FpField, n::Int)
-   z = zero_matrix(R, n, n)
-   for i in 1:n
-      z[i, i] = one(R)
-   end
-   z.base_ring = R
-   return z
+  z = zero_matrix(R, n, n)
+  for i in 1:n
+    z[i, i] = one(R)
+  end
+  z.base_ring = R
+  return z
 end
 
 ################################################################################
@@ -403,35 +403,35 @@ end
 ################################################################################
 
 function Solve._can_solve_internal_no_check(A::FpMatrix, b::FpMatrix, task::Symbol; side::Symbol = :left)
-   check_parent(A, b)
-   if side === :left
-      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
-      return fl, transpose(sol), transpose(K)
-   end
+  check_parent(A, b)
+  if side === :left
+    fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+    return fl, transpose(sol), transpose(K)
+  end
 
-   x = similar(A, ncols(A), ncols(b))
-   fl = ccall((:fmpz_mod_mat_can_solve, libflint), Cint,
-              (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Ref{fmpz_mod_ctx_struct}), x, A, b, base_ring(x).ninv)
-   if task === :only_check || task === :with_solution
-     return Bool(fl), x, zero(A, 0, 0)
-   end
-   return Bool(fl), x, kernel(A, side = :right)
+  x = similar(A, ncols(A), ncols(b))
+  fl = ccall((:fmpz_mod_mat_can_solve, libflint), Cint,
+             (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Ref{fmpz_mod_ctx_struct}), x, A, b, base_ring(x).ninv)
+  if task === :only_check || task === :with_solution
+    return Bool(fl), x, zero(A, 0, 0)
+  end
+  return Bool(fl), x, kernel(A, side = :right)
 end
 
 # Direct interface to the C functions to be able to write 'generic' code for
 # different matrix types
 function _solve_tril_right_flint!(x::FpMatrix, L::FpMatrix, B::FpMatrix, unit::Bool)
-   ccall((:fmpz_mod_mat_solve_tril, libflint), Nothing,
-         (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
-         x, L, B, Cint(unit), base_ring(x).ninv)
-   return nothing
+  ccall((:fmpz_mod_mat_solve_tril, libflint), Nothing,
+        (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
+        x, L, B, Cint(unit), base_ring(x).ninv)
+  return nothing
 end
 
 function _solve_triu_right_flint!(x::FpMatrix, U::FpMatrix, B::FpMatrix, unit::Bool)
-   ccall((:fmpz_mod_mat_solve_triu, libflint), Nothing,
-         (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
-         x, U, B, Cint(unit), base_ring(x).ninv)
-   return nothing
+  ccall((:fmpz_mod_mat_solve_triu, libflint), Nothing,
+        (Ref{FpMatrix}, Ref{FpMatrix}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
+        x, U, B, Cint(unit), base_ring(x).ninv)
+  return nothing
 end
 
 ################################################################################
@@ -441,45 +441,45 @@ end
 ################################################################################
 
 function lu!(P::Generic.Perm, x::FpMatrix)
-   P.d .-= 1
+  P.d .-= 1
 
-   rank = ccall((:fmpz_mod_mat_lu, libflint), Int,
-                (Ptr{Int}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
-                P.d, x, Cint(false), base_ring(x).ninv)
+  rank = ccall((:fmpz_mod_mat_lu, libflint), Int,
+               (Ptr{Int}, Ref{FpMatrix}, Cint, Ref{fmpz_mod_ctx_struct}),
+               P.d, x, Cint(false), base_ring(x).ninv)
 
-   P.d .+= 1
+  P.d .+= 1
 
-   # flint does x == PLU instead of Px == LU (docs are wrong)
-   inv!(P)
+  # flint does x == PLU instead of Px == LU (docs are wrong)
+  inv!(P)
 
-   return rank
+  return rank
 end
 
 function lu(x::FpMatrix, P = SymmetricGroup(nrows(x)))
-   m = nrows(x)
-   n = ncols(x)
-   P.n != m && error("Permutation does not match matrix")
-   p = one(P)
-   R = base_ring(x)
-   U = deepcopy(x)
+  m = nrows(x)
+  n = ncols(x)
+  P.n != m && error("Permutation does not match matrix")
+  p = one(P)
+  R = base_ring(x)
+  U = deepcopy(x)
 
-   L = similar(x, m, m)
+  L = similar(x, m, m)
 
-   rank = lu!(p, U)
+  rank = lu!(p, U)
 
-   for i = 1:m
-      for j = 1:n
-         if i > j
-            L[i, j] = U[i, j]
-            U[i, j] = R()
-         elseif i == j
-            L[i, j] = one(R)
-         elseif j <= m
-            L[i, j] = R()
-         end
+  for i = 1:m
+    for j = 1:n
+      if i > j
+        L[i, j] = U[i, j]
+        U[i, j] = R()
+      elseif i == j
+        L[i, j] = one(R)
+      elseif j <= m
+        L[i, j] = R()
       end
-   end
-   return rank, p, L, U
+    end
+  end
+  return rank, p, L, U
 end
 
 ################################################################################
@@ -489,5 +489,5 @@ end
 ################################################################################
 
 @inline mat_entry_ptr(A::FpMatrix, i::Int, j::Int) =
-   ccall((:fmpz_mod_mat_entry, libflint), Ptr{ZZRingElem},
-         (Ref{FpMatrix}, Int, Int), A, i - 1, j - 1)
+ccall((:fmpz_mod_mat_entry, libflint), Ptr{ZZRingElem},
+      (Ref{FpMatrix}, Int, Int), A, i - 1, j - 1)

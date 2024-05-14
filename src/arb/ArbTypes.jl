@@ -439,14 +439,14 @@ mutable struct acb_calc_integrate_opts
   verbose::Int32   # 1 less verbose; 2 more verbose
 
   function acb_calc_integrate_opts(deg_limit::Int, eval_limit::Int,
-    depth_limit::Int, use_heap::Int32, verbose::Int32)
+      depth_limit::Int, use_heap::Int32, verbose::Int32)
     return new(deg_limit, eval_limit, depth_limit, use_heap, verbose)
   end
 
   function acb_calc_integrate_opts()
     opts = new()
     ccall((:acb_calc_integrate_opt_init, libflint),
-      Nothing, (Ref{acb_calc_integrate_opts}, ), opts)
+          Nothing, (Ref{acb_calc_integrate_opts}, ), opts)
     return opts
   end
 end
@@ -486,7 +486,7 @@ mutable struct RealPoly <: PolyRingElem{RealFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{RealPoly}, ), z)
     ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
-                (Ref{RealPoly}, Int, Ref{RealFieldElem}), z, 0, x)
+          (Ref{RealPoly}, Int, Ref{RealFieldElem}), z, 0, x)
     finalizer(_RealPoly_clear_fn, z)
     return z
   end
@@ -495,8 +495,8 @@ mutable struct RealPoly <: PolyRingElem{RealFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{RealPoly}, ), z)
     for i = 1:length(x)
-        ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
-                (Ref{RealPoly}, Int, Ref{RealFieldElem}), z, i - 1, x[i])
+      ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
+            (Ref{RealPoly}, Int, Ref{RealFieldElem}), z, i - 1, x[i])
     end
     finalizer(_RealPoly_clear_fn, z)
     return z
@@ -514,7 +514,7 @@ mutable struct RealPoly <: PolyRingElem{RealFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{RealPoly}, ), z)
     ccall((:arb_poly_set_round, libflint), Nothing,
-                (Ref{RealPoly}, Ref{RealPoly}, Int), z, x, p)
+          (Ref{RealPoly}, Ref{RealPoly}, Int), z, x, p)
     finalizer(_RealPoly_clear_fn, z)
     return z
   end
@@ -523,7 +523,7 @@ mutable struct RealPoly <: PolyRingElem{RealFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{RealPoly}, ), z)
     ccall((:arb_poly_set_fmpz_poly, libflint), Nothing,
-                (Ref{RealPoly}, Ref{ZZPolyRingElem}, Int), z, x, p)
+          (Ref{RealPoly}, Ref{ZZPolyRingElem}, Int), z, x, p)
     finalizer(_RealPoly_clear_fn, z)
     return z
   end
@@ -532,7 +532,7 @@ mutable struct RealPoly <: PolyRingElem{RealFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{RealPoly}, ), z)
     ccall((:arb_poly_set_fmpq_poly, libflint), Nothing,
-                (Ref{RealPoly}, Ref{QQPolyRingElem}, Int), z, x, p)
+          (Ref{RealPoly}, Ref{QQPolyRingElem}, Int), z, x, p)
     finalizer(_RealPoly_clear_fn, z)
     return z
   end
@@ -580,7 +580,7 @@ mutable struct ArbPolyRingElem <: PolyRingElem{ArbFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{ArbPolyRingElem}, ), z)
     ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
-                (Ref{ArbPolyRingElem}, Int, Ref{ArbFieldElem}), z, 0, x)
+          (Ref{ArbPolyRingElem}, Int, Ref{ArbFieldElem}), z, 0, x)
     finalizer(_arb_poly_clear_fn, z)
     return z
   end
@@ -589,8 +589,8 @@ mutable struct ArbPolyRingElem <: PolyRingElem{ArbFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{ArbPolyRingElem}, ), z)
     for i = 1:length(x)
-        ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
-                (Ref{ArbPolyRingElem}, Int, Ref{ArbFieldElem}), z, i - 1, x[i])
+      ccall((:arb_poly_set_coeff_arb, libflint), Nothing,
+            (Ref{ArbPolyRingElem}, Int, Ref{ArbFieldElem}), z, i - 1, x[i])
     end
     finalizer(_arb_poly_clear_fn, z)
     return z
@@ -608,7 +608,7 @@ mutable struct ArbPolyRingElem <: PolyRingElem{ArbFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{ArbPolyRingElem}, ), z)
     ccall((:arb_poly_set_round, libflint), Nothing,
-                (Ref{ArbPolyRingElem}, Ref{ArbPolyRingElem}, Int), z, x, p)
+          (Ref{ArbPolyRingElem}, Ref{ArbPolyRingElem}, Int), z, x, p)
     finalizer(_arb_poly_clear_fn, z)
     return z
   end
@@ -617,7 +617,7 @@ mutable struct ArbPolyRingElem <: PolyRingElem{ArbFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{ArbPolyRingElem}, ), z)
     ccall((:arb_poly_set_fmpz_poly, libflint), Nothing,
-                (Ref{ArbPolyRingElem}, Ref{ZZPolyRingElem}, Int), z, x, p)
+          (Ref{ArbPolyRingElem}, Ref{ZZPolyRingElem}, Int), z, x, p)
     finalizer(_arb_poly_clear_fn, z)
     return z
   end
@@ -626,7 +626,7 @@ mutable struct ArbPolyRingElem <: PolyRingElem{ArbFieldElem}
     z = new() 
     ccall((:arb_poly_init, libflint), Nothing, (Ref{ArbPolyRingElem}, ), z)
     ccall((:arb_poly_set_fmpq_poly, libflint), Nothing,
-                (Ref{ArbPolyRingElem}, Ref{QQPolyRingElem}, Int), z, x, p)
+          (Ref{ArbPolyRingElem}, Ref{QQPolyRingElem}, Int), z, x, p)
     finalizer(_arb_poly_clear_fn, z)
     return z
   end
@@ -679,7 +679,7 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
-                (Ref{ComplexPoly}, Int, Ref{ComplexFieldElem}), z, 0, x)
+          (Ref{ComplexPoly}, Int, Ref{ComplexFieldElem}), z, 0, x)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -688,8 +688,8 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     for i = 1:length(x)
-        ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
-                (Ref{ComplexPoly}, Int, Ref{ComplexFieldElem}), z, i - 1, x[i])
+      ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
+            (Ref{ComplexPoly}, Int, Ref{ComplexFieldElem}), z, i - 1, x[i])
     end
     finalizer(_acb_poly_clear_fn, z)
     return z
@@ -707,9 +707,9 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     ccall((:acb_poly_set_arb_poly, libflint), Nothing,
-                (Ref{ComplexPoly}, Ref{ArbPolyRingElem}, Int), z, x, p)
+          (Ref{ComplexPoly}, Ref{ArbPolyRingElem}, Int), z, x, p)
     ccall((:acb_poly_set_round, libflint), Nothing,
-                (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, z, p)
+          (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, z, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -718,7 +718,7 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     ccall((:acb_poly_set_round, libflint), Nothing,
-                (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, x, p)
+          (Ref{ComplexPoly}, Ref{ComplexPoly}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -727,7 +727,7 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     ccall((:acb_poly_set_fmpz_poly, libflint), Nothing,
-                (Ref{ComplexPoly}, Ref{ZZPolyRingElem}, Int), z, x, p)
+          (Ref{ComplexPoly}, Ref{ZZPolyRingElem}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -736,7 +736,7 @@ mutable struct ComplexPoly <: PolyRingElem{ComplexFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{ComplexPoly}, ), z)
     ccall((:acb_poly_set_fmpq_poly, libflint), Nothing,
-                (Ref{ComplexPoly}, Ref{QQPolyRingElem}, Int), z, x, p)
+          (Ref{ComplexPoly}, Ref{QQPolyRingElem}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -784,7 +784,7 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Int, Ref{AcbFieldElem}), z, 0, x)
+          (Ref{AcbPolyRingElem}, Int, Ref{AcbFieldElem}), z, 0, x)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -793,8 +793,8 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     for i = 1:length(x)
-        ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Int, Ref{AcbFieldElem}), z, i - 1, x[i])
+      ccall((:acb_poly_set_coeff_acb, libflint), Nothing,
+            (Ref{AcbPolyRingElem}, Int, Ref{AcbFieldElem}), z, i - 1, x[i])
     end
     finalizer(_acb_poly_clear_fn, z)
     return z
@@ -812,9 +812,9 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     ccall((:acb_poly_set_arb_poly, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Ref{ArbPolyRingElem}, Int), z, x, p)
+          (Ref{AcbPolyRingElem}, Ref{ArbPolyRingElem}, Int), z, x, p)
     ccall((:acb_poly_set_round, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Ref{AcbPolyRingElem}, Int), z, z, p)
+          (Ref{AcbPolyRingElem}, Ref{AcbPolyRingElem}, Int), z, z, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -823,7 +823,7 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     ccall((:acb_poly_set_round, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Ref{AcbPolyRingElem}, Int), z, x, p)
+          (Ref{AcbPolyRingElem}, Ref{AcbPolyRingElem}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -832,7 +832,7 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     ccall((:acb_poly_set_fmpz_poly, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Ref{ZZPolyRingElem}, Int), z, x, p)
+          (Ref{AcbPolyRingElem}, Ref{ZZPolyRingElem}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -841,7 +841,7 @@ mutable struct AcbPolyRingElem <: PolyRingElem{AcbFieldElem}
     z = new() 
     ccall((:acb_poly_init, libflint), Nothing, (Ref{AcbPolyRingElem}, ), z)
     ccall((:acb_poly_set_fmpq_poly, libflint), Nothing,
-                (Ref{AcbPolyRingElem}, Ref{QQPolyRingElem}, Int), z, x, p)
+          (Ref{AcbPolyRingElem}, Ref{QQPolyRingElem}, Int), z, x, p)
     finalizer(_acb_poly_clear_fn, z)
     return z
   end
@@ -886,19 +886,19 @@ mutable struct RealMat <: MatElem{RealFieldElem}
   function RealMat(a::ZZMatrix)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+          (Ref{RealMat}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_fmpz_mat, libflint), Nothing,
-                (Ref{RealMat}, Ref{ZZMatrix}), z, a)
+          (Ref{RealMat}, Ref{ZZMatrix}), z, a)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
-  
+
   function RealMat(a::ZZMatrix, prec::Int)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+          (Ref{RealMat}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_round_fmpz_mat, libflint), Nothing,
-                (Ref{RealMat}, Ref{ZZMatrix}, Int), z, a, prec)
+          (Ref{RealMat}, Ref{ZZMatrix}, Int), z, a, prec)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
@@ -906,12 +906,12 @@ mutable struct RealMat <: MatElem{RealFieldElem}
   function RealMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, ZZRingElem, Float64, BigFloat, RealFieldElem}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{RealMat}, Int, Int), z, r, c)
+          (Ref{RealMat}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{RealFieldElem},
-                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
         Nemo._arb_set(el, arr[i, j])
       end
     end
@@ -921,12 +921,12 @@ mutable struct RealMat <: MatElem{RealFieldElem}
   function RealMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, ZZRingElem, Float64, BigFloat, RealFieldElem}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{RealMat}, Int, Int), z, r, c)
+          (Ref{RealMat}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{RealFieldElem},
-                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
         Nemo._arb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -936,27 +936,27 @@ mutable struct RealMat <: MatElem{RealFieldElem}
   function RealMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64, BigFloat, RealFieldElem, AbstractString}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{RealMat}, Int, Int), z, r, c)
+          (Ref{RealMat}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{RealFieldElem},
-                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
         _arb_set(el, arr[i, j], prec)
       end
     end
     return z
   end
-     
+
   function RealMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64, BigFloat, RealFieldElem, AbstractString}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{RealMat}, Int, Int), z, r, c)
+          (Ref{RealMat}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{RealFieldElem},
-                    (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{RealMat}, Int, Int), z, i - 1, j - 1)
         _arb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -966,9 +966,9 @@ mutable struct RealMat <: MatElem{RealFieldElem}
   function RealMat(a::QQMatrix, prec::Int)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{RealMat}, Int, Int), z, a.r, a.c)
+          (Ref{RealMat}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_fmpq_mat, libflint), Nothing,
-                (Ref{RealMat}, Ref{QQMatrix}, Int), z, a, prec)
+          (Ref{RealMat}, Ref{QQMatrix}, Int), z, a, prec)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
@@ -999,19 +999,19 @@ mutable struct ArbMatrix <: MatElem{ArbFieldElem}
   function ArbMatrix(a::ZZMatrix)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_fmpz_mat, libflint), Nothing,
-                (Ref{ArbMatrix}, Ref{ZZMatrix}), z, a)
+          (Ref{ArbMatrix}, Ref{ZZMatrix}), z, a)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
-  
+
   function ArbMatrix(a::ZZMatrix, prec::Int)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_round_fmpz_mat, libflint), Nothing,
-                (Ref{ArbMatrix}, Ref{ZZMatrix}, Int), z, a, prec)
+          (Ref{ArbMatrix}, Ref{ZZMatrix}, Int), z, a, prec)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
@@ -1019,12 +1019,12 @@ mutable struct ArbMatrix <: MatElem{ArbFieldElem}
   function ArbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, ZZRingElem, Float64, BigFloat, ArbFieldElem}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{ArbMatrix}, Int, Int), z, r, c)
+          (Ref{ArbMatrix}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{ArbFieldElem},
-                    (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
         Nemo._arb_set(el, arr[i, j])
       end
     end
@@ -1034,12 +1034,12 @@ mutable struct ArbMatrix <: MatElem{ArbFieldElem}
   function ArbMatrix(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, ZZRingElem, Float64, BigFloat, ArbFieldElem}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{ArbMatrix}, Int, Int), z, r, c)
+          (Ref{ArbMatrix}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{ArbFieldElem},
-                    (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
         Nemo._arb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -1049,27 +1049,27 @@ mutable struct ArbMatrix <: MatElem{ArbFieldElem}
   function ArbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64, BigFloat, ArbFieldElem, AbstractString}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{ArbMatrix}, Int, Int), z, r, c)
+          (Ref{ArbMatrix}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{ArbFieldElem},
-                    (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
         _arb_set(el, arr[i, j], prec)
       end
     end
     return z
   end
-     
+
   function ArbMatrix(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64, BigFloat, ArbFieldElem, AbstractString}}
     z = new()
     ccall((:arb_mat_init, libflint), Nothing, 
-                (Ref{ArbMatrix}, Int, Int), z, r, c)
+          (Ref{ArbMatrix}, Int, Int), z, r, c)
     finalizer(_arb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:arb_mat_entry_ptr, libflint), Ptr{ArbFieldElem},
-                    (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ArbMatrix}, Int, Int), z, i - 1, j - 1)
         _arb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -1079,9 +1079,9 @@ mutable struct ArbMatrix <: MatElem{ArbFieldElem}
   function ArbMatrix(a::QQMatrix, prec::Int)
     z = new()
     ccall((:arb_mat_init, libflint), Nothing,
-                (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{ArbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:arb_mat_set_fmpq_mat, libflint), Nothing,
-                (Ref{ArbMatrix}, Ref{QQMatrix}, Int), z, a, prec)
+          (Ref{ArbMatrix}, Ref{QQMatrix}, Int), z, a, prec)
     finalizer(_arb_mat_clear_fn, z)
     return z
   end
@@ -1116,19 +1116,19 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(a::ZZMatrix)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+          (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_fmpz_mat, libflint), Nothing,
-                (Ref{ComplexMat}, Ref{ZZMatrix}), z, a)
+          (Ref{ComplexMat}, Ref{ZZMatrix}), z, a)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
-  
+
   function ComplexMat(a::ZZMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+          (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_round_fmpz_mat, libflint), Nothing,
-                (Ref{ComplexMat}, Ref{ZZMatrix}, Int), z, a, prec)
+          (Ref{ComplexMat}, Ref{ZZMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
@@ -1136,9 +1136,9 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(a::RealMat)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+          (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_arb_mat, libflint), Nothing,
-                (Ref{ComplexMat}, Ref{ArbMatrix}), z, a)
+          (Ref{ComplexMat}, Ref{ArbMatrix}), z, a)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
@@ -1146,22 +1146,22 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(a::ArbMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+          (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_round_arb_mat, libflint), Nothing,
-                (Ref{ComplexMat}, Ref{ArbMatrix}, Int), z, a, prec)
+          (Ref{ComplexMat}, Ref{ArbMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
-   
+
   function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, Float64, ZZRingElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j])
       end
     end
@@ -1171,12 +1171,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{BigFloat, ComplexFieldElem, RealFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j])
       end
     end
@@ -1186,12 +1186,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, Float64, ZZRingElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -1201,12 +1201,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{BigFloat, ComplexFieldElem, RealFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -1216,12 +1216,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j], prec)
       end
     end
@@ -1231,12 +1231,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{BigFloat, RealFieldElem, AbstractString, ComplexFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j], prec)
       end
     end
@@ -1246,12 +1246,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -1261,12 +1261,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{BigFloat, RealFieldElem, AbstractString, ComplexFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -1277,12 +1277,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
       end
     end
@@ -1293,12 +1293,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
       end
     end
@@ -1309,12 +1309,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
       end
     end
@@ -1325,12 +1325,12 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{ComplexMat}, Int, Int), z, r, c)
+          (Ref{ComplexMat}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{ComplexFieldElem},
-                    (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
+                   (Ref{ComplexMat}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
       end
     end
@@ -1340,9 +1340,9 @@ mutable struct ComplexMat <: MatElem{ComplexFieldElem}
   function ComplexMat(a::QQMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
+          (Ref{ComplexMat}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_fmpq_mat, libflint), Nothing,
-                (Ref{ComplexMat}, Ref{QQMatrix}, Int), z, a, prec)
+          (Ref{ComplexMat}, Ref{QQMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
@@ -1373,19 +1373,19 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(a::ZZMatrix)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_fmpz_mat, libflint), Nothing,
-                (Ref{AcbMatrix}, Ref{ZZMatrix}), z, a)
+          (Ref{AcbMatrix}, Ref{ZZMatrix}), z, a)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
-  
+
   function AcbMatrix(a::ZZMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_round_fmpz_mat, libflint), Nothing,
-                (Ref{AcbMatrix}, Ref{ZZMatrix}, Int), z, a, prec)
+          (Ref{AcbMatrix}, Ref{ZZMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
@@ -1393,9 +1393,9 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(a::ArbMatrix)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_arb_mat, libflint), Nothing,
-                (Ref{AcbMatrix}, Ref{ArbMatrix}), z, a)
+          (Ref{AcbMatrix}, Ref{ArbMatrix}), z, a)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
@@ -1403,22 +1403,22 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(a::ArbMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_round_arb_mat, libflint), Nothing,
-                (Ref{AcbMatrix}, Ref{ArbMatrix}, Int), z, a, prec)
+          (Ref{AcbMatrix}, Ref{ArbMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
-   
+
   function AcbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{Int, UInt, Float64, ZZRingElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j])
       end
     end
@@ -1428,12 +1428,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Union{BigFloat, AcbFieldElem, ArbFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j])
       end
     end
@@ -1443,12 +1443,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{Int, UInt, Float64, ZZRingElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -1458,12 +1458,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Union{BigFloat, AcbFieldElem, ArbFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j])
       end
     end
@@ -1473,12 +1473,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j], prec)
       end
     end
@@ -1488,12 +1488,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, prec::Int) where {T <: Union{BigFloat, ArbFieldElem, AbstractString, AcbFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j], prec)
       end
     end
@@ -1503,12 +1503,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{Int, UInt, ZZRingElem, QQFieldElem, Float64}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -1518,12 +1518,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(r::Int, c::Int, arr::AbstractVector{T}, prec::Int) where {T <: Union{BigFloat, ArbFieldElem, AbstractString, AcbFieldElem}}
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j], prec)
       end
     end
@@ -1534,12 +1534,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
       end
     end
@@ -1550,12 +1550,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[i, j][1], arr[i,j][2], prec)
       end
     end
@@ -1566,12 +1566,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
       end
     end
@@ -1582,12 +1582,12 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
 
     z = new()
     ccall((:acb_mat_init, libflint), Nothing, 
-                (Ref{AcbMatrix}, Int, Int), z, r, c)
+          (Ref{AcbMatrix}, Int, Int), z, r, c)
     finalizer(_acb_mat_clear_fn, z)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = ccall((:acb_mat_entry_ptr, libflint), Ptr{AcbFieldElem},
-                    (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
+                   (Ref{AcbMatrix}, Int, Int), z, i - 1, j - 1)
         _acb_set(el, arr[(i-1)*c+j][1], arr[(i-1)*c+j][2], prec)
       end
     end
@@ -1597,9 +1597,9 @@ mutable struct AcbMatrix <: MatElem{AcbFieldElem}
   function AcbMatrix(a::QQMatrix, prec::Int)
     z = new()
     ccall((:acb_mat_init, libflint), Nothing,
-                (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
+          (Ref{AcbMatrix}, Int, Int), z, a.r, a.c)
     ccall((:acb_mat_set_fmpq_mat, libflint), Nothing,
-                (Ref{AcbMatrix}, Ref{QQMatrix}, Int), z, a, prec)
+          (Ref{AcbMatrix}, Ref{QQMatrix}, Int), z, a, prec)
     finalizer(_acb_mat_clear_fn, z)
     return z
   end
