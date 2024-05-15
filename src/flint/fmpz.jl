@@ -171,8 +171,10 @@ fits(::Type{Int}, a::ZZRingElem) = ccall((:fmpz_fits_si, libflint), Bool,
 
 Return `true` if $a$ fits into a `UInt`, otherwise return `false`.
 """
-fits(::Type{UInt}, a::ZZRingElem) = a < 0 ? false :
-ccall((:fmpz_abs_fits_ui, libflint), Bool, (Ref{ZZRingElem},), a)
+@inline function fits(::Type{UInt}, a::ZZRingElem)
+  a < 0 && return false
+  return ccall((:fmpz_abs_fits_ui, libflint), Bool, (Ref{ZZRingElem},), a)
+end
 
 if Culong !== UInt
   function fits(::Type{Culong}, a::ZZRingElem)
