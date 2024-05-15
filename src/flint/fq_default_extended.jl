@@ -101,11 +101,11 @@ function defining_polynomial(R::FqPolyRing, K::FqField)
   coefficient_ring(R) !== base_field(K) && error("Coefficient ring must be base field of finite field")
   f = defining_polynomial(K) # this is cached
   if parent(f) === R
-     return f
+    return f
   else
-     g = deepcopy(f)
-     g.parent = R
-     return g
+    g = deepcopy(f)
+    g.parent = R
+    return g
   end
 end
 
@@ -252,10 +252,10 @@ true
 ```
 """
 function coeff(x::FqFieldElem, n::Int)
-   if is_absolute(parent(x))
-     return base_field(parent(x))(_coeff(x, n))
-   end
-   return coeff(_as_poly(x), n)
+  if is_absolute(parent(x))
+    return base_field(parent(x))(_coeff(x, n))
+  end
+  return coeff(_as_poly(x), n)
 end
 
 ################################################################################
@@ -273,14 +273,14 @@ the order of the base field. By default the Frobenius map is applied $n =
 times if $n$ is not specified.
 """
 function frobenius(x::FqFieldElem, n = 1)
-   # we want x -> x^#base_field
-   z = parent(x)()
-   if is_absolute(parent(x))
-     m = n
-   else
-     m = n * absolute_degree(base_field(parent(x)))
-   end
-   return _frobenius(x, m)
+  # we want x -> x^#base_field
+  z = parent(x)()
+  if is_absolute(parent(x))
+    m = n
+  else
+    m = n * absolute_degree(base_field(parent(x)))
+  end
+  return _frobenius(x, m)
 end
 
 @doc raw"""
@@ -490,22 +490,22 @@ struct _fq_default_dummy
 end
 
 function expressify(a::_fq_default_dummy; context = nothing)
-   x = a.a.parent.var
-   d = _degree(a.a.parent)
+  x = a.a.parent.var
+  d = _degree(a.a.parent)
 
-   sum = Expr(:call, :+)
-   for k in (d - 1):-1:0
-        c = _coeff(a.a, k)
-        iszero(c) && continue
-        xk = k < 1 ? 1 : k == 1 ? x : Expr(:call, :^, x, k)
-        push!(sum.args, isone(c) ? Expr(:call, :*, xk) :
-                         Expr(:call, :*, expressify(c, context = context), xk))
-    end
-    return sum
+  sum = Expr(:call, :+)
+  for k in (d - 1):-1:0
+    c = _coeff(a.a, k)
+    iszero(c) && continue
+    xk = k < 1 ? 1 : k == 1 ? x : Expr(:call, :^, x, k)
+    push!(sum.args, isone(c) ? Expr(:call, :*, xk) :
+          Expr(:call, :*, expressify(c, context = context), xk))
+  end
+  return sum
 end
 
 show_raw(io::IO, a::FqFieldElem) =
-  println(io, AbstractAlgebra.obj_to_string(_fq_default_dummy(a), context = io))
+println(io, AbstractAlgebra.obj_to_string(_fq_default_dummy(a), context = io))
 
 ################################################################################
 #
@@ -580,7 +580,7 @@ function _fq_field_from_nmod_poly_in_disguise(f::FqPolyRingElem, s::Symbol)
   GC.@preserve ss begin
     ccall((:fq_default_ctx_init_modulus_nmod, libflint), Nothing,
           (Ref{FqField}, Ref{FqPolyRingElem}, Ptr{UInt8}),
-                z, f, ss)
+          z, f, ss)
     finalizer(_FqDefaultFiniteField_clear_fn, z)
   end
   z.isabsolute = true
@@ -631,7 +631,7 @@ function FqField(f::FqPolyRingElem, s::Symbol, cached::Bool = false, absolute::B
       # First embed K into L
       e = _embed(K, L)
       # Push f to L
-			Lx, _ = polynomial_ring(L, "\$", cached = false)
+      Lx, _ = polynomial_ring(L, "\$", cached = false)
       foverL = map_coefficients(e, f, parent = Lx)
       a = roots(foverL)[1]
       # Found the map K[x]/(f) -> L
@@ -828,7 +828,7 @@ such that `parent(a)(lift(R, a)) == a` is `true`.
 """
 function lift(R::FqPolyRing, a::FqFieldElem)
   base_ring(R) !== base_field(parent(a)) &&
-      error("Polynomial ring has wrong coefficient ring")
+  error("Polynomial ring has wrong coefficient ring")
   K = parent(a)
   if isdefined(K, :backwardmap)
     return K.backwardmap(a)

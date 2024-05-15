@@ -1,6 +1,6 @@
 @testset "zzModPolyRingElem.constructors" begin
   R, = residue_ring(ZZ, 17)
-  
+
   S1 = PolyRing(R)
   S2 = PolyRing(R)
 
@@ -136,38 +136,38 @@ end
 end
 
 @testset "zzModPolyRingElem.polynomial" begin
-   R, = residue_ring(ZZ, 23)
+  R, = residue_ring(ZZ, 23)
 
-   f = polynomial(R, [])
-   g = polynomial(R, [1, 2, 3])
-   h = polynomial(R, ZZRingElem[1, 2, 3])
-   k = polynomial(R, [R(1), R(2), R(3)])
-   p = polynomial(R, [1, 2, 3], "y")
+  f = polynomial(R, [])
+  g = polynomial(R, [1, 2, 3])
+  h = polynomial(R, ZZRingElem[1, 2, 3])
+  k = polynomial(R, [R(1), R(2), R(3)])
+  p = polynomial(R, [1, 2, 3], "y")
 
-   @test isa(f, zzModPolyRingElem)
-   @test isa(g, zzModPolyRingElem)
-   @test isa(h, zzModPolyRingElem)
-   @test isa(k, zzModPolyRingElem)
-   @test isa(p, zzModPolyRingElem)
+  @test isa(f, zzModPolyRingElem)
+  @test isa(g, zzModPolyRingElem)
+  @test isa(h, zzModPolyRingElem)
+  @test isa(k, zzModPolyRingElem)
+  @test isa(p, zzModPolyRingElem)
 
-   q = polynomial(R, [1, 2, 3], cached=false)
+  q = polynomial(R, [1, 2, 3], cached=false)
 
-   @test parent(g) !== parent(q)
+  @test parent(g) !== parent(q)
 end
 
 @testset "zzModPolyRingElem.similar" begin
-   R, = residue_ring(ZZ, 23)
+  R, = residue_ring(ZZ, 23)
 
-   f = polynomial(R, [1, 2, 3])
-   g = similar(f)
-   h = similar(f, "y")
+  f = polynomial(R, [1, 2, 3])
+  g = similar(f)
+  h = similar(f, "y")
 
-   @test isa(g, zzModPolyRingElem)
-   @test isa(h, zzModPolyRingElem)
+  @test isa(g, zzModPolyRingElem)
+  @test isa(h, zzModPolyRingElem)
 
-   q = similar(g, cached=false)
+  q = similar(g, cached=false)
 
-   @test parent(g) === parent(q)
+  @test parent(g) === parent(q)
 end
 
 @testset "zzModPolyRingElem.unary_ops" begin
@@ -255,22 +255,22 @@ end
 end
 
 @testset "zzModPolyRingElem.adhoc_comparison" begin
-   R, = residue_ring(ZZ, 7)
-   S, x = polynomial_ring(R, "x")
+  R, = residue_ring(ZZ, 7)
+  S, x = polynomial_ring(R, "x")
 
-   f = x^2 + 2x + 1
+  f = x^2 + 2x + 1
 
-   @test f != 1
+  @test f != 1
 
-   @test 1 != f
+  @test 1 != f
 
-   @test S(5) == ZZRingElem(5)
+  @test S(5) == ZZRingElem(5)
 
-   @test ZZRingElem(5) != f
+  @test ZZRingElem(5) != f
 
-   @test S(5) == R(5)
+  @test S(5) == R(5)
 
-   @test R(5) != x + 1
+  @test R(5) != x + 1
 end
 
 @testset "zzModPolyRingElem.truncation" begin
@@ -370,45 +370,45 @@ end
   @test parent(r) == parent(f)
   @test r == Rx(14)
 
-   R, = residue_ring(ZZ, 24)
-   Rx, x = polynomial_ring(R, "x")
-   a = 2*x+1
-   try
-      q = div(a^2, a)
-      @test q*a = a^2
-   catch e
-      @test e isa NotInvertibleError
-   end
+  R, = residue_ring(ZZ, 24)
+  Rx, x = polynomial_ring(R, "x")
+  a = 2*x+1
+  try
+    q = div(a^2, a)
+    @test q*a = a^2
+  catch e
+    @test e isa NotInvertibleError
+  end
 end
 
 @testset "zzModPolyRingElem.hgcd" begin
-   R, = residue_ring(ZZ, next_prime(2^30))
-   Rx, x = polynomial_ring(R, "x")
-   a = rand(Rx, 501:501)
-   b = rand(Rx, 500:500)
-   try
-      (A, B, m11, m12, m21, m22, s) = hgcd(a, b)
-      @test degree(A) >= cld(degree(a), 2) > degree(B)
-      @test m11*A + m12*B == a
-      @test m21*A + m22*B == b
-      @test m11*m22 - m21*m12 == s
-      @test s^2 == 1
-   catch e
-      @test e isa NotInvertibleError
-   end
+  R, = residue_ring(ZZ, next_prime(2^30))
+  Rx, x = polynomial_ring(R, "x")
+  a = rand(Rx, 501:501)
+  b = rand(Rx, 500:500)
+  try
+    (A, B, m11, m12, m21, m22, s) = hgcd(a, b)
+    @test degree(A) >= cld(degree(a), 2) > degree(B)
+    @test m11*A + m12*B == a
+    @test m21*A + m22*B == b
+    @test m11*m22 - m21*m12 == s
+    @test s^2 == 1
+  catch e
+    @test e isa NotInvertibleError
+  end
 end
 
 @testset "zzModPolyRingElem.adhoc_exact_division" begin
-   R, = residue_ring(ZZ, 23)
-   S, x = polynomial_ring(R, "x")
+  R, = residue_ring(ZZ, 23)
+  S, x = polynomial_ring(R, "x")
 
-   f = x^2 + 2x + 1
+  f = x^2 + 2x + 1
 
-   @test divexact(3*f, ZZRingElem(3)) == f
+  @test divexact(3*f, ZZRingElem(3)) == f
 
-   @test divexact(3*f, 3) == f
+  @test divexact(3*f, 3) == f
 
-   @test divexact(R(7)*f, R(7)) == f
+  @test divexact(R(7)*f, R(7)) == f
 end
 
 @testset "zzModPolyRingElem.gcd" begin
@@ -668,12 +668,12 @@ end
   @test n == 10
   @test p == (x+2)*(x+3)
 
-   v, q = divides(f*g, f)
+  v, q = divides(f*g, f)
 
-   @test v
-   @test q == g
+  @test v
+  @test q == g
 
-   v, q = divides(f*g + 1, f)
+  v, q = divides(f*g + 1, f)
 
-   @test !v
+  @test !v
 end

@@ -157,11 +157,11 @@ import LinearAlgebra: transpose!
 # AbstractAlgebra/Nemo has its own promote_rule, distinct from Base
 # Set, Module, Ring, Group and Field are too generic to pollute the users namespace with
 for i in names(AbstractAlgebra)
-   (i in AbstractAlgebra.import_exclude || !isdefined(AbstractAlgebra, i)) && continue
-   i == :GF && continue           # remove once Nemocas/AbstractAlgebra.jl#1538 is available
-   i == :NumberField && continue  # remove once Nemocas/AbstractAlgebra.jl#1538 is available
-   @eval import AbstractAlgebra: $i
-   @eval export $i
+  (i in AbstractAlgebra.import_exclude || !isdefined(AbstractAlgebra, i)) && continue
+  i == :GF && continue           # remove once Nemocas/AbstractAlgebra.jl#1538 is available
+  i == :NumberField && continue  # remove once Nemocas/AbstractAlgebra.jl#1538 is available
+  @eval import AbstractAlgebra: $i
+  @eval export $i
 end
 
 import AbstractAlgebra: _absolute_basis
@@ -246,7 +246,7 @@ end
 
 function trace_free(n::UInt)
   global active_mem
-#  @assert haskey(active_mem, n)
+  #  @assert haskey(active_mem, n)
   delete!(active_mem, n)
   ccall(:jl_free, Nothing, (UInt, ), n)
 end
@@ -254,7 +254,7 @@ end
 function trace_realloc(n::UInt, s::UInt)
   global active_mem
   p = ccall(:jl_realloc, UInt, (UInt, UInt), n, s)
-#  @assert haskey(active_mem, n)
+  #  @assert haskey(active_mem, n)
   delete!(active_mem, n)
   active_mem[p] = (:realloc, s, backtrace())
   return p
@@ -270,7 +270,7 @@ end
 function trace_counted_realloc(n::UInt, m::UInt, o::UInt)
   global active_mem
   p = ccall(:jl_gc_counted_realloc_with_old_size, UInt, (UInt, UInt, UInt), n, m, o)
-#  @assert n==0 || haskey(active_mem, n)
+  #  @assert n==0 || haskey(active_mem, n)
   delete!(active_mem, n)
   active_mem[p] = (:counted_realloc, o, backtrace())
   return p
@@ -278,7 +278,7 @@ end
 
 function trace_counted_free(n::UInt, s::UInt)
   global active_mem
-#  @assert haskey(active_mem, n)
+  #  @assert haskey(active_mem, n)
   delete!(active_mem, n)
   ccall(:jl_gc_counted_free_with_size, Nothing, (UInt, UInt), n, s)
 end
@@ -300,30 +300,30 @@ function trace_memory(b::Bool)
   end
   if b
     ccall((:__gmp_set_memory_functions, :libgmp), Nothing,
-       (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
-       @cfunction(trace_counted_malloc, UInt, (UInt, )),
-       @cfunction(trace_counted_realloc, UInt, (UInt, UInt, UInt)),
-       @cfunction(trace_counted_free, Nothing, (UInt, UInt)))
+          (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
+          @cfunction(trace_counted_malloc, UInt, (UInt, )),
+          @cfunction(trace_counted_realloc, UInt, (UInt, UInt, UInt)),
+          @cfunction(trace_counted_free, Nothing, (UInt, UInt)))
 
     ccall((:__flint_set_memory_functions, libflint), Nothing,
-       (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
-       @cfunction(trace_malloc, UInt, (UInt, )),
-       @cfunction(trace_calloc, UInt, (UInt, UInt)),
-       @cfunction(trace_realloc, UInt, (UInt, UInt)),
-       @cfunction(trace_free, Nothing, (UInt, )))
+          (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
+          @cfunction(trace_malloc, UInt, (UInt, )),
+          @cfunction(trace_calloc, UInt, (UInt, UInt)),
+          @cfunction(trace_realloc, UInt, (UInt, UInt)),
+          @cfunction(trace_free, Nothing, (UInt, )))
   else
     ccall((:__gmp_set_memory_functions, :libgmp), Nothing,
-       (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
-       cglobal(:jl_gc_counted_malloc),
-       cglobal(:jl_gc_counted_realloc_with_old_size),
-       cglobal(:jl_gc_counted_free_with_size))
+          (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
+          cglobal(:jl_gc_counted_malloc),
+          cglobal(:jl_gc_counted_realloc_with_old_size),
+          cglobal(:jl_gc_counted_free_with_size))
 
     ccall((:__flint_set_memory_functions, libflint), Nothing,
-       (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
-       cglobal(:jl_malloc),
-       cglobal(:jl_calloc),
-       cglobal(:jl_realloc),
-       cglobal(:jl_free))
+          (Ptr{Nothing},Ptr{Nothing},Ptr{Nothing},Ptr{Nothing}),
+          cglobal(:jl_malloc),
+          cglobal(:jl_calloc),
+          cglobal(:jl_realloc),
+          cglobal(:jl_free))
   end
 end
 
@@ -336,30 +336,30 @@ end
 const __isthreaded = Ref(false)
 
 function __init__()
-   # In case libgmp picks up the wrong libgmp later on, we "unset" the jl_*
-   # functions from the julia :libgmp.
+  # In case libgmp picks up the wrong libgmp later on, we "unset" the jl_*
+  # functions from the julia :libgmp.
 
-   __isthreaded[] = get(ENV, "NEMO_THREADED", "") == "1"
+  __isthreaded[] = get(ENV, "NEMO_THREADED", "") == "1"
 
-   if __isthreaded[]
-      ccall((:__gmp_set_memory_functions, :libgmp), Nothing,
-            (Int, Int, Int), 0, 0, 0)
-   end
+  if __isthreaded[]
+    ccall((:__gmp_set_memory_functions, :libgmp), Nothing,
+          (Int, Int, Int), 0, 0, 0)
+  end
 
-   ccall((:flint_set_abort, libflint), Nothing,
-         (Ptr{Nothing},), @cfunction(flint_abort, Nothing, ()))
+  ccall((:flint_set_abort, libflint), Nothing,
+        (Ptr{Nothing},), @cfunction(flint_abort, Nothing, ()))
 
-   if AbstractAlgebra.should_show_banner() && get(ENV, "NEMO_PRINT_BANNER", "true") != "false"
-      println("")
-      println("Welcome to Nemo version $(version())")
-      println("")
-      println("Nemo comes with absolutely no warranty whatsoever")
-   end
+  if AbstractAlgebra.should_show_banner() && get(ENV, "NEMO_PRINT_BANNER", "true") != "false"
+    println("")
+    println("Welcome to Nemo version $(version())")
+    println("")
+    println("Nemo comes with absolutely no warranty whatsoever")
+  end
 
   # Initialize the thread local random state
   resize!(_flint_rand_states, Threads.nthreads())
   for i in 1:Threads.nthreads()
-     _flint_rand_states[i] = rand_ctx()
+    _flint_rand_states[i] = rand_ctx()
   end
 
   # Initialize the thread local ECM parameters
@@ -368,15 +368,15 @@ function __init__()
 end
 
 function flint_set_num_threads(a::Int)
-   if !__isthreaded[]
-     error("To use threaded flint, julia has to be started with NEMO_THREADED=1")
-   else
-     ccall((:flint_set_num_threads, libflint), Nothing, (Int,), a)
-   end
+  if !__isthreaded[]
+    error("To use threaded flint, julia has to be started with NEMO_THREADED=1")
+  else
+    ccall((:flint_set_num_threads, libflint), Nothing, (Int,), a)
+  end
 end
 
 function flint_cleanup()
-   ccall((:flint_cleanup, libflint), Nothing, ())
+  ccall((:flint_cleanup, libflint), Nothing, ())
 end
 
 ###############################################################################
@@ -387,14 +387,14 @@ end
 
 deps = Pkg.dependencies()
 if !haskey(deps, Base.UUID("2edaba10-b0f1-5616-af89-8c11ac63239a"))
-   version() = "building"
+  version() = "building"
 else
-   ver = deps[Base.UUID("2edaba10-b0f1-5616-af89-8c11ac63239a")]
-   if occursin("/dev/", ver.source)
-      version() = VersionNumber("$(ver.version)-dev")
-   else
-      version() = VersionNumber("$(ver.version)")
-   end
+  ver = deps[Base.UUID("2edaba10-b0f1-5616-af89-8c11ac63239a")]
+  if occursin("/dev/", ver.source)
+    version() = VersionNumber("$(ver.version)-dev")
+  else
+    version() = VersionNumber("$(ver.version)")
+  end
 end
 
 function versioninfo()
@@ -418,7 +418,7 @@ function versioninfo()
 end
 
 macro new_struct(T, args...)
-   return esc(Expr(:new, T, args...))
+  return esc(Expr(:new, T, args...))
 end
 
 ###############################################################################
@@ -490,52 +490,52 @@ For a fixed seed, the stream of generated numbers is allowed to change between
 different versions of Nemo.
 """
 randseed!(seed::Union{Integer,Nothing}=nothing) =
-   Random.seed!(_flint_rand_states[Threads.threadid()], seed)
+Random.seed!(_flint_rand_states[Threads.threadid()], seed)
 
 function make_seed(n::Integer)
-    n < 0 && throw(DomainError(n, "`n` must be non-negative."))
-    seed = UInt32[]
-    while true
-        push!(seed, n & 0xffffffff)
-        n >>= 32
-        if n == 0
-            return seed
-        end
+  n < 0 && throw(DomainError(n, "`n` must be non-negative."))
+  seed = UInt32[]
+  while true
+    push!(seed, n & 0xffffffff)
+    n >>= 32
+    if n == 0
+      return seed
     end
+  end
 end
 
 function Random.seed!(a::rand_ctx, s::Integer)
-   # we hash the seed to obtain better independence of streams for
-   # two given seeds which could be "not very different"
-   # (cf. the documentation of `gmp_randseed`).
-   # Hashing has a negligible cost compared to the call to `gmp_randseed`.
-   ctx = SHA.SHA2_512_CTX()
-   seed = make_seed(s)::Vector{UInt32}
-   SHA.update!(ctx, reinterpret(UInt8, seed))
-   digest = reinterpret(UInt, SHA.digest!(ctx))
-   @assert Base.GMP.Limb == UInt
+  # we hash the seed to obtain better independence of streams for
+  # two given seeds which could be "not very different"
+  # (cf. the documentation of `gmp_randseed`).
+  # Hashing has a negligible cost compared to the call to `gmp_randseed`.
+  ctx = SHA.SHA2_512_CTX()
+  seed = make_seed(s)::Vector{UInt32}
+  SHA.update!(ctx, reinterpret(UInt8, seed))
+  digest = reinterpret(UInt, SHA.digest!(ctx))
+  @assert Base.GMP.Limb == UInt
 
-   # two last words go for flint_randseed!
-   flint_randseed!(a, digest[end], digest[end-1])
+  # two last words go for flint_randseed!
+  flint_randseed!(a, digest[end], digest[end-1])
 
-   # remaining words (6 or 14) for flint_gmp_randseed!
-   seedbits = 512 - 2*sizeof(UInt)*8
-   n = Int(seedbits / (sizeof(UInt)*8))
-   @assert n == 6 && UInt === UInt64 || n == 14 && UInt === UInt32
-   b = BigInt(nbits = seedbits)
+  # remaining words (6 or 14) for flint_gmp_randseed!
+  seedbits = 512 - 2*sizeof(UInt)*8
+  n = Int(seedbits / (sizeof(UInt)*8))
+  @assert n == 6 && UInt === UInt64 || n == 14 && UInt === UInt32
+  b = BigInt(nbits = seedbits)
 
-   @assert b.alloc >= n
-   GC.@preserve digest b unsafe_copyto!(b.d, pointer(digest), n)
-   b.size = n
-   flint_gmp_randseed!(a, b)
-   return a
+  @assert b.alloc >= n
+  GC.@preserve digest b unsafe_copyto!(b.d, pointer(digest), n)
+  b.size = n
+  flint_gmp_randseed!(a, b)
+  return a
 end
 
 Random.seed!(a::rand_ctx, s::Nothing=nothing) = Random.seed!(a, rand(UInt128))
 
 if NEW_FLINT
   flint_randseed!(a::rand_ctx, seed1::UInt, seed2::UInt) =
-    ccall((:flint_rand_set_seed, libflint), Cvoid, (Ref{rand_ctx}, UInt, UInt), a, seed1, seed2)
+  ccall((:flint_rand_set_seed, libflint), Cvoid, (Ref{rand_ctx}, UInt, UInt), a, seed1, seed2)
 
   function flint_gmp_randseed!(a::rand_ctx, seed::BigInt)
     if a.gmp_state == C_NULL
@@ -546,7 +546,7 @@ if NEW_FLINT
   end
 else
   flint_randseed!(a::rand_ctx, seed1::UInt, seed2::UInt) =
-    ccall((:flint_randseed, libflint), Cvoid, (Ref{rand_ctx}, UInt, UInt), a, seed1, seed2)
+  ccall((:flint_randseed, libflint), Cvoid, (Ref{rand_ctx}, UInt, UInt), a, seed1, seed2)
 
   function flint_gmp_randseed!(a::rand_ctx, seed::BigInt)
     ccall((:_flint_rand_init_gmp, libflint), Cvoid, (Ref{rand_ctx},), a)
@@ -579,7 +579,7 @@ const _ecm_nCs = Vector{Int}[_ecm_nC]
 
 @doc zz_ring_doc
 const FlintZZ = ZZ
-  
+
 @doc qq_field_doc
 const FlintQQ = QQ
 
@@ -621,32 +621,32 @@ AbstractAlgebra._order(g::AbstractAlgebra.GroupElem) = order(ZZRingElem, g)
 include("../benchmarks/runbenchmarks.jl")
 
 function test_module(x, y)
-   julia_exe = Base.julia_cmd()
-   test_file = joinpath(pkgdir, "test/$x/")
-   test_file = test_file * "$y-test.jl";
-   test_function_name = "test_"
+  julia_exe = Base.julia_cmd()
+  test_file = joinpath(pkgdir, "test/$x/")
+  test_file = test_file * "$y-test.jl";
+  test_function_name = "test_"
 
-   if x in ["flint", "arb", "antic"]
-     test_function_name *= y
-   else x == "generic"
-     if y == "RelSeries"
-       test_function_name *= "gen_rel_series"
-     elseif y == "AbsSeries"
-       test_function_name *= "gen_abs_series"
-     elseif y == "Matrix"
-       test_function_name *= "gen_mat"
-     elseif y == "Fraction"
-       test_function_name *= "gen_frac"
-     elseif y == "Residue"
-       test_function_name *= "gen_res"
-     else
-       test_function_name *= "gen_$(lowercase(y))"
-     end
-   end
+  if x in ["flint", "arb", "antic"]
+    test_function_name *= y
+  else x == "generic"
+    if y == "RelSeries"
+      test_function_name *= "gen_rel_series"
+    elseif y == "AbsSeries"
+      test_function_name *= "gen_abs_series"
+    elseif y == "Matrix"
+      test_function_name *= "gen_mat"
+    elseif y == "Fraction"
+      test_function_name *= "gen_frac"
+    elseif y == "Residue"
+      test_function_name *= "gen_res"
+    else
+      test_function_name *= "gen_$(lowercase(y))"
+    end
+  end
 
-   cmd = "using Test; using Nemo; include(\"$test_file\"); $test_function_name();"
-   println("spawning ", `$julia_exe -e \"$cmd\"`)
-   run(`$julia_exe -e $cmd`)
+  cmd = "using Test; using Nemo; include(\"$test_file\"); $test_function_name();"
+  println("spawning ", `$julia_exe -e \"$cmd\"`)
+  run(`$julia_exe -e $cmd`)
 end
 
 ################################################################################

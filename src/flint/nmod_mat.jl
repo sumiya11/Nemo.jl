@@ -13,12 +13,12 @@
 dense_matrix_type(::Type{zzModRingElem}) = zzModMatrix
 
 function check_parent(x::T, y::T, throw::Bool = true) where T <: Zmodn_mat
-   fl = base_ring(x) != base_ring(y)
-   fl && throw && error("Residue rings must be equal")
-   fl && return false
-   fl = (ncols(x) != ncols(y)) && (nrows(x) != nrows(y))
-   fl && throw && error("Matrices have wrong dimensions")
-   return !fl
+  fl = base_ring(x) != base_ring(y)
+  fl && throw && error("Residue rings must be equal")
+  fl && return false
+  fl = (ncols(x) != ncols(y)) && (nrows(x) != nrows(y))
+  fl && throw && error("Matrices have wrong dimensions")
+  return !fl
 end
 
 ###############################################################################
@@ -28,9 +28,9 @@ end
 ###############################################################################
 
 function similar(::zzModMatrix, R::zzModRing, r::Int, c::Int)
-   z = zzModMatrix(r, c, R.n)
-   z.base_ring = R
-   return z
+  z = zzModMatrix(r, c, R.n)
+  z.base_ring = R
+  return z
 end
 
 zero(m::zzModMatrix, R::zzModRing, r::Int, c::Int) = similar(m, R, r, c)
@@ -44,14 +44,14 @@ zero(m::zzModMatrix, R::zzModRing, r::Int, c::Int) = similar(m, R, r, c)
 @inline function getindex(a::zzModMatrix, i::Int, j::Int)
   @boundscheck Generic._checkbounds(a, i, j)
   u = ccall((:nmod_mat_get_entry, libflint), UInt,
-              (Ref{zzModMatrix}, Int, Int), a, i - 1 , j - 1)
+            (Ref{zzModMatrix}, Int, Int), a, i - 1 , j - 1)
   return zzModRingElem(u, base_ring(a)) # no reduction needed
 end
 
 #as above, but as a plain UInt, no bounds checking
 function getindex_raw(a::T, i::Int, j::Int) where T <: Zmodn_mat
   return ccall((:nmod_mat_get_entry, libflint), UInt,
-                 (Ref{T}, Int, Int), a, i - 1, j - 1)
+               (Ref{T}, Int, Int), a, i - 1, j - 1)
 end
 
 @inline function setindex!(a::T, u::UInt, i::Int, j::Int) where T <: Zmodn_mat
@@ -72,19 +72,19 @@ end
 end
 
 setindex!(a::T, u::Integer, i::Int, j::Int) where T <: Zmodn_mat =
-        setindex!(a, ZZRingElem(u), i, j)
+setindex!(a, ZZRingElem(u), i, j)
 
 # as per setindex! but no reduction mod n and no bounds checking
 function setindex_raw!(a::T, u::UInt, i::Int, j::Int) where T <: Zmodn_mat
   ccall((:nmod_mat_set_entry, libflint), Nothing,
-          (Ref{T}, Int, Int, UInt), a, i - 1, j - 1, u)
+        (Ref{T}, Int, Int, UInt), a, i - 1, j - 1, u)
 end
 
 # as per setindex! but no reduction mod n and no bounds checking
 function setindex_raw!(a::T, u::ZZRingElem, i::Int, j::Int) where T <: Zmodn_mat
   t = ZZRingElem()
   ccall((:fmpz_mod_ui, libflint), UInt,
-          (Ref{ZZRingElem}, Ref{ZZRingElem}, UInt), t, u, a.n)
+        (Ref{ZZRingElem}, Ref{ZZRingElem}, UInt), t, u, a.n)
   tt = ccall((:fmpz_get_ui, libflint), UInt, (Ref{ZZRingElem}, ), t)
   setindex_raw!(a, tt, i, j)
 end
@@ -103,7 +103,7 @@ function deepcopy_internal(a::zzModMatrix, dict::IdDict)
     z.base_ring = a.base_ring
   end
   ccall((:nmod_mat_set, libflint), Nothing,
-          (Ref{zzModMatrix}, Ref{zzModMatrix}), z, a)
+        (Ref{zzModMatrix}, Ref{zzModMatrix}), z, a)
   return z
 end
 
@@ -132,8 +132,8 @@ end
 ################################################################################
 
 ==(a::T, b::T) where T <: Zmodn_mat = (a.base_ring == b.base_ring) &&
-        Bool(ccall((:nmod_mat_equal, libflint), Cint,
-                (Ref{T}, Ref{T}), a, b))
+Bool(ccall((:nmod_mat_equal, libflint), Cint,
+           (Ref{T}, Ref{T}), a, b))
 
 isequal(a::T, b::T) where T <: Zmodn_mat = ==(a, b)
 
@@ -146,14 +146,14 @@ isequal(a::T, b::T) where T <: Zmodn_mat = ==(a, b)
 function transpose(a::T) where T <: Zmodn_mat
   z = similar(a, ncols(a), nrows(a))
   ccall((:nmod_mat_transpose, libflint), Nothing,
-          (Ref{T}, Ref{T}), z, a)
+        (Ref{T}, Ref{T}), z, a)
   return z
 end
 
 function transpose!(a::T) where T <: Zmodn_mat
   !is_square(a) && error("Matrix must be a square matrix")
   ccall((:nmod_mat_transpose, libflint), Nothing,
-          (Ref{T}, Ref{T}), a, a)
+        (Ref{T}, Ref{T}), a, a)
 end
 
 ###############################################################################
@@ -169,9 +169,9 @@ function swap_rows!(x::T, i::Int, j::Int) where T <: Zmodn_mat
 end
 
 function swap_rows(x::T, i::Int, j::Int) where T <: Zmodn_mat
-   (1 <= i <= nrows(x) && 1 <= j <= nrows(x)) || throw(BoundsError())
-   y = deepcopy(x)
-   return swap_rows!(y, i, j)
+  (1 <= i <= nrows(x) && 1 <= j <= nrows(x)) || throw(BoundsError())
+  y = deepcopy(x)
+  return swap_rows!(y, i, j)
 end
 
 function swap_cols!(x::T, i::Int, j::Int) where T <: Zmodn_mat
@@ -181,23 +181,23 @@ function swap_cols!(x::T, i::Int, j::Int) where T <: Zmodn_mat
 end
 
 function swap_cols(x::T, i::Int, j::Int) where T <: Zmodn_mat
-   (1 <= i <= ncols(x) && 1 <= j <= ncols(x)) || throw(BoundsError())
-   y = deepcopy(x)
-   return swap_cols!(y, i, j)
+  (1 <= i <= ncols(x) && 1 <= j <= ncols(x)) || throw(BoundsError())
+  y = deepcopy(x)
+  return swap_cols!(y, i, j)
 end
 
 function reverse_rows!(x::T) where T <: Zmodn_mat
-   ccall((:nmod_mat_invert_rows, libflint), Nothing,
-         (Ref{T}, Ptr{Nothing}), x, C_NULL)
-   return x
+  ccall((:nmod_mat_invert_rows, libflint), Nothing,
+        (Ref{T}, Ptr{Nothing}), x, C_NULL)
+  return x
 end
 
 reverse_rows(x::T) where T <: Zmodn_mat = reverse_rows!(deepcopy(x))
 
 function reverse_cols!(x::T) where T <: Zmodn_mat
-   ccall((:nmod_mat_invert_cols, libflint), Nothing,
-         (Ref{T}, Ptr{Nothing}), x, C_NULL)
-   return x
+  ccall((:nmod_mat_invert_cols, libflint), Nothing,
+        (Ref{T}, Ptr{Nothing}), x, C_NULL)
+  return x
 end
 
 reverse_cols(x::T) where T <: Zmodn_mat = reverse_cols!(deepcopy(x))
@@ -211,7 +211,7 @@ reverse_cols(x::T) where T <: Zmodn_mat = reverse_cols!(deepcopy(x))
 function -(x::T) where T <: Zmodn_mat
   z = similar(x)
   ccall((:nmod_mat_neg, libflint), Nothing,
-          (Ref{T}, Ref{T}), z, x)
+        (Ref{T}, Ref{T}), z, x)
   return z
 end
 
@@ -225,7 +225,7 @@ function +(x::T, y::T) where T <: Zmodn_mat
   check_parent(x,y)
   z = similar(x)
   ccall((:nmod_mat_add, libflint), Nothing,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
+        (Ref{T}, Ref{T}, Ref{T}), z, x, y)
   return z
 end
 
@@ -233,7 +233,7 @@ function -(x::T, y::T) where T <: Zmodn_mat
   check_parent(x,y)
   z = similar(x)
   ccall((:nmod_mat_sub, libflint), Nothing,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
+        (Ref{T}, Ref{T}, Ref{T}), z, x, y)
   return z
 end
 
@@ -242,7 +242,7 @@ function *(x::T, y::T) where T <: Zmodn_mat
   (ncols(x) != nrows(y)) && error("Dimensions are wrong")
   z = similar(x, nrows(x), ncols(y))
   ccall((:nmod_mat_mul, libflint), Nothing,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
+        (Ref{T}, Ref{T}, Ref{T}), z, x, y)
   return z
 end
 
@@ -275,28 +275,28 @@ end
 
 # entries of b required to be in [0,n)
 function mul!(z::Vector{UInt}, a::T, b::Vector{UInt}) where T <: Zmodn_mat
-   ccall((:nmod_mat_mul_nmod_vec, libflint), Nothing,
-         (Ptr{UInt}, Ref{T}, Ptr{UInt}, Int),
-         z, a, b, length(b))
-   return z
+  ccall((:nmod_mat_mul_nmod_vec, libflint), Nothing,
+        (Ptr{UInt}, Ref{T}, Ptr{UInt}, Int),
+        z, a, b, length(b))
+  return z
 end
 
 # entries of a required to be in [0,n)
 function mul!(z::Vector{UInt}, a::Vector{UInt}, b::T) where T <: Zmodn_mat
-   ccall((:nmod_mat_nmod_vec_mul, libflint), Nothing,
-         (Ptr{UInt}, Ptr{UInt}, Int, Ref{T}),
-         z, a, length(a), b)
-   return z
+  ccall((:nmod_mat_nmod_vec_mul, libflint), Nothing,
+        (Ptr{UInt}, Ptr{UInt}, Int, Ref{T}),
+        z, a, length(a), b)
+  return z
 end
 
 function mul!(a::zzModMatrix, b::zzModMatrix, c::zzModRingElem)
-    ccall((:nmod_mat_scalar_mul, libflint), Nothing,
+  ccall((:nmod_mat_scalar_mul, libflint), Nothing,
         (Ref{zzModMatrix}, Ref{zzModMatrix}, UInt), a, b, c.data)
-    return a
+  return a
 end
 
 function mul!(A::fpMatrix, B::fpFieldElem, D::fpMatrix)
-    ccall((:nmod_mat_scalar_mul_ui, libflint), Nothing, (Ref{fpMatrix}, Ref{fpMatrix}, UInt), A, D, B.data)
+  ccall((:nmod_mat_scalar_mul_ui, libflint), Nothing, (Ref{fpMatrix}, Ref{fpMatrix}, UInt), A, D, B.data)
 end
 
 function Generic.add_one!(a::zzModMatrix, i::Int, j::Int)
@@ -321,7 +321,7 @@ end
 function *(x::T, y::UInt) where T <: Zmodn_mat
   z = similar(x)
   ccall((:nmod_mat_scalar_mul, libflint), Nothing,
-          (Ref{T}, Ref{T}, UInt), z, x, y)
+        (Ref{T}, Ref{T}, UInt), z, x, y)
   return z
 end
 
@@ -330,7 +330,7 @@ end
 function *(x::T, y::ZZRingElem) where T <: Zmodn_mat
   t = ZZRingElem()
   ccall((:fmpz_mod_ui, libflint), UInt,
-          (Ref{ZZRingElem}, Ref{ZZRingElem}, UInt), t, y, x.n)
+        (Ref{ZZRingElem}, Ref{ZZRingElem}, UInt), t, y, x.n)
   tt = ccall((:fmpz_get_ui, libflint), UInt, (Ref{ZZRingElem}, ), t)
   return x*tt
 end
@@ -359,7 +359,7 @@ end
 function ^(x::T, y::UInt) where T <: Zmodn_mat
   z = similar(x)
   ccall((:nmod_mat_pow, libflint), Nothing,
-          (Ref{T}, Ref{T}, UInt), z, x, y)
+        (Ref{T}, Ref{T}, UInt), z, x, y)
   return z
 end
 
@@ -371,7 +371,7 @@ end
 function ^(x::T, y::ZZRingElem) where T <: Zmodn_mat
   ( y < 0 ) && error("Exponent must be positive")
   ( y > ZZRingElem(typemax(UInt))) &&
-          error("Exponent must be smaller than ", ZZRingElem(typemax(UInt)))
+  error("Exponent must be smaller than ", ZZRingElem(typemax(UInt)))
   return x^(UInt(y))
 end
 
@@ -393,7 +393,7 @@ many rows as columns.
 """
 function strong_echelon_form(a::zzModMatrix)
   (nrows(a) < ncols(a)) &&
-              error("Matrix must have at least as many rows as columns")
+  error("Matrix must have at least as many rows as columns")
   z = deepcopy(a)
   strong_echelon_form!(z)
   return z
@@ -411,7 +411,7 @@ many rows as columns.
 """
 function howell_form(a::zzModMatrix)
   (nrows(a) < ncols(a)) &&
-              error("Matrix must have at least as many rows as columns")
+  error("Matrix must have at least as many rows as columns")
 
   z = deepcopy(a)
   howell_form!(z)
@@ -439,14 +439,14 @@ end
 function det(a::zzModMatrix)
   !is_square(a) && error("Matrix must be a square matrix")
   if is_prime(a.n)
-     r = ccall((:nmod_mat_det, libflint), UInt, (Ref{zzModMatrix}, ), a)
-     return base_ring(a)(r)
+    r = ccall((:nmod_mat_det, libflint), UInt, (Ref{zzModMatrix}, ), a)
+    return base_ring(a)(r)
   else
-     try
-        return AbstractAlgebra.det_fflu(a)
-     catch
-        return AbstractAlgebra.det_df(a)
-     end
+    try
+      return AbstractAlgebra.det_fflu(a)
+    catch
+      return AbstractAlgebra.det_df(a)
+    end
   end
 end
 
@@ -470,20 +470,20 @@ end
 function inv(a::zzModMatrix)
   !is_square(a) && error("Matrix must be a square matrix")
   if is_prime(a.n)
-     z = similar(a)
-     r = ccall((:nmod_mat_inv, libflint), Int,
-               (Ref{zzModMatrix}, Ref{zzModMatrix}), z, a)
-     !Bool(r) && error("Matrix not invertible")
-     return z
+    z = similar(a)
+    r = ccall((:nmod_mat_inv, libflint), Int,
+              (Ref{zzModMatrix}, Ref{zzModMatrix}), z, a)
+    !Bool(r) && error("Matrix not invertible")
+    return z
   else
-     b = lift(a)
-     c, d = pseudo_inv(b)
-     R = base_ring(a)
+    b = lift(a)
+    c, d = pseudo_inv(b)
+    R = base_ring(a)
 
-     if !isone(gcd(d, modulus(R)))
-        error("Matrix not invertible")
-     end
-     return change_base_ring(R, c) * inv(R(d))
+    if !isone(gcd(d, modulus(R)))
+      error("Matrix not invertible")
+    end
+    return change_base_ring(R, c) * inv(R(d))
   end
 end
 
@@ -494,11 +494,11 @@ end
 ################################################################################
 
 function AbstractAlgebra._solve_triu(x::T, y::T) where T <: Zmodn_mat
-   (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
-   is_upper_trangular(x) || error("Matrix must be upper triangular")
-   z = similar(x, nrows(x), ncols(y))
-   _solve_triu!(z, x, y, 0)
-   return z
+  (base_ring(x) != base_ring(y)) && error("Matrices must have same base ring")
+  is_upper_trangular(x) || error("Matrix must be upper triangular")
+  z = similar(x, nrows(x), ncols(y))
+  _solve_triu!(z, x, y, 0)
+  return z
 end
 
 #solves upper_triangular_part(B)A = C, 
@@ -509,32 +509,32 @@ end
 # is done inplace, so the lower part wil be "l", the upper "u",
 # both are implicit only.
 function _solve_triu!(A::T, B::T, C::T, unit::Int = 0) where T <: Zmodn_mat
-   ccall((:nmod_mat_solve_triu, Nemo.libflint), Cvoid, (Ref{T}, Ref{T}, Ref{T}, Cint), A, B, C, unit)
+  ccall((:nmod_mat_solve_triu, Nemo.libflint), Cvoid, (Ref{T}, Ref{T}, Ref{T}, Cint), A, B, C, unit)
 end
 
 #solves lower_triangular_part(B)A = C, 
 #if unit == 1, then only the strictly lower triangular part is used
 #and the diagonal is assumed to be 1
 function AbstractAlgebra._solve_tril!(A::T, B::T, C::T, unit::Int = 0) where T <: Zmodn_mat
-   ccall((:nmod_mat_solve_tril, Nemo.libflint), Cvoid, (Ref{T}, Ref{T}, Ref{T}, Cint), A, B, C, unit)
+  ccall((:nmod_mat_solve_tril, Nemo.libflint), Cvoid, (Ref{T}, Ref{T}, Ref{T}, Cint), A, B, C, unit)
 end
 
 function Solve._can_solve_internal_no_check(A::zzModMatrix, b::zzModMatrix, task::Symbol; side::Symbol = :left)
-   check_parent(A, b)
-   if side === :left
-      fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
-      return fl, transpose(sol), transpose(K)
-   end
+  check_parent(A, b)
+  if side === :left
+    fl, sol, K = Solve._can_solve_internal_no_check(transpose(A), transpose(b), task, side = :right)
+    return fl, transpose(sol), transpose(K)
+  end
 
-   x = similar(A, ncols(A), ncols(b))
-   # This is probably only correct if the characteristic is prime
-   fl = ccall((:nmod_mat_can_solve, libflint), Cint,
+  x = similar(A, ncols(A), ncols(b))
+  # This is probably only correct if the characteristic is prime
+  fl = ccall((:nmod_mat_can_solve, libflint), Cint,
              (Ref{zzModMatrix}, Ref{zzModMatrix}, Ref{zzModMatrix}),
-              x, A, b)
-   if task === :only_check || task === :with_solution
-      return Bool(fl), x, zero(A, 0, 0)
-   end
-   return Bool(fl), x, kernel(A, side = :right)
+             x, A, b)
+  if task === :only_check || task === :with_solution
+    return Bool(fl), x, zero(A, 0, 0)
+  end
+  return Bool(fl), x, kernel(A, side = :right)
 end
 
 ################################################################################
@@ -547,7 +547,7 @@ function lu!(P::Generic.Perm, x::T) where T <: Zmodn_mat
   P.d .-= 1
 
   rank = Int(ccall((:nmod_mat_lu, libflint), Cint, (Ptr{Int}, Ref{T}, Cint),
-           P.d, x, 0))
+                   P.d, x, 0))
 
   P.d .+= 1
 
@@ -604,27 +604,27 @@ end
 
 function Base.view(x::zzModMatrix, r1::Int, c1::Int, r2::Int, c2::Int)
 
-   _checkrange_or_empty(nrows(x), r1, r2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(nrows(x), r1, r2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   _checkrange_or_empty(ncols(x), c1, c2) ||
-      Base.throw_boundserror(x, (r1:r2, c1:c2))
+  _checkrange_or_empty(ncols(x), c1, c2) ||
+  Base.throw_boundserror(x, (r1:r2, c1:c2))
 
-   if (r1 > r2)
-     r1 = 1
-     r2 = 0
-   end
-   if (c1 > c2)
-     c1 = 1
-     c2 = 0
-   end
+  if (r1 > r2)
+    r1 = 1
+    r2 = 0
+  end
+  if (c1 > c2)
+    c1 = 1
+    c2 = 0
+  end
 
   z = zzModMatrix()
   z.base_ring = x.base_ring
   z.view_parent = x
   ccall((:nmod_mat_window_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Ref{zzModMatrix}, Int, Int, Int, Int),
-          z, x, r1 - 1, c1 - 1, r2, c2)
+        (Ref{zzModMatrix}, Ref{zzModMatrix}, Int, Int, Int, Int),
+        z, x, r1 - 1, c1 - 1, r2, c2)
   finalizer(_nmod_mat_window_clear_fn, z)
   return z
 end
@@ -646,7 +646,7 @@ function sub(x::T, r::AbstractUnitRange{Int}, c::AbstractUnitRange{Int}) where T
 end
 
 function getindex(x::T, r::AbstractUnitRange{Int}, c::AbstractUnitRange{Int}) where T <: Zmodn_mat
-   sub(x, r, c)
+  sub(x, r, c)
 end
 
 ################################################################################
@@ -660,7 +660,7 @@ function hcat(x::T, y::T) where T <: Zmodn_mat
   (x.r != y.r) && error("Matrices must have same number of rows")
   z = similar(x, nrows(x), ncols(x) + ncols(y))
   ccall((:nmod_mat_concat_horizontal, libflint), Nothing,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
+        (Ref{T}, Ref{T}, Ref{T}), z, x, y)
   return z
 end
 
@@ -669,7 +669,7 @@ function vcat(x::T, y::T) where T <: Zmodn_mat
   (x.c != y.c) && error("Matrices must have same number of columns")
   z = similar(x, nrows(x) + nrows(y), ncols(x))
   ccall((:nmod_mat_concat_vertical, libflint), Nothing,
-          (Ref{T}, Ref{T}, Ref{T}), z, x, y)
+        (Ref{T}, Ref{T}, Ref{T}), z, x, y)
   return z
 end
 
@@ -704,13 +704,13 @@ entries of the returned matrix are those of $a$ lifted to $\mathbb{Z}$.
 function lift(a::T) where {T <: Zmodn_mat}
   z = ZZMatrix(nrows(a), ncols(a))
   ccall((:fmpz_mat_set_nmod_mat, libflint), Nothing,
-          (Ref{ZZMatrix}, Ref{T}), z, a)
+        (Ref{ZZMatrix}, Ref{T}), z, a)
   return z
 end
 
 function lift!(z::ZZMatrix, a::T) where T <: Zmodn_mat
   ccall((:fmpz_mat_set_nmod_mat, libflint), Nothing,
-          (Ref{ZZMatrix}, Ref{T}), z, a)
+        (Ref{ZZMatrix}, Ref{T}), z, a)
   return z
 end
 
@@ -724,7 +724,7 @@ function charpoly(R::zzModPolyRing, a::zzModMatrix)
   m = deepcopy(a)
   p = R()
   ccall((:nmod_mat_charpoly, libflint), Nothing,
-          (Ref{zzModPolyRingElem}, Ref{zzModMatrix}), p, m)
+        (Ref{zzModPolyRingElem}, Ref{zzModMatrix}), p, m)
   return p
 end
 
@@ -737,7 +737,7 @@ end
 function minpoly(R::zzModPolyRing, a::zzModMatrix)
   p = R()
   ccall((:nmod_mat_minpoly, libflint), Nothing,
-          (Ref{zzModPolyRingElem}, Ref{zzModMatrix}), p, a)
+        (Ref{zzModPolyRingElem}, Ref{zzModMatrix}), p, a)
   return p
 end
 
@@ -837,16 +837,16 @@ end
 ###############################################################################
 
 function matrix(R::zzModRing, arr::AbstractMatrix{<: Union{zzModRingElem, ZZRingElem, Integer}})
-   z = zzModMatrix(size(arr, 1), size(arr, 2), R.n, arr)
-   z.base_ring = R
-   return z
+  z = zzModMatrix(size(arr, 1), size(arr, 2), R.n, arr)
+  z.base_ring = R
+  return z
 end
 
 function matrix(R::zzModRing, r::Int, c::Int, arr::AbstractVector{<: Union{zzModRingElem, ZZRingElem, Integer}})
-   _check_dim(r, c, arr)
-   z = zzModMatrix(r, c, R.n, arr)
-   z.base_ring = R
-   return z
+  _check_dim(r, c, arr)
+  z = zzModMatrix(r, c, R.n, arr)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -856,12 +856,12 @@ end
 ###############################################################################
 
 function zero_matrix(R::zzModRing, r::Int, c::Int)
-   if r < 0 || c < 0
-     error("dimensions must not be negative")
-   end
-   z = zzModMatrix(r, c, R.n)
-   z.base_ring = R
-   return z
+  if r < 0 || c < 0
+    error("dimensions must not be negative")
+  end
+  z = zzModMatrix(r, c, R.n)
+  z.base_ring = R
+  return z
 end
 
 ###############################################################################
@@ -871,12 +871,12 @@ end
 ###############################################################################
 
 function identity_matrix(R::zzModRing, n::Int)
-   z = zero_matrix(R, n, n)
-   for i in 1:n
-      z[i, i] = one(R)
-   end
-   z.base_ring = R
-   return z
+  z = zero_matrix(R, n, n)
+  for i in 1:n
+    z[i, i] = one(R)
+  end
+  z.base_ring = R
+  return z
 end
 
 ################################################################################
@@ -894,34 +894,34 @@ function nullspace(M::zzModMatrix)
 end
 
 function kernel(M::zzModMatrix; side::Symbol = :left)
-   Solve.check_option(side, [:right, :left], "side")
+  Solve.check_option(side, [:right, :left], "side")
 
-   if side === :left
-      K = kernel(transpose(M), side = :right)
-      return transpose(K)
-   end
+  if side === :left
+    K = kernel(transpose(M), side = :right)
+    return transpose(K)
+  end
 
-   R = base_ring(M)
-   if is_prime(modulus(R))
-      return nullspace(M)[2]
-   end
+  R = base_ring(M)
+  if is_prime(modulus(R))
+    return nullspace(M)[2]
+  end
 
-   H = hcat(transpose(M), identity_matrix(R, ncols(M)))
-   if nrows(H) < ncols(H)
-      H = vcat(H, zero_matrix(R, ncols(H) - nrows(H), ncols(H)))
-   end
-   howell_form!(H)
-   nr = 1
-   while nr <= nrows(H) && !is_zero_row(H, nr)
-      nr += 1
-   end
-   nr -= 1
-   h = view(H, 1:nr, 1:nrows(M))
-   for i = 1:nrows(h)
-      if is_zero_row(h, i)
-         k = view(H, i:nrows(h), nrows(M) + 1:ncols(H))
-         return transpose(k)
-      end
-   end
-   return zero_matrix(R, ncols(M), 0)
+  H = hcat(transpose(M), identity_matrix(R, ncols(M)))
+  if nrows(H) < ncols(H)
+    H = vcat(H, zero_matrix(R, ncols(H) - nrows(H), ncols(H)))
+  end
+  howell_form!(H)
+  nr = 1
+  while nr <= nrows(H) && !is_zero_row(H, nr)
+    nr += 1
+  end
+  nr -= 1
+  h = view(H, 1:nr, 1:nrows(M))
+  for i = 1:nrows(h)
+    if is_zero_row(h, i)
+      k = view(H, i:nrows(h), nrows(M) + 1:ncols(H))
+      return transpose(k)
+    end
+  end
+  return zero_matrix(R, ncols(M), 0)
 end
