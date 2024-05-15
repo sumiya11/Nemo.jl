@@ -61,6 +61,12 @@ end
 
   @test isa(d, FqPolyRepFieldElem)
 
+  e = R(Native.GF(ZZ(7))(1))
+  @test isa(e, FqPolyRepFieldElem)
+  @test isone(e)
+
+  @test isa(R(QQ(1)), FqPolyRepFieldElem)
+
   # check for primality
   T3, z3 = Native.finite_field(yy^2 + 1, "z", check=false)
   @test isa(T2, FqPolyRepField)
@@ -102,9 +108,9 @@ end
 
   @test isa(modulus(R), FpPolyRingElem)
 
-  #@test defining_polynomial(R) isa FpPolyRingElem
-  #kt, t = Native.GF(ZZ(7))["t"]
-  #@test parent(defining_polynomial(kt, R)) === kt
+  @test defining_polynomial(R) isa FpPolyRingElem
+  kt, t = Native.GF(ZZ(7))["t"]
+  @test parent(defining_polynomial(kt, R)) === kt
 end
 
 @testset "FqPolyRepFieldElem.unary_ops" begin
@@ -140,6 +146,12 @@ end
   @test a*ZZRingElem(5) == 5*x^4+x^2+2*x+5
 
   @test ZZRingElem(5)*a == 5*x^4+x^2+2*x+5
+
+  F7 = Native.GF(ZZ(7))
+  @test F7(5) + a == x^4 + 3x^2 + 6x + 6
+  @test a + F7(5) == x^4 + 3x^2 + 6x + 6
+  @test F7(5) * a == 5*x^4+x^2+2*x+5
+  @test a * F7(5) == 5*x^4+x^2+2*x+5
 
   @test 12345678901234567890123*a == 3*x^4+2*x^2+4*x+3
 
@@ -262,4 +274,28 @@ end
 @testset "Nemo.jl#1493" begin
   @test_throws DomainError Native.GF(ZZ(4), 2)
   @test_throws DomainError Native.finite_field(ZZ(6), 2, "x")
+end
+
+@testset "FqPolyRepFieldElem.minpoly" begin
+  F, a = Native.finite_field(ZZ(7), 5, "a")
+
+  f = minpoly(a)
+  @test is_zero(f(a))
+  @test degree(f) == degree(F)
+  @test is_monic(f)
+
+  f = charpoly(a)
+  @test is_zero(f(a))
+  @test degree(f) == degree(F)
+  @test is_monic(f)
+
+  g = minpoly(F(3))
+  @test is_zero(g(F(3)))
+  @test degree(g) == 1
+  @test is_monic(g)
+
+  g = charpoly(F(3))
+  @test is_zero(g(F(3)))
+  @test degree(g) == degree(F)
+  @test is_monic(g)
 end

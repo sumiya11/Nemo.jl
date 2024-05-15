@@ -524,23 +524,23 @@ function modulus(k::FqPolyRepField, var::VarName=:T)
   return Q
 end
 
-#function defining_polynomial(k::FqPolyRepField)
-#   F = FpField(characteristic(k))
-#   Fx, = polynomial_ring(F, "x", cached = false)
-#   return defining_polynomial(Fx, k)
-#end
-#
-#function defining_polynomial(R::FpPolyRing, k::FqPolyRepField)
-#   Q = R()
-#   GC.@preserve k begin
-#      P = ccall((:fq_ctx_modulus, libflint), Ptr{FpPolyRingElem},
-#                (Ref{FqPolyRepField},), k)
-#      ccall((:fmpz_mod_poly_set, libflint), Nothing,
-#            (Ref{FpPolyRingElem}, Ptr{FpPolyRingElem}),
-#            Q, P)
-#   end
-#   return Q
-#end
+function defining_polynomial(k::FqPolyRepField)
+  F = FpField(characteristic(k))
+  Fx, = polynomial_ring(F, "x", cached = false)
+  return defining_polynomial(Fx, k)
+end
+
+function defining_polynomial(R::FpPolyRing, k::FqPolyRepField)
+  Q = R()
+  GC.@preserve k begin
+    P = ccall((:fq_ctx_modulus, libflint), Ptr{FpPolyRingElem},
+              (Ref{FqPolyRepField},), k)
+    ccall((:fmpz_mod_poly_set, libflint), Nothing,
+          (Ref{FpPolyRingElem}, Ptr{FpPolyRingElem}),
+          Q, P)
+  end
+  return Q
+end
 
 ###############################################################################
 #
@@ -551,6 +551,8 @@ end
 promote_rule(::Type{FqPolyRepFieldElem}, ::Type{T}) where {T <: Integer} = FqPolyRepFieldElem
 
 promote_rule(::Type{FqPolyRepFieldElem}, ::Type{ZZRingElem}) = FqPolyRepFieldElem
+
+promote_rule(::Type{FqPolyRepFieldElem}, ::Type{FpFieldElem}) = FqPolyRepFieldElem
 
 ###############################################################################
 #
@@ -594,10 +596,59 @@ function (a::FqPolyRepField)(b::FqPolyRepFieldElem)
   end
 end
 
+function (A::FqPolyRepField)(x::FpFieldElem)
+  @assert characteristic(A) == characteristic(parent(x))
+  return A(lift(x))
+end
+
 function (a::FqPolyRepField)(b::Vector{<:IntegerUnion})
   da = degree(a)
   db = length(b)
   da == db || error("Coercion impossible")
   F = Native.GF(characteristic(a), cached = false)
   return FqPolyRepFieldElem(a, polynomial(F, b))
+end
+
+function (k::FqPolyRepField)(a::QQFieldElem)
+  return k(numerator(a)) // k(denominator(a))
+end
+
+###############################################################################
+#
+#   Minimal polynomial and characteristic polynomial
+#
+###############################################################################
+
+function minpoly(a::FqPolyRepFieldElem)
+  Fp = Native.GF(characteristic(parent(a)), cached=false)
+  Rx, _ = polynomial_ring(Fp, cached=false)
+  return minpoly(Rx, a)
+end
+
+function minpoly(Rx::FpPolyRing, a::FqPolyRepFieldElem)
+  @assert characteristic(base_ring(Rx)) == characteristic(parent(a))
+  c = [a]
+  fa = frobenius(a)
+  while !(fa in c)
+    push!(c, fa)
+    fa = frobenius(fa)
+  end
+  St = polynomial_ring(parent(a), cached=false)[1]
+  f = prod([gen(St) - x for x = c])
+  g = Rx()
+  for i = 0:degree(f)
+    setcoeff!(g, i, coeff(coeff(f, i), 0))
+  end
+  return g
+end
+
+function charpoly(a::FqPolyRepFieldElem)
+  Fp = Native.GF(characteristic(parent(a)), cached=false)
+  Rx, _ = polynomial_ring(Fp, cached=false)
+  return charpoly(Rx, a)
+end
+
+function charpoly(Rx::FpPolyRing, a::FqPolyRepFieldElem)
+  g = minpoly(Rx, a)
+  return g^div(degree(parent(a)), degree(g))
 end

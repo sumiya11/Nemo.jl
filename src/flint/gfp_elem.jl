@@ -40,6 +40,7 @@ end
 data(a::fpFieldElem) = a.data
 
 lift(a::fpFieldElem) = ZZRingElem(data(a))
+lift(::ZZRing, x::fpFieldElem) = lift(x)
 
 function zero(R::fpField)
   return fpFieldElem(UInt(0), R)
@@ -470,4 +471,14 @@ end
 function (R::fpField)(a::Vector{<:IntegerUnion})
   is_one(length(a)) || error("Coercion impossible")
   return R(a[1])
+end
+
+###############################################################################
+#
+#   Representation matrix
+#
+###############################################################################
+
+function representation_matrix(a::fpFieldElem)
+  return matrix(parent(a), 1, 1, [a])
 end

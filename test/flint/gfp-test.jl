@@ -122,6 +122,8 @@ end
   @test data(R(3)) == 3
   @test lift(R(3)) == 3
   @test isa(lift(R(3)), ZZRingElem)
+  @test lift(ZZ, R(3)) == 3
+  @test isa(lift(ZZ, R(3)), ZZRingElem)
 
   R2 = Native.GF(2)
   R3 = Native.GF(3)
@@ -526,4 +528,9 @@ end
 @testset "gfp.overload" begin
   R = Native.GF(19)
   @test R([5]) == R(5)
+end
+
+@testset "gfp.representation_matrix" begin
+  F = Native.GF(19)
+  @test is_one(representation_matrix(one(F)))
 end

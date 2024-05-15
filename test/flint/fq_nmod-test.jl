@@ -40,6 +40,16 @@
 
   @test isa(d, fqPolyRepFieldElem)
 
+  e = R(Native.GF(7)(1))
+  @test isa(e, fqPolyRepFieldElem)
+  @test isone(e)
+
+  @test isa(R(QQ(1)), fqPolyRepFieldElem)
+
+  S, = residue_ring(ZZ, 14)
+  @test isa(R(S(8)), fqPolyRepFieldElem)
+  @test is_one(R(S(8)))
+
   # check for primality
   T3, z3 = Native.finite_field(yy^2 + 1, "z", check=false)
   @test isa(T2, fqPolyRepField)
@@ -120,9 +130,9 @@ end
 
   @test isa(modulus(R), fpPolyRingElem)
 
-  #@test defining_polynomial(R) isa fpPolyRingElem
-  #kt, t = Native.GF(7)["t"]
-  #@test parent(defining_polynomial(kt, R)) === kt
+  @test defining_polynomial(R) isa fpPolyRingElem
+  kt, t = Native.GF(7)["t"]
+  @test parent(defining_polynomial(kt, R)) === kt
 end
 
 @testset "fqPolyRepFieldElem.unary_ops" begin
@@ -144,6 +154,12 @@ end
   @test a - b == 5*x^4+x^2+5*x
 
   @test a*b == 3*x^3+2
+
+  F7 = Native.GF(7)
+  @test F7(5) + a == x^4 + 3x^2 + 6x + 6
+  @test a + F7(5) == x^4 + 3x^2 + 6x + 6
+  @test F7(5) * a == 5*x^4+x^2+2*x+5
+  @test a * F7(5) == 5*x^4+x^2+2*x+5
 end
 
 @testset "fqPolyRepFieldElem.adhoc_binary" begin
@@ -232,6 +248,14 @@ end
 
   @test frobenius(a, 3) == 3*x^4+3*x^3+3*x^2+x+4
 
+  M = frobenius_matrix(R)
+  @test M == matrix(base_ring(M), [1 0 0 0 0;
+                                   0 0 3 6 0;
+                                   3 2 6 0 2;
+                                   3 3 4 5 2;
+                                   5 6 2 1 2])
+
+
   @test pth_root(a) == 4*x^4+3*x^3+4*x^2+5*x+2
 
   @test is_square(a^2)
@@ -264,4 +288,43 @@ end
   f = 8x + 9
   S, y = polynomial_ring(Native.GF(23), "y")
   @test lift(S, f) == 8y + 9
+end
+
+@testset "fqPolyRepFieldElem.minpoly" begin
+  F, a = Native.finite_field(7, 5, "a")
+
+  f = minpoly(a)
+  @test is_zero(f(a))
+  @test degree(f) == degree(F)
+  @test is_monic(f)
+
+  f = charpoly(a)
+  @test is_zero(f(a))
+  @test degree(f) == degree(F)
+  @test is_monic(f)
+
+  g = minpoly(F(3))
+  @test is_zero(g(F(3)))
+  @test degree(g) == 1
+  @test is_monic(g)
+
+  g = charpoly(F(3))
+  @test is_zero(g(F(3)))
+  @test degree(g) == degree(F)
+  @test is_monic(g)
+end
+
+@testset "fqPolyRepFieldElem.representation_matrix" begin
+  F, a = Native.finite_field(7, 5, "a")
+
+  @test is_one(representation_matrix(one(F)))
+  @test is_zero(representation_matrix(zero(F)))
+
+  M = representation_matrix(a)
+  @test nrows(M) == degree(F)
+  @test ncols(M) == degree(F)
+
+  f = minpoly(M)
+  g = minpoly(parent(f), a)
+  @test f == g
 end

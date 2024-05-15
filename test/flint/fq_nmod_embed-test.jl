@@ -97,6 +97,19 @@ end
 
     for j in 1:20
       x = rand(ka)
+      @test @inferred preimage(g, g(x)) == x
+      @test @inferred f(g(x)) == x
+    end
+
+    a, b = rand(1:5), rand(1:5)
+    ka, xa = Native.finite_field(p, a, "xa")
+    kab, xab = Native.finite_field(p, a*b, "xab")
+
+    f = preimage_map(ka, kab)
+    g = embed(ka, kab)
+
+    for j in 1:20
+      x = rand(ka)
       @test f(g(x)) == x
     end
   end
