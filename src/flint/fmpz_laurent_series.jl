@@ -1121,14 +1121,14 @@ function add!(c::ZZLaurentSeriesRingElem, a::ZZLaurentSeriesRingElem, b::ZZLaure
   elseif lenb == 1
     sb = sa
   end
-  sz = gcd(gcd(sa, sb), abs(vala - valb))
+  sc = gcd(gcd(sa, sb), abs(vala - valb))
   mina = min(vala + lena*sa, prec)
   minb = min(valb + lenb*sb, prec)
   lenr = max(mina, minb) - valr
   R = base_ring(c)
   c = set_precision!(c, prec)
   c = set_valuation!(c, valr)
-  c = set_scale!(c, sz)
+  c = set_scale!(c, sc)
   pa = vala
   pb = valb
   j = 0
