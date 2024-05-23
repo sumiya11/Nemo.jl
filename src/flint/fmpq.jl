@@ -716,10 +716,10 @@ end
 ###############################################################################
 
 @doc raw"""
-    reconstruct(a::ZZRingElem, b::ZZRingElem)
-    reconstruct(a::ZZRingElem, b::Integer)
-    reconstruct(a::Integer, b::ZZRingElem)
-    reconstruct(a::Integer, b::Integer)
+    reconstruct(a::ZZRingElem, m::ZZRingElem)
+    reconstruct(a::ZZRingElem, m::Integer)
+    reconstruct(a::Integer, m::ZZRingElem)
+    reconstruct(a::Integer, m::Integer)
 
 Attempt to return a rational number $n/d$ such that
 $0 \leq |n| \leq \lfloor\sqrt{m/2}\rfloor$ and
@@ -739,30 +739,47 @@ julia> c = reconstruct(ZZ(123), ZZ(237))
 9//2
 ```
 """
-function reconstruct(a::ZZRingElem, b::ZZRingElem)
+function reconstruct(a::ZZRingElem, m::ZZRingElem)
   c = QQFieldElem()
   if !Bool(ccall((:fmpq_reconstruct_fmpz, libflint), Cint,
-                 (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), c, a, b))
+                 (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), c, a, m))
     error("Impossible rational reconstruction")
   end
   return c
 end
 
-reconstruct(a::ZZRingElem, b::Integer) =  reconstruct(a, ZZRingElem(b))
+reconstruct(a::ZZRingElem, m::Integer) =  reconstruct(a, ZZRingElem(m))
 
-reconstruct(a::Integer, b::ZZRingElem) =  reconstruct(ZZRingElem(a), b)
+reconstruct(a::Integer, m::ZZRingElem) =  reconstruct(ZZRingElem(a), m)
 
-reconstruct(a::Integer, b::Integer) =  reconstruct(ZZRingElem(a), ZZRingElem(b))
+reconstruct(a::Integer, m::Integer) =  reconstruct(ZZRingElem(a), ZZRingElem(m))
 
 @doc raw"""
-   unsafe_reconstruct(a::ZZRingElem, b::ZZRingElem)
-Same as [`reconstruct`](@ref), but does not throw if the reconstruction fails.
+    reconstruct2(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
+
+Attempt to return a rational number $n/d$ such that $0 \leq |n| \leq N$ and $0 < d \leq D$
+such that $2 N D < m$, gcd$(n, d) = 1$, and $a \equiv nd^{-1} \pmod{m}$.
+
 Returns a tuple (`success`, `n/d`), where `success` signals the success of reconstruction.
 """
-function unsafe_reconstruct(a::ZZRingElem, b::ZZRingElem)
+function reconstruct2(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
+  c = QQFieldElem()
+  success = Bool(ccall((:fmpq_reconstruct_fmpz_2, Nemo.libflint), Cint,
+    (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}),
+    c, a, m, N, D))
+  return success, c
+end
+
+@doc raw"""
+   unsafe_reconstruct(a::ZZRingElem, m::ZZRingElem)
+
+Same as [`reconstruct`](@ref), but does not throw if reconstruction fails.
+Returns a tuple (`success`, `n/d`), where `success` signals the success of reconstruction.
+"""
+function unsafe_reconstruct(a::ZZRingElem, m::ZZRingElem)
   c = QQFieldElem()
   success = Bool(ccall((:fmpq_reconstruct_fmpz, libflint), Cint,
-                       (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), c, a, b))
+                       (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), c, a, m))
   return success, c
 end
 
