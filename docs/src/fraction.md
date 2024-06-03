@@ -118,7 +118,7 @@ reconstruct(::ZZRingElem, ::ZZRingElem)
 ```
 
 ```@docs
-reconstruct2(::ZZRingElem, ::ZZRingElem, ::ZZRingElem, ::ZZRingElem)
+reconstruct(::ZZRingElem, ::ZZRingElem, ::ZZRingElem, ::ZZRingElem)
 ```
 
 ## Rational enumeration

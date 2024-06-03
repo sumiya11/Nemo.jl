@@ -542,11 +542,11 @@ end
 
   a, m = ZZRingElem(397284476), ZZRingElem(2^30 + 3)
   N = D = isqrt((m >> 1) - 1)
-  flag, nd = reconstruct2(a, m, N, D)
+  flag, nd = reconstruct(a, m, N, D)
   @test nd == ZZRingElem(1)//ZZRingElem(100)
 
   N = D = ZZRingElem(50)
-  flag, nd = reconstruct2(a, m, N, D)
+  flag, nd = reconstruct(a, m, N, D)
   @test !flag
 
   @test reconstruct(123, ZZRingElem(237)) == ZZRingElem(9)//2

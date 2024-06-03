@@ -529,7 +529,6 @@ export RealMatSpace
 export RealPoly
 export RealPolyRing
 export reconstruct
-export reconstruct2
 export reduce_mod
 export reduce_mod!
 export rem

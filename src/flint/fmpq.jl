@@ -755,16 +755,16 @@ reconstruct(a::Integer, m::ZZRingElem) =  reconstruct(ZZRingElem(a), m)
 reconstruct(a::Integer, m::Integer) =  reconstruct(ZZRingElem(a), ZZRingElem(m))
 
 @doc raw"""
-    reconstruct2(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
+    reconstruct(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
 
 Attempt to return a rational number $n/d$ such that $0 \leq |n| \leq N$ and $0 < d \leq D$
 such that $2 N D < m$, gcd$(n, d) = 1$, and $a \equiv nd^{-1} \pmod{m}$.
 
 Returns a tuple (`success`, `n/d`), where `success` signals the success of reconstruction.
 """
-function reconstruct2(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
+function reconstruct(a::ZZRingElem, m::ZZRingElem, N::ZZRingElem, D::ZZRingElem)
   c = QQFieldElem()
-  success = Bool(ccall((:fmpq_reconstruct_fmpz_2, Nemo.libflint), Cint,
+  success = Bool(ccall((:fmpq_reconstruct_fmpz_2, libflint), Cint,
     (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}, Ref{ZZRingElem}),
     c, a, m, N, D))
   return success, c
