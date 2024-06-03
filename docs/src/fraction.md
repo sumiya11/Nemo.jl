@@ -117,6 +117,10 @@ Rational reconstruction is available for rational numbers.
 reconstruct(::ZZRingElem, ::ZZRingElem)
 ```
 
+```@docs
+reconstruct(::ZZRingElem, ::ZZRingElem, ::ZZRingElem, ::ZZRingElem)
+```
+
 ## Rational enumeration
 
 Various methods exist to enumerate rationals.
