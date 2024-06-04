@@ -109,12 +109,23 @@ end
   @test Rational{Int}(ZZRingElem(12)) == 12
   @test Rational{BigInt}(ZZRingElem(12)) == 12
 
+  @test convert(Rational{Int}, ZZRingElem(12)) == 12
+  @test convert(Rational{BigInt}, ZZRingElem(12)) == 12
+
   @test Rational(QQFieldElem(3, 7)) == 3//7
   @test Rational{Int}(QQFieldElem(3, 7)) == 3//7
   @test Rational{BigInt}(QQFieldElem(3, 7)) == 3//7
 
   @test ZZ(QQFieldElem(3)) isa ZZRingElem
   @test_throws Exception ZZ(QQFieldElem(3, 2))
+
+  @test ZZ(3//1) isa ZZRingElem
+  @test_throws Exception ZZ(3//2)
+
+  @test ZZ(big(3)//1) isa ZZRingElem
+  @test_throws Exception ZZ(big(3)//2)
+
+  @test BigFloat(QQFieldElem(3, 4)) == BigFloat(0.75)
 end
 
 @testset "QQFieldElem.vector_arithmetics" begin
@@ -406,6 +417,11 @@ end
   @test QQFieldElem(1, 2) == BigInt(1)//BigInt(2)
 
   @test BigInt(1)//BigInt(2) == QQFieldElem(1, 2)
+
+  @test QQ(1) > 0.7
+  @test 0.7 < QQ(1)
+  @test QQ(3//4) < 1.0
+  @test 1.0 > QQ(3//4)
 end
 
 @testset "QQFieldElem.shifting" begin
@@ -586,6 +602,9 @@ end
   @test dedekind_sum(-120, ZZRingElem(1305)) == -ZZRingElem(575)//522
 
   @test dedekind_sum(ZZRingElem(-120), 1305) == -ZZRingElem(575)//522
+
+  @test log(ZZ(2), QQ(1//4)) == -2.0
+  @test_throws DomainError log(QQ(-2))
 end
 
 @testset "QQFieldElem.adhoc_remove_valuation" begin
@@ -648,4 +667,15 @@ end
   io = PrettyPrinting.pretty(IOBuffer())
   print(PrettyPrinting.terse(io), PrettyPrinting.Lowercase(), QQ)
   @test String(take!(io)) == "QQ"
+end
+
+@testset "QQFieldElem.is_perfect_power_with_data" begin
+  for T in [Rational{Int}, Rational{BigInt}, QQFieldElem]
+    @test @inferred is_perfect_power_with_data(T(5//9)) == (1, 5//9)
+    @test @inferred is_perfect_power_with_data(T(4//9)) == (2, 2//3)
+  end
+
+  @test is_power(QQ(2), 2)[1] == false
+  @test is_power(QQ(1//2), 2)[1] == false
+  @test is_power(QQ(4//9), 2) == (true, 2//3)
 end

@@ -209,7 +209,7 @@ end
   @test characteristic(ZZ) == 0
 end
 
-@testset "QQFieldElem.rounding" begin
+@testset "ZZRingElem.rounding" begin
   @test floor(ZZRingElem(12)) == ZZRingElem(12)
   @test ceil(ZZRingElem(12)) == ZZRingElem(12)
   @test trunc(ZZRingElem(12)) == ZZRingElem(12)
@@ -217,7 +217,6 @@ end
   @test floor(ZZRingElem, ZZRingElem(12)) == ZZRingElem(12)
   @test ceil(ZZRingElem, ZZRingElem(12)) == ZZRingElem(12)
   @test trunc(ZZRingElem, ZZRingElem(12)) == ZZRingElem(12)
-
 
   @testset "$func" for func in (trunc, round, ceil, floor)
     for val in -5:5
@@ -227,8 +226,22 @@ end
       @test func(ZZRingElem, valZ) isa ZZRingElem
       @test func(ZZRingElem, valZ) == func(ZZRingElem, val)
     end
+
+    for val in [3.4, 2//3, big(2)//3, 2, big(3), false//true]
+      @test func(ZZRingElem, val) isa ZZRingElem
+      @test func(ZZRingElem, val) == func(Int, val)
+    end
+
+    for T in [Int, BigInt]
+      @test @inferred func(T, QQ(2//3)) == func(T, 2//3)
+    end
   end
 
+  a = [1.2 3.4; -1.2 -3.4]
+  @test trunc(ZZMatrix, a) == ZZ[1 3; -1 -3]
+  @test round(ZZMatrix, a) == ZZ[1 3; -1 -3]
+  @test ceil(ZZMatrix, a) == ZZ[2 4; -1 -3]
+  @test floor(ZZMatrix, a) == ZZ[1 3; -2 -4]
 end
 
 @testset "ZZRingElem.binary_ops" begin
@@ -401,6 +414,9 @@ end
   @test clog(b, 12) == 2
 
   @test_throws DomainError clog(b, -12)
+
+  @test log(ZZ(2), ZZ(4)) == 2.0
+  @test_throws DomainError log(ZZ(-2))
 end
 
 @testset "ZZRingElem.adhoc_binary" begin
@@ -429,6 +445,11 @@ end
   @test isapprox(a * big"1.5", big"1.5")
   @test big"1.5" * a isa BigFloat
   @test isapprox(big"1.5" * a, big"1.5") 
+
+  @test 1.5/a isa BigFloat
+  @test isapprox(1.5/a, 1.5)
+  @test big"1.5"/a isa BigFloat
+  @test isapprox(big"1.5"/a, 1.5)
 end
 
 @testset "ZZRingElem.adhoc_division" begin
@@ -544,13 +565,13 @@ end
   a = ZZRingElem(12)
 
   # values less than a
-  lt = [-40, UInt(3), 3, 3//1, big(5)//big(3)]
+  lt = [-40, UInt(3), 3, 3//1, big(5)//big(3), Float64(-40), BigFloat(-40)]
 
   # values equal to a
-  eq = [12, UInt(12), 12//1, big(12), big(12)//1]
+  eq = [12, UInt(12), 12//1, big(12), big(12)//1, Float64(12), BigFloat(12)]
 
   # values greater than a
-  gt = [40, UInt(40), 40//1, big(40)//big(3)]
+  gt = [40, UInt(40), 40//1, big(40)//big(3), Float64(40), BigFloat(40)]
 
   @testset "lt $b" for b in lt
     @test b < a
@@ -602,6 +623,23 @@ end
     @test a != b
     @test b != a
   end
+
+  # Additional test for non-small a
+  a = ZZ(2)^200
+  b = BigFloat(2)
+  @test b < a
+  @test !(b > a)
+  @test b != a
+
+  b = BigFloat(2)^200
+  @test !(b < a)
+  @test !(b > a)
+  @test b == a
+
+  b = BigFloat(2)^201
+  @test b > a
+  @test !(b < a)
+  @test b != a
 end
 
 @testset "ZZRingElem.unary_ops" begin
@@ -672,6 +710,15 @@ end
 
   @test_throws DomainError iroot(-ZZRingElem(1000), 4)
   @test_throws DomainError iroot(ZZRingElem(1000), -3)
+end
+
+@testset "ZZRingElem.is_squarefree" begin
+  for T in [Int, ZZRingElem]
+    @test !is_squarefree(T(0))
+    @test is_squarefree(T(1))
+    @test is_squarefree(T(3))
+    @test !is_squarefree(T(-4))
+  end
 end
 
 @testset "ZZRingElem.extended_gcd" begin
@@ -783,6 +830,8 @@ end
   @test base(a, 13) == "c"
 
   @test nbits(a) == 4
+  @test nbits(12) == 4
+  @test nbits(BigInt(12)) == 4
 
   @test ndigits(a, 3) == 3
 
@@ -1226,6 +1275,19 @@ end
   end
   @test is_perfect_power(ZZRingElem(10940293781057873954324736))
 
+  # Perfect power with data
+  for T in [Int, BigInt, ZZRingElem]
+    @test @inferred is_perfect_power_with_data(T(5)) == (1, 5)
+    @test @inferred is_perfect_power_with_data(T(-5)) == (1, -5)
+    @test @inferred is_perfect_power_with_data(T(64)) == (6, 2)
+    @test @inferred is_perfect_power_with_data(T(-64)) == (3, -4)
+    @test @inferred is_perfect_power_with_data(T(1)) == (0, 1)
+  end
+
+  # is_power(::ZZRingElem, n::Int)
+  @test is_power(ZZ(-64), 6)[1] == false
+  @test is_power(ZZ(64), 6) == (true, 2)
+
   # Prime power
   for T in [Int, BigInt, ZZRingElem]
     @test @inferred Nemo.is_prime_power(T(2))
@@ -1432,4 +1494,47 @@ end
   io = PrettyPrinting.pretty(IOBuffer())
   print(PrettyPrinting.terse(io), PrettyPrinting.Lowercase(), ZZ)
   @test String(take!(io)) == "ZZ"
+end
+
+@testset "ZZRingElem.range" begin
+  # UnitRange
+  r = ZZ(-2):ZZ(10)
+  @test r isa ZZRingElemUnitRange
+  @test r[1] == ZZ(-2)
+  @test r[ZZ(3)] == ZZ(0)
+  @test_throws BoundsError r[ZZ(100)]
+  @test 1 in r
+  @test !(-3 in r)
+  @test ZZ(1) in r
+  @test !(ZZ(-3) in r)
+  @test length(r) == 13
+
+  @test mod(ZZ(6), ZZ(1):ZZ(3)) == ZZ(3)
+  @test mod(6, ZZ(1):ZZ(3)) == ZZ(3)
+
+  @test 2:ZZ(3) isa ZZRingElemUnitRange
+  @test BigInt(2):ZZ(3) isa ZZRingElemUnitRange
+  @test ZZ(2):3 isa ZZRingElemUnitRange
+  @test ZZ(2):BigInt(3) isa ZZRingElemUnitRange
+
+  # StepRange
+  r = ZZ(-2):ZZ(2):ZZ(10)
+  @test length(r) == 7
+  @test length(r) isa BigInt
+  @test 2 in r
+  @test !(3 in r)
+  @test ZZ(2) in r
+  @test !(ZZ(3) in r)
+  @test r[ZZ(2)] == ZZ(0)
+  @test_throws BoundsError r[ZZ(20)]
+
+  r = ZZ(-2):ZZ(-2):ZZ(10)
+  @test length(r) == 0
+  @test length(r) isa BigInt
+  @test !(1 in r)
+  @test !(ZZ(1) in r)
+  @test_throws BoundsError r[ZZ(2)]
+
+  @test ZZ(-2):2:2 isa StepRange{ZZRingElem}
+  @test BigInt(-2):2:ZZ(2) isa StepRange{ZZRingElem}
 end

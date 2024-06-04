@@ -57,15 +57,73 @@ is_domain_type(::Type{ZZRingElem}) = true
 
 ###############################################################################
 #
-#   Misc.
+#   Ranges
 #
 ###############################################################################
+
+# ZZRingElem needs to be iterable for
+# Base.throw_boundserror(something, ::ZZRingElem) to print correctly
+Base.iterate(x::ZZRingElem) = (x, nothing)
+Base.iterate(x::ZZRingElem, i::Any) = nothing
+
+# Note that we cannot get a UnitRange as this is only legal for subtypes of Real.
+# So, we use an AbstractUnitRange here mostly copied from `base/range.jl`.
+# `StepRange`s on the other hand work out of the box thanks to duck typing.
+
+# See FlintTypes.jl for the struct ZZRingElemUnitRange
+
+fmpz_unitrange_last(start::ZZRingElem, stop::ZZRingElem) =
+ifelse(stop >= start, stop, start - one(ZZRingElem))
+
+Base.:(:)(a::ZZRingElem, b::ZZRingElem) = ZZRingElemUnitRange(a, b)
+
+@inline function getindex(r::ZZRingElemUnitRange, i::ZZRingElem)
+  val = r.start + (i - 1)
+  @boundscheck _in_unit_range(r, val) || Base.throw_boundserror(r, i)
+  val
+end
+_in_unit_range(r::ZZRingElemUnitRange, val::ZZRingElem) = r.start <= val <= r.stop
+
+show(io::IO, r::ZZRingElemUnitRange) = print(io, repr(first(r)), ':', repr(last(r)))
+
+in(x::IntegerUnion, r::ZZRingElemUnitRange) = first(r) <= x <= last(r)
+
+mod(i::IntegerUnion, r::ZZRingElemUnitRange) = mod(i - first(r), length(r)) + first(r)
+
+Base.:(:)(a::ZZRingElem, b::Integer) = (:)(promote(a, b)...)
+Base.:(:)(a::Integer, b::ZZRingElem) = (:)(promote(a, b)...)
+
+Base.:(:)(x::Int, y::ZZRingElem) = ZZRingElem(x):y
+Base.:(:)(x::ZZRingElem, y::Int) = x:ZZRingElem(y)
+
+# Construct StepRange{ZZRingElem, T} where +(::ZZRingElem, zero(::T)) must be defined
+Base.:(:)(a::ZZRingElem, s, b::Integer) = ((a_, b_) = promote(a, b); a_:s:b_)
+Base.:(:)(a::Integer, s, b::ZZRingElem) = ((a_, b_) = promote(a, b); a_:s:b_)
 
 # `length` should return an Integer, so BigInt seems appropriate as ZZRingElem is not <: Integer
 # this method is useful in particular to enable rand(ZZ(n):ZZ(m))
 function Base.length(r::StepRange{ZZRingElem})
   n = div((last(r) - first(r)) + step(r), step(r))
   isempty(r) ? zero(BigInt) : BigInt(n)
+end
+
+function Base.in(x::IntegerUnion, r::AbstractRange{ZZRingElem})
+  if isempty(r) || first(r) > x || x > last(r)
+    return false
+  end
+  return mod(convert(ZZRingElem, x), step(r)) == mod(first(r), step(r))
+end
+
+function Base.getindex(a::StepRange{ZZRingElem}, i::ZZRingElem)
+  res = first(a) + (i - 1) * Base.step(a)
+  ok = false
+  if step(a) > 0
+    ok = res <= last(a) && res >= first(a)
+  else
+    ok = res >= last(a) && res <= first(a)
+  end
+  @boundscheck ((i > 0) && ok) || Base.throw_boundserror(a, i)
+  return res
 end
 
 ################################################################################
@@ -494,6 +552,45 @@ end
 
 *(a::Integer, b::ZZRingElem) = ZZRingElem(a)*b
 
+*(a::ZZRingElem, b::AbstractFloat) = BigInt(a) * b
+*(a::AbstractFloat, b::ZZRingElem) = a * BigInt(b)
+
+/(a::AbstractFloat, b::ZZRingElem) = a / BigInt(b)
+
+###############################################################################
+#
+#   Rounding
+#
+###############################################################################
+
+for sym in (:trunc, :round, :ceil, :floor)
+  @eval begin
+    # support `trunc(ZZRingElem, 1.23)` etc. for arbitrary reals
+    Base.$sym(::Type{ZZRingElem}, a::Real) = ZZRingElem(Base.$sym(BigInt, a))
+    Base.$sym(::Type{ZZRingElem}, a::Rational) = ZZRingElem(Base.$sym(BigInt, a))
+    Base.$sym(::Type{ZZRingElem}, a::Rational{T}) where T = ZZRingElem(Base.$sym(BigInt, a))
+    Base.$sym(::Type{ZZRingElem}, a::Rational{Bool}) = ZZRingElem(Base.$sym(BigInt, a))
+
+    # for integers we don't need to round in between
+    Base.$sym(::Type{ZZRingElem}, a::Integer) = ZZRingElem(a)
+
+    # support `trunc(ZZRingElem, m)` etc. where m is a matrix of reals
+    function Base.$sym(::Type{ZZMatrix}, a::Matrix{<:Real})
+      s = Base.size(a)
+      m = zero_matrix(ZZ, s[1], s[2])
+      for i = 1:s[1], j = 1:s[2]
+        m[i, j] = Base.$sym(ZZRingElem, a[i, j])
+      end
+      return m
+    end
+
+    # rounding QQFieldElem to integer via ZZRingElem
+    function Base.$sym(::Type{T}, a::QQFieldElem) where T <: Integer
+      return T(Base.$sym(ZZRingElem, a))
+    end
+  end
+end
+
 ###############################################################################
 #
 #   Ad hoc exact division
@@ -813,6 +910,24 @@ end
 <=(x::Rational, y::ZZRingElem) = numerator(x) <= y*denominator(x)
 
 <(x::Rational, y::ZZRingElem) = numerator(x) < y*denominator(x)
+
+function cmp(a::BigFloat, b::ZZRingElem)
+  if _fmpz_is_small(b)
+    return Int(ccall((:mpfr_cmp_si, :libmpfr), Cint, (Ref{BigFloat}, Int), a, b.d))
+  end
+  return Int(ccall((:mpfr_cmp_z, :libmpfr), Cint, (Ref{BigFloat}, UInt), a, unsigned(b.d) << 2))
+end
+
+==(x::ZZRingElem, y::BigFloat) = cmp(y, x) == 0
+
+isless(x::ZZRingElem, y::BigFloat) = cmp(y, x) > 0
+
+==(x::BigFloat, y::ZZRingElem) = cmp(x, y) == 0
+
+isless(x::BigFloat, y::ZZRingElem) = cmp(x, y) < 0
+
+isless(a::Float64, b::ZZRingElem) = isless(a, BigFloat(b))
+isless(a::ZZRingElem, b::Float64) = isless(BigFloat(a), b)
 
 ###############################################################################
 #
@@ -1159,6 +1274,15 @@ end
 
 ###############################################################################
 #
+#   Natural logarithm
+#
+###############################################################################
+
+log(a::ZZRingElem) = log(BigInt(a))
+log(a::ZZRingElem, b::ZZRingElem) = log(b) / log(a)
+
+###############################################################################
+#
 #   GCD and LCM
 #
 ###############################################################################
@@ -1456,6 +1580,22 @@ function iroot(x::ZZRingElem, n::Int)
   ccall((:fmpz_root, libflint), Bool,
         (Ref{ZZRingElem}, Ref{ZZRingElem}, Int), z, x, n)
   return z
+end
+
+#TODO (Hard): Implement this properly.
+@doc raw"""
+    is_squarefree(n::Union{Int, ZZRingElem}) -> Bool
+
+Return `true` if $n$ is squarefree, `false` otherwise.
+"""
+function is_squarefree(n::Union{Int, ZZRingElem})
+  iszero(n) && return false
+  is_unit(n) && return true
+  e, b = is_perfect_power_with_data(n)
+  if e > 1
+    return false
+  end
+  return isone(maximum(values(factor(n).fac); init = 1))
 end
 
 ###############################################################################
@@ -2293,6 +2433,15 @@ julia> nbits(ZZ(12))
 nbits(x::ZZRingElem) = iszero(x) ? 0 : Int(ccall((:fmpz_bits, libflint), Clong,
                                                  (Ref{ZZRingElem},), x))  
 
+@doc raw"""
+    nbits(a::Integer) -> Int
+
+Return the number of bits necessary to represent $a$.
+"""
+function nbits(a::Integer)
+  return ndigits(a, base=2)
+end
+
 ###############################################################################
 #
 #   Bit fiddling
@@ -2937,7 +3086,7 @@ end
 @doc raw"""
     is_perfect_power(a::IntegerUnion)
 
-Returns whether $a$ is a perfect power, that is, whether $a = m^r$ for some
+Return whether $a$ is a perfect power, that is, whether $a = m^r$ for some
 integer $m$ and $r > 1$.
 """
 function is_perfect_power(a::ZZRingElem)
@@ -2947,8 +3096,16 @@ end
 
 is_perfect_power(a::Integer) = is_perfect_power(ZZRingElem(a))
 
-# Returns $e$, $r$ such that $a = r^e$ with $e$ maximal. Note: $1 = 1^0$.
-function _maximal_integer_root(a::ZZRingElem)
+#compare to Oscar/examples/PerfectPowers.jl which is, for large input,
+#far superior over gmp/ fmpz_is_perfect_power
+
+@doc raw"""
+    is_perfect_power_with_data(a::ZZRingElem) -> Int, ZZRingElem
+    is_perfect_power_with_data(a::Integer) -> Int, Integer
+
+Return $e$, $r$ such that $a = r^e$ with $e$ maximal. Note: $1 = 1^0$.
+"""
+function is_perfect_power_with_data(a::ZZRingElem)
   if iszero(a)
     error("must not be zero")
   end
@@ -2956,7 +3113,7 @@ function _maximal_integer_root(a::ZZRingElem)
     return 0, a
   end
   if a < 0
-    e, r = _maximal_integer_root(-a)
+    e, r = is_perfect_power_with_data(-a)
     if isone(e)
       return 1, a
     end
@@ -2975,6 +3132,26 @@ function _maximal_integer_root(a::ZZRingElem)
   end
 end
 
+function is_perfect_power_with_data(a::Integer)
+  e, r = is_perfect_power_with_data(ZZRingElem(a))
+  return e, typeof(a)(r)
+end
+
+@doc raw"""
+    is_power(a::ZZRingElem, n::Int) -> Bool, ZZRingElem
+    is_power(a::QQFieldElem, n::Int) -> Bool, QQFieldElem
+    is_power(a::Integer, n::Int) -> Bool, Integer
+
+Return `true` and the root if $a$ is an $n$-th power.
+"""
+function is_power(a::ZZRingElem, n::Int)
+  if a < 0 && is_even(n)
+    return false, a
+  end
+  b = iroot(a, n)
+  return b^n == a, b
+end
+
 @doc raw"""
     is_prime_power(q::IntegerUnion) -> Bool
 
@@ -2984,7 +3161,7 @@ is_prime_power(::IntegerUnion)
 
 function is_prime_power(q::ZZRingElem)
   iszero(q) && return false
-  e, a = _maximal_integer_root(q)
+  e, a = is_perfect_power_with_data(q)
   return is_prime(a)
 end
 
@@ -3000,12 +3177,12 @@ is_prime_power_with_data(::IntegerUnion)
 
 function is_prime_power_with_data(q::ZZRingElem)
   iszero(q) && return false, 1, q
-  e, a = _maximal_integer_root(q)
+  e, a = is_perfect_power_with_data(q)
   return is_prime(a), e, a
 end
 
 function is_prime_power_with_data(q::Integer)
-  e, a = _maximal_integer_root(ZZRingElem(q))
+  e, a = is_perfect_power_with_data(ZZRingElem(q))
   return is_prime(a), e, typeof(q)(a)
 end
 

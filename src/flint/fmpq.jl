@@ -373,6 +373,9 @@ end
 
 *(a::Rational{T}, b::QQFieldElem) where {T <: Integer} = b * a
 
+*(a::QQFieldElem, b::AbstractFloat) = Rational(a) * b
+*(a::AbstractFloat, b::QQFieldElem) = a * Rational(b)
+
 ###############################################################################
 #
 #   Comparison
@@ -439,6 +442,10 @@ end
 isless(a::Rational{T}, b::QQFieldElem) where {T <: Integer} = isless(QQFieldElem(a), b)
 
 isless(a::QQFieldElem, b::Rational{T}) where {T <: Integer} = isless(a, QQFieldElem(b))
+
+isless(a::Float64, b::QQFieldElem) = isless(a, BigFloat(b))
+
+isless(a::QQFieldElem, b::Float64) = isless(BigFloat(a), b)
 
 ###############################################################################
 #
@@ -552,10 +559,46 @@ end
 
 ###############################################################################
 #
-#   Inversion
+#   Power detection
 #
 ###############################################################################
 
+@doc raw"""
+    is_perfect_power_with_data(a::QQFieldElem) -> Int, QQFieldElem
+    is_perfect_power_with_data(a::Rational) -> Int, Rational
+
+Return $e$, $r$ such that $a = r^e$ with $e$ maximal. Note: $1 = 1^0$.
+"""
+function is_perfect_power_with_data(a::QQFieldElem)
+  e, r = is_perfect_power_with_data(numerator(a))
+  if e == 1
+    return e, a
+  end
+  f, s = is_perfect_power_with_data(denominator(a))
+  g = gcd(e, f)
+  return g, r^Base.div(e, g) // s^Base.div(f, g)
+end
+
+function is_perfect_power_with_data(a::Rational)
+  T = typeof(denominator(a))
+  e, r = is_perfect_power_with_data(QQFieldElem(a))
+  return e, T(numerator(r)) // T(denominator(r))
+end
+
+function is_power(a::QQFieldElem, n::Int)
+  fl, nu = is_power(numerator(a), n)
+  if !fl
+    return fl, a
+  end
+  fl, de = is_power(denominator(a), n)
+  return fl, QQFieldElem(nu, de)
+end
+
+###############################################################################
+#
+#   Inversion
+#
+###############################################################################
 
 function inv(a::QQFieldElem)
   if iszero(a)
@@ -991,6 +1034,9 @@ dedekind_sum(h::Integer, k::ZZRingElem) = dedekind_sum(ZZRingElem(h), k)
 
 dedekind_sum(h::Integer, k::Integer) = dedekind_sum(ZZRingElem(h), ZZRingElem(k))
 
+log(a::QQFieldElem) = log(numerator(a)) - log(denominator(a))
+log(a::ZZRingElem, b::QQFieldElem) = log(b) / log(a)
+
 ###############################################################################
 #
 #  Simplest between
@@ -1155,6 +1201,10 @@ function (a::ZZRing)(b::QQFieldElem)
   return z
 end
 
+function (::ZZRing)(x::Rational{<:IntegerUnion})
+  @assert denominator(x) == 1
+  return ZZRingElem(numerator(x))
+end
 
 ###############################################################################
 #
@@ -1224,6 +1274,17 @@ end
 
 Rational(z::ZZRingElem) = Rational{BigInt}(z)
 
+function convert(R::Type{Rational{T}}, a::ZZRingElem) where T <: Integer
+  return R(T(a))
+end
+
+@inline __get_rounding_mode() = Base.MPFR.rounding_raw(BigFloat)
+
+function BigFloat(a::QQFieldElem)
+  r = BigFloat(0)
+  ccall((:fmpq_get_mpfr, libflint), Cint, (Ref{BigFloat}, Ref{QQFieldElem}, Int32), r, a, __get_rounding_mode())
+  return r
+end
 
 ###############################################################################
 #
