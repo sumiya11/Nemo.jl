@@ -65,27 +65,21 @@ mutable struct ZZRingElem <: RingElem
   end
 
   function ZZRingElem(x::BigInt)
-    z = new()
-    ccall((:fmpz_init, libflint), Nothing, (Ref{ZZRingElem},), z)
+    z = ZZRingElem()
     ccall((:fmpz_set_mpz, libflint), Nothing, (Ref{ZZRingElem}, Ref{BigInt}), z, x)
-    finalizer(_fmpz_clear_fn, z)
     return z
   end
 
   function ZZRingElem(x::Ptr{Culong}, len::Clong)
-    z = new()
-    ccall((:fmpz_init, libflint), Nothing, (Ref{ZZRingElem},), z)
+    z = ZZRingElem()
     ccall((:fmpz_set_ui_array, libflint), Nothing, (Ref{ZZRingElem}, Ptr{Culong}, Clong), z, x, len)
-    finalizer(_fmpz_clear_fn, z)
     return z
   end
 
   function ZZRingElem(x::Float64)
     !isinteger(x) && throw(InexactError(:convert, ZZRingElem, x))
-    z = new()
-    ccall((:fmpz_init, libflint), Nothing, (Ref{ZZRingElem},), z)
+    z = ZZRingElem()
     ccall((:fmpz_set_d, libflint), Nothing, (Ref{ZZRingElem}, Cdouble), z, x)
-    finalizer(_fmpz_clear_fn, z)
     return z
   end
 
@@ -187,31 +181,26 @@ mutable struct QQFieldElem <: FracElem{ZZRingElem}
 
   function QQFieldElem(a::ZZRingElem, b::ZZRingElem)
     iszero(b) && throw(DivideError())
-    z = new()
-    ccall((:fmpq_init, libflint), Nothing, (Ref{QQFieldElem},), z)
+    z = QQFieldElem()
     ccall((:fmpq_set_fmpz_frac, libflint), Nothing,
           (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), z, a, b)
-    finalizer(_fmpq_clear_fn, z)
     return z
   end
 
   function QQFieldElem(a::ZZRingElem)
-    z = new()
-    ccall((:fmpq_init, libflint), Nothing, (Ref{QQFieldElem},), z)
+    z = QQFieldElem()
     b = ZZRingElem(1)
     ccall((:fmpq_set_fmpz_frac, libflint), Nothing,
           (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), z, a, b)
-    finalizer(_fmpq_clear_fn, z)
     return z
   end
 
   function QQFieldElem(a::Int, b::Int)
     b == 0 && throw(DivideError())
-    z = new()
+    z = QQFieldElem()
     if b == typemin(Int) || (b < 0 && a == typemin(Int))
       bz = -ZZ(b)
       az = -ZZ(a)
-      ccall((:fmpq_init, libflint), Nothing, (Ref{QQFieldElem},), z)
       ccall((:fmpq_set_fmpz_frac, libflint), Nothing,
             (Ref{QQFieldElem}, Ref{ZZRingElem}, Ref{ZZRingElem}), z, az, bz)
     else
@@ -219,20 +208,16 @@ mutable struct QQFieldElem <: FracElem{ZZRingElem}
         b = -b
         a = -a
       end
-      ccall((:fmpq_init, libflint), Nothing, (Ref{QQFieldElem},), z)
       ccall((:fmpq_set_si, libflint), Nothing,
             (Ref{QQFieldElem}, Int, Int), z, a, b)
     end
-    finalizer(_fmpq_clear_fn, z)
     return z
   end
 
   function QQFieldElem(a::Int)
-    z = new()
-    ccall((:fmpq_init, libflint), Nothing, (Ref{QQFieldElem},), z)
+    z = QQFieldElem()
     ccall((:fmpq_set_si, libflint), Nothing,
           (Ref{QQFieldElem}, Int, Int), z, a, 1)
-    finalizer(_fmpq_clear_fn, z)
     return z
   end
 
@@ -285,28 +270,22 @@ mutable struct ZZPolyRingElem <: PolyRingElem{ZZRingElem}
   end
 
   function ZZPolyRingElem(a::Int)
-    z = new()
-    ccall((:fmpz_poly_init, libflint), Nothing, (Ref{ZZPolyRingElem},), z)
+    z = ZZPolyRingElem()
     ccall((:fmpz_poly_set_si, libflint), Nothing, (Ref{ZZPolyRingElem}, Int), z, a)
-    finalizer(_fmpz_poly_clear_fn, z)
     return z
   end
 
   function ZZPolyRingElem(a::ZZRingElem)
-    z = new()
-    ccall((:fmpz_poly_init, libflint), Nothing, (Ref{ZZPolyRingElem},), z)
+    z = ZZPolyRingElem()
     ccall((:fmpz_poly_set_fmpz, libflint), Nothing,
           (Ref{ZZPolyRingElem}, Ref{ZZRingElem}), z, a)
-    finalizer(_fmpz_poly_clear_fn, z)
     return z
   end
 
   function ZZPolyRingElem(a::ZZPolyRingElem)
-    z = new()
-    ccall((:fmpz_poly_init, libflint), Nothing, (Ref{ZZPolyRingElem},), z)
+    z = ZZPolyRingElem()
     ccall((:fmpz_poly_set, libflint), Nothing,
           (Ref{ZZPolyRingElem}, Ref{ZZPolyRingElem}), z, a)
-    finalizer(_fmpz_poly_clear_fn, z)
     return z
   end
 end
@@ -384,46 +363,36 @@ mutable struct QQPolyRingElem <: PolyRingElem{QQFieldElem}
   end
 
   function QQPolyRingElem(a::Int)
-    z = new()
-    ccall((:fmpq_poly_init, libflint), Nothing, (Ref{QQPolyRingElem},), z)
+    z = QQPolyRingElem()
     ccall((:fmpq_poly_set_si, libflint), Nothing, (Ref{QQPolyRingElem}, Int), z, a)
-    finalizer(_fmpq_poly_clear_fn, z)
     return z
   end
 
   function QQPolyRingElem(a::ZZRingElem)
-    z = new()
-    ccall((:fmpq_poly_init, libflint), Nothing, (Ref{QQPolyRingElem},), z)
+    z = QQPolyRingElem()
     ccall((:fmpq_poly_set_fmpz, libflint), Nothing,
           (Ref{QQPolyRingElem}, Ref{ZZRingElem}), z, a)
-    finalizer(_fmpq_poly_clear_fn, z)
     return z
   end
 
   function QQPolyRingElem(a::QQFieldElem)
-    z = new()
-    ccall((:fmpq_poly_init, libflint), Nothing, (Ref{QQPolyRingElem},), z)
+    z = QQPolyRingElem()
     ccall((:fmpq_poly_set_fmpq, libflint), Nothing,
           (Ref{QQPolyRingElem}, Ref{QQFieldElem}), z, a)
-    finalizer(_fmpq_poly_clear_fn, z)
     return z
   end
 
   function QQPolyRingElem(a::ZZPolyRingElem)
-    z = new()
-    ccall((:fmpq_poly_init, libflint), Nothing, (Ref{QQPolyRingElem},), z)
+    z = QQPolyRingElem()
     ccall((:fmpq_poly_set_fmpz_poly, libflint), Nothing,
           (Ref{QQPolyRingElem}, Ref{ZZPolyRingElem}), z, a)
-    finalizer(_fmpq_poly_clear_fn, z)
     return z
   end
 
   function QQPolyRingElem(a::QQPolyRingElem)
-    z = new()
-    ccall((:fmpq_poly_init, libflint), Nothing, (Ref{QQPolyRingElem},), z)
+    z = QQPolyRingElem()
     ccall((:fmpq_poly_set, libflint), Nothing,
           (Ref{QQPolyRingElem}, Ref{QQPolyRingElem}), z, a)
-    finalizer(_fmpq_poly_clear_fn, z)
     return z
   end
 end
@@ -4789,10 +4758,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
   end
 
   function QQMatrix(r::Int, c::Int, arr::AbstractMatrix{QQFieldElem})
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4804,10 +4770,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
   end
 
   function QQMatrix(r::Int, c::Int, arr::AbstractMatrix{ZZRingElem})
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     b = ZZRingElem(1)
     GC.@preserve z for i = 1:r
       for j = 1:c
@@ -4821,10 +4784,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
 
 
   function QQMatrix(r::Int, c::Int, arr::AbstractVector{QQFieldElem})
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4836,10 +4796,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
   end
 
   function QQMatrix(r::Int, c::Int, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     b = ZZRingElem(1)
     GC.@preserve z for i = 1:r
       for j = 1:c
@@ -4853,10 +4810,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
 
 
   function QQMatrix(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Integer}
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4868,10 +4822,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
   end
 
   function QQMatrix(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Integer}
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4883,10 +4834,7 @@ mutable struct QQMatrix <: MatElem{QQFieldElem}
   end
 
   function QQMatrix(r::Int, c::Int, d::QQFieldElem)
-    z = new()
-    ccall((:fmpq_mat_init, libflint), Nothing,
-          (Ref{QQMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpq_mat_clear_fn, z)
+    z = QQMatrix(r, c)
     GC.@preserve z for i = 1:min(r, c)
       el = mat_entry_ptr(z, i, i)
       ccall((:fmpq_set, libflint), Nothing,
@@ -4939,10 +4887,7 @@ mutable struct ZZMatrix <: MatElem{ZZRingElem}
   end
 
   function ZZMatrix(r::Int, c::Int, arr::AbstractMatrix{ZZRingElem})
-    z = new()
-    ccall((:fmpz_mat_init, libflint), Nothing,
-          (Ref{ZZMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpz_mat_clear_fn, z)
+    z = ZZMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4954,10 +4899,7 @@ mutable struct ZZMatrix <: MatElem{ZZRingElem}
   end
 
   function ZZMatrix(r::Int, c::Int, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:fmpz_mat_init, libflint), Nothing,
-          (Ref{ZZMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpz_mat_clear_fn, z)
+    z = ZZMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4969,10 +4911,7 @@ mutable struct ZZMatrix <: MatElem{ZZRingElem}
   end
 
   function ZZMatrix(r::Int, c::Int, arr::AbstractMatrix{T}) where {T <: Integer}
-    z = new()
-    ccall((:fmpz_mat_init, libflint), Nothing,
-          (Ref{ZZMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpz_mat_clear_fn, z)
+    z = ZZMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4984,10 +4923,7 @@ mutable struct ZZMatrix <: MatElem{ZZRingElem}
   end
 
   function ZZMatrix(r::Int, c::Int, arr::AbstractVector{T}) where {T <: Integer}
-    z = new()
-    ccall((:fmpz_mat_init, libflint), Nothing,
-          (Ref{ZZMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpz_mat_clear_fn, z)
+    z = ZZMatrix(r, c)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -4999,10 +4935,7 @@ mutable struct ZZMatrix <: MatElem{ZZRingElem}
   end
 
   function ZZMatrix(r::Int, c::Int, d::ZZRingElem)
-    z = new()
-    ccall((:fmpz_mat_init, libflint), Nothing,
-          (Ref{ZZMatrix}, Int, Int), z, r, c)
-    finalizer(_fmpz_mat_clear_fn, z)
+    z = ZZMatrix(r, c)
     GC.@preserve z for i = 1:min(r, c)
       el = mat_entry_ptr(z, i, i)
       ccall((:fmpz_set, libflint), Nothing,
@@ -5058,10 +4991,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{UInt}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5074,10 +5004,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{UInt})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, mod(arr[(i - 1) * c + j], n), i, j)
@@ -5087,10 +5014,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{ZZRingElem}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5106,10 +5030,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     t = ZZRingElem()
     for i = 1:r
       for j = 1:c
@@ -5132,10 +5053,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{zzModRingElem}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5148,10 +5066,7 @@ mutable struct zzModMatrix <: MatElem{zzModRingElem}
   end
 
   function zzModMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{zzModRingElem})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{zzModMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_nmod_mat_clear_fn, z)
+    z = zzModMatrix(r, c, n)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, arr[(i - 1) * c + j].data, i, j) # no reduction necessary
@@ -5224,10 +5139,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
   end
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{ZZRingElem}, transpose::Bool = false)
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5244,10 +5156,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
   end
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{T}, transpose::Bool = false) where T <: Integer
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5265,10 +5174,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{ZZModRingElem}, transpose::Bool = false)
     # FIXME: Check compatibility between ctx and arr?
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5285,10 +5191,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
   end
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, _reduce(arr[(i - 1)*c + j], ctx), i, j)
@@ -5302,10 +5205,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
   end
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{T}) where T <: Integer
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, _reduce(ZZRingElem(arr[(i - 1)*c + j]), ctx), i, j)
@@ -5320,10 +5220,7 @@ mutable struct ZZModMatrix <: MatElem{ZZModRingElem}
 
   function ZZModMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{ZZModRingElem})
     # FIXME: Check compatibility between ctx and arr?
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{ZZModMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_fmpz_mod_mat_clear_fn, z)
+    z = ZZModMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, arr[(i - 1)*c + j].data, i, j)
@@ -5396,10 +5293,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
   end
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{ZZRingElem}, transpose::Bool = false)
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5412,10 +5306,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
   end
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{T}, transpose::Bool = false) where T <: Integer
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5429,10 +5320,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractMatrix{FpFieldElem}, transpose::Bool = false)
     # FIXME: Check compatibility between ctx and arr?
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5445,10 +5333,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
   end
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, _reduce(arr[(i - 1)*c + j], ctx), i, j)
@@ -5458,10 +5343,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
   end
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{T}) where T <: Integer
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, _reduce(ZZRingElem(arr[(i - 1)*c + j]), ctx), i, j)
@@ -5472,10 +5354,7 @@ mutable struct FpMatrix <: MatElem{FpFieldElem}
 
   function FpMatrix(r::Int, c::Int, ctx::fmpz_mod_ctx_struct, arr::AbstractVector{FpFieldElem})
     # FIXME: Check compatibility between ctx and arr?
-    z = new()
-    ccall((:fmpz_mod_mat_init, libflint), Nothing,
-          (Ref{FpMatrix}, Int, Int, Ref{fmpz_mod_ctx_struct}), z, r, c, ctx)
-    finalizer(_gfp_fmpz_mat_clear_fn, z)
+    z = FpMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, arr[(i - 1)*c + j].data, i, j)
@@ -5524,10 +5403,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{UInt}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5540,10 +5416,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{UInt})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, mod(arr[(i - 1) * c + j], n), i, j)
@@ -5553,10 +5426,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{ZZRingElem}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5572,10 +5442,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{ZZRingElem})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     t = ZZRingElem()
     for i = 1:r
       for j = 1:c
@@ -5598,10 +5465,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractMatrix{fpFieldElem}, transpose::Bool = false)
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     if transpose
       arr = Base.transpose(arr)
     end
@@ -5614,10 +5478,7 @@ mutable struct fpMatrix <: MatElem{fpFieldElem}
   end
 
   function fpMatrix(r::Int, c::Int, n::UInt, arr::AbstractVector{fpFieldElem})
-    z = new()
-    ccall((:nmod_mat_init, libflint), Nothing,
-          (Ref{fpMatrix}, Int, Int, UInt), z, r, c, n)
-    finalizer(_gfp_mat_clear_fn, z)
+    z = fpMatrix(r, c, n)
     for i = 1:r
       for j = 1:c
         setindex_raw!(z, arr[(i - 1) * c + j].data, i, j) # no reduction necessary
@@ -6121,10 +5982,7 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractMatrix{FqFieldElem}, ctx::FqField)
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set, libflint), Nothing,
@@ -6133,16 +5991,11 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractVector{FqFieldElem}, ctx::FqField)
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set, libflint), Nothing,
@@ -6151,16 +6004,11 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractMatrix{ZZRingElem}, ctx::FqField)
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set_fmpz, libflint), Nothing,
@@ -6169,16 +6017,11 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractVector{ZZRingElem}, ctx::FqField)
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set_fmpz, libflint), Nothing,
@@ -6187,16 +6030,11 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, ctx::FqField) where {T <: Integer}
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set, libflint), Nothing,
@@ -6205,16 +6043,11 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, ctx(arr[i, j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, arr::AbstractVector{T}, ctx::FqField) where {T <: Integer}
-    z = new()
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:r
       for j = 1:c
         ccall((:fq_default_mat_entry_set, libflint), Nothing,
@@ -6223,84 +6056,57 @@ mutable struct FqMatrix <: MatElem{FqFieldElem}
               z, i - 1, j - 1, ctx(arr[(i - 1) * c + j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(r::Int, c::Int, d::FqFieldElem)
-    z = new()
     ctx = parent(d)
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     for i = 1:min(r, c)
       ccall((:fq_default_mat_entry_set, libflint), Nothing,
             (Ref{FqMatrix}, Int, Int, Ref{FqFieldElem},
              Ref{FqField}), z, i - 1, i - 1, d, ctx)
     end
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(m::ZZMatrix, ctx::FqField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     ccall((:fq_default_mat_set_fmpz_mat, libflint), Nothing,
           (Ref{FqMatrix}, Ref{ZZMatrix}, Ref{FqField}),
           z, m, ctx)
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(m::ZZModMatrix, ctx::FqField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     ccall((:fq_default_mat_set_fmpz_mod_mat, libflint), Nothing,
           (Ref{FqMatrix}, Ref{ZZModMatrix}, Ref{FqField}),
           z, m, ctx)
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(m::zzModMatrix, ctx::FqField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     ccall((:fq_default_mat_set_nmod_mat, libflint), Nothing,
           (Ref{FqMatrix}, Ref{zzModMatrix}, Ref{FqField}),
           z, m, ctx)
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 
   function FqMatrix(m::fpMatrix, ctx::FqField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_default_mat_init, libflint), Nothing,
-          (Ref{FqMatrix}, Int, Int, Ref{FqField}),
-          z, r, c, ctx)
+    z = FqMatrix(r, c, ctx)
     ccall((:fq_default_mat_set_nmod_mat, libflint), Nothing,
           (Ref{FqMatrix}, Ref{fpMatrix}, Ref{FqField}),
           z, m, ctx)
-    z.base_ring = ctx
-    finalizer(_fq_default_mat_clear_fn, z)
     return z
   end
 end
@@ -6341,9 +6147,7 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{FqPolyRepFieldElem}, ctx::FqPolyRepField)
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_mat_entry_set, libflint), Nothing,
@@ -6351,15 +6155,11 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               z, i - 1, j - 1, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{FqPolyRepFieldElem}, ctx::FqPolyRepField)
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_mat_entry_set, libflint), Nothing,
@@ -6367,15 +6167,11 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               z, i - 1, j - 1, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{ZZRingElem}, ctx::FqPolyRepField)
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -6383,15 +6179,11 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               (Ptr{FqPolyRepFieldElem}, Ref{ZZRingElem}, Ref{FqPolyRepField}), el, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{ZZRingElem}, ctx::FqPolyRepField)
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -6399,15 +6191,11 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               (Ptr{FqPolyRepFieldElem}, Ref{ZZRingElem}, Ref{FqPolyRepField}), el, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, ctx::FqPolyRepField) where {T <: Integer}
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_mat_entry_set, libflint), Nothing,
@@ -6415,15 +6203,11 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               z, i - 1, j - 1, ctx(arr[i, j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{T}, ctx::FqPolyRepField) where {T <: Integer}
-    z = new()
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_mat_entry_set, libflint), Nothing,
@@ -6431,31 +6215,23 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               z, i - 1, j - 1, ctx(arr[(i - 1) * c + j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(r::Int, c::Int, d::FqPolyRepFieldElem)
-    z = new()
     ctx = parent(d)
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     for i = 1:min(r, c)
       ccall((:fq_mat_entry_set, libflint), Nothing,
             (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepFieldElem}, Ref{FqPolyRepField}), z, i - 1, i- 1, d, ctx)
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 
   function FqPolyRepMatrix(m::ZZMatrix, ctx::FqPolyRepField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_mat_init, libflint), Nothing,
-          (Ref{FqPolyRepMatrix}, Int, Int, Ref{FqPolyRepField}), z, r, c, ctx)
+    z = FqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el1 = mat_entry_ptr(z, i, j)
@@ -6465,8 +6241,6 @@ mutable struct FqPolyRepMatrix <: MatElem{FqPolyRepFieldElem}
               (Ptr{FqPolyRepFieldElem}, Ptr{ZZRingElem}, Ref{FqPolyRepField}), el1, el2, ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_mat_clear_fn, z)
     return z
   end
 end
@@ -6506,9 +6280,7 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{fqPolyRepFieldElem}, ctx::fqPolyRepField)
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_nmod_mat_entry_set, libflint), Nothing,
@@ -6516,15 +6288,11 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               z, i - 1, j - 1, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{fqPolyRepFieldElem}, ctx::fqPolyRepField)
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_nmod_mat_entry_set, libflint), Nothing,
@@ -6532,15 +6300,11 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               z, i - 1, j - 1, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{ZZRingElem}, ctx::fqPolyRepField)
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -6548,15 +6312,11 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               (Ptr{fqPolyRepFieldElem}, Ref{ZZRingElem}, Ref{fqPolyRepField}), el, arr[i, j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{ZZRingElem}, ctx::fqPolyRepField)
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el = mat_entry_ptr(z, i, j)
@@ -6564,15 +6324,11 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               (Ptr{fqPolyRepFieldElem}, Ref{ZZRingElem}, Ref{fqPolyRepField}), el, arr[(i - 1) * c + j], ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractMatrix{T}, ctx::fqPolyRepField) where {T <: Integer}
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_nmod_mat_entry_set, libflint), Nothing,
@@ -6580,15 +6336,11 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               z, i - 1, j - 1, ctx(arr[i, j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, arr::AbstractVector{T}, ctx::fqPolyRepField) where {T <: Integer}
-    z = new()
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         ccall((:fq_nmod_mat_entry_set, libflint), Nothing,
@@ -6596,31 +6348,23 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               z, i - 1, j - 1, ctx(arr[(i - 1) * c + j]), ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(r::Int, c::Int, d::fqPolyRepFieldElem)
-    z = new()
     ctx = parent(d)
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     for i = 1:min(r, c)
       ccall((:fq_nmod_mat_entry_set, libflint), Nothing,
             (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), z, i - 1, i- 1, d, ctx)
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 
   function fqPolyRepMatrix(m::ZZMatrix, ctx::fqPolyRepField)
-    z = new()
     r = nrows(m)
     c = ncols(m)
-    ccall((:fq_nmod_mat_init, libflint), Nothing,
-          (Ref{fqPolyRepMatrix}, Int, Int, Ref{fqPolyRepField}), z, r, c, ctx)
+    z = fqPolyRepMatrix(r, c, ctx)
     GC.@preserve z for i = 1:r
       for j = 1:c
         el1 = mat_entry_ptr(z, i, j)
@@ -6630,8 +6374,6 @@ mutable struct fqPolyRepMatrix <: MatElem{fqPolyRepFieldElem}
               (Ptr{fqPolyRepFieldElem}, Ptr{ZZRingElem}, Ref{fqPolyRepField}), el1, el2, ctx)
       end
     end
-    z.base_ring = ctx
-    finalizer(_fq_nmod_mat_clear_fn, z)
     return z
   end
 end
