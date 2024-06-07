@@ -10,23 +10,13 @@ end
 Nemo allows working with exact real and complex algebraic numbers.
 
 The default algebraic number type in Nemo is provided by Calcium. The
-associated field of algebraic numbers is represented by the constant
-parent object called `CalciumQQBar`.
+associated field of algebraic numbers can be constructed using
+`QQBar = algebraic_closure(QQ)`. We will leave out this line from
+all code blocks on this page for brevity.
 
-For convenience we define
-
-```
-QQBar = CalciumQQBar
-```
-
-so that algebraic numbers can be constructed using `QQBar` instead of
-`CalciumQQBar`. Note that this is the name of a specific parent object,
-not the name of its type.
-
-
- Library        | Element type  | Parent type
-----------------|---------------|--------------------
-Calcium         | `QQBarFieldElem`       | `QQBarField`
+ Library        | Element type     | Parent type
+----------------|------------------|--------------------
+Calcium         | `QQBarFieldElem` | `QQBarField`
 
 **Important note on performance**
 
@@ -38,8 +28,7 @@ For fast calculation in $\overline{\mathbb{Q}}$,
 `CalciumField` should typically be used instead (see the section
 on *Exact real and complex numbers*).
 Alternatively, to compute in a fixed subfield of $\overline{\mathbb{Q}}$,
-you may fix a generator $a$ and construct an
-Antic number field to represent $\mathbb{Q}(a)$.
+you may fix a generator $a$ and construct a number field to represent $\mathbb{Q}(a)$.
 
 ## Algebraic number functionality
 
@@ -58,7 +47,7 @@ Methods to construct algebraic numbers include:
 
 Arithmetic:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> ZZRingElem(QQBar(3))
 3
 
@@ -71,7 +60,7 @@ Root 0.500000 + 0.866025*im of x^2 - x + 1
 
 Solving the quintic equation:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> R, x = polynomial_ring(QQ, "x")
 (Univariate polynomial ring in x over QQ, x)
 
@@ -89,7 +78,7 @@ true
 
 Computing exact eigenvalues of a matrix:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> eigenvalues(QQBar, ZZ[1 1 0; 0 1 1; 1 0 1])
 3-element Vector{QQBarFieldElem}:
  Root 2.00000 of x - 2
@@ -117,7 +106,7 @@ Algebraic numbers can be evaluated
 numerically to arbitrary precision by converting
 to real or complex Arb fields:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> RR = ArbField(64); RR(sqrt(QQBar(2)))
 [1.414213562373095049 +/- 3.45e-19]
 
@@ -132,7 +121,7 @@ julia> CC = AcbField(32); CC(QQBar(-1) ^ (QQBar(1) // 4))
 Retrieving the minimal polynomial and algebraic conjugates
 of a given algebraic number:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> minpoly(polynomial_ring(ZZ, "x")[1], QQBar(1+2im))
 x^2 - 2*x + 5
 
@@ -165,7 +154,7 @@ height_bits(x::QQBarFieldElem)
 
 **Examples**
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> real(sqrt(QQBar(1im)))
 Root 0.707107 of 2x^2 - 1
 
@@ -223,7 +212,7 @@ first.
 
 **Examples**
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> 1 < sqrt(QQBar(2)) < QQBar(3)//2
 true
 
@@ -260,7 +249,7 @@ is_less_root_order(a::QQBarFieldElem, b::QQBarFieldElem)
 
 **Examples**
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> root(QQBar(2), 5)
 Root 1.14870 of x^5 - 2
 
@@ -315,7 +304,7 @@ atanpi(a::QQBarFieldElem)
 
 An algebraic number can be recovered from a numerical value:
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> RR = RealField(); guess(QQBar, RR("1.41421356 +/- 1e-6"), 2)
 Root 1.41421 of x^2 - 2
 ```
@@ -325,7 +314,7 @@ approximation, you should add an error estimate; otherwise, at best the only
 algebraic number that can be guessed is the binary floating-point number
 itself, at worst no guess is possible.
 
-```jldoctest
+```jldoctest; setup = :(QQBar = algebraic_closure(QQ))
 julia> RR = RealField();
 
 julia> x = RR(0.1)       # note: 53-bit binary approximation of 1//10 without radius

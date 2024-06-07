@@ -1,13 +1,11 @@
 @testset "QQBarFieldElem.constructors" begin
-  R = CalciumQQBar
-
-  @test R == QQBar
+  R = algebraic_closure(QQ)
 
   @test elem_type(R) == QQBarFieldElem
   @test elem_type(QQBarField) == QQBarFieldElem
   @test parent_type(QQBarFieldElem) == QQBarField
   @test is_domain_type(QQBarFieldElem) == true
-  @test base_ring(CalciumQQBar) == Union{}
+  @test base_ring(R) == Union{}
   @test base_ring(QQBarFieldElem(3)) == Union{}
 
   @test isa(R, QQBarField)
@@ -41,19 +39,20 @@
 end
 
 @testset "QQBarFieldElem.printing" begin
-  a = CalciumQQBar(1)
+  R = algebraic_closure(QQ)
+  a = R(1)
 
   @test string(a) == "Root 1.00000 of x - 1"
   @test string(parent(a)) == "Field of algebraic numbers"
 
   @test string(-(QQBarFieldElem(10) ^ 20)) == "Root -1.00000e+20 of x + 100000000000000000000"
-  @test string(root_of_unity(CalciumQQBar, 3)) == "Root -0.500000 + 0.866025*im of x^2 + x + 1"
+  @test string(root_of_unity(R, 3)) == "Root -0.500000 + 0.866025*im of x^2 + x + 1"
   @test string(sqrt(QQBarFieldElem(-1)) // 3) == "Root 0.333333*im of 9x^2 + 1"
 end
 
 
 @testset "QQBarFieldElem.manipulation" begin
-  R = CalciumQQBar
+  R = algebraic_closure(QQ)
 
   @test zero(R) == 0
   @test one(R) == 1
@@ -152,27 +151,27 @@ end
   @test root_of_unity_as_args(-i) == (4, 3)
   @test_throws DomainError root_of_unity_as_args(QQBarFieldElem(2))
 
-  v = roots(CalciumQQBar, x^5-x-1)
+  v = roots(R, x^5-x-1)
   @test v[1]^5 - v[1] - 1 == 0
 
-  v = roots(CalciumQQBar, y^2+1)
+  v = roots(R, y^2+1)
   @test v == [i, -i]
 
-  @test roots(CalciumQQBar, ZZx(0)) == []
-  @test roots(CalciumQQBar, ZZx(1)) == []
-  @test roots(CalciumQQBar, QQy(0)) == []
-  @test roots(CalciumQQBar, QQy(1)) == []
+  @test roots(R, ZZx(0)) == []
+  @test roots(R, ZZx(1)) == []
+  @test roots(R, QQy(0)) == []
+  @test roots(R, QQy(1)) == []
 
-  @test eigenvalues(CalciumQQBar, zero(matrix_space(ZZ, 0, 0))) == []
-  @test eigenvalues(CalciumQQBar, zero(matrix_space(QQ, 0, 0))) == []
-  @test eigenvalues(CalciumQQBar, ZZ[1 1; 1 -1]) == [u, -u]
-  @test eigenvalues_with_multiplicities(CalciumQQBar, ZZ[1 1; 1 -1]) == [(u, 1), (-u, 1)]
-  @test eigenvalues(CalciumQQBar, diagonal_matrix(ZZ[1 1; 1 -1], ZZ[1 1; 1 -1])) == [u, -u]
-  @test eigenvalues_with_multiplicities(CalciumQQBar, diagonal_matrix(ZZ[1 1; 1 -1], ZZ[1 1; 1 -1])) == [(u, 2), (-u, 2)]
-  @test eigenvalues(CalciumQQBar, QQ[1 1; 1 -1]) == [u, -u]
-  @test eigenvalues_with_multiplicities(CalciumQQBar, QQ[1 1; 1 -1]) == [(u, 1), (-u, 1)]
-  @test eigenvalues(CalciumQQBar, diagonal_matrix(QQ[1 1; 1 -1], QQ[1 1; 1 -1])) == [u, -u]
-  @test eigenvalues_with_multiplicities(CalciumQQBar, diagonal_matrix(QQ[1 1; 1 -1], QQ[1 1; 1 -1])) == [(u, 2), (-u, 2)]
+  @test eigenvalues(R, zero(matrix_space(ZZ, 0, 0))) == []
+  @test eigenvalues(R, zero(matrix_space(QQ, 0, 0))) == []
+  @test eigenvalues(R, ZZ[1 1; 1 -1]) == [u, -u]
+  @test eigenvalues_with_multiplicities(R, ZZ[1 1; 1 -1]) == [(u, 1), (-u, 1)]
+  @test eigenvalues(R, diagonal_matrix(ZZ[1 1; 1 -1], ZZ[1 1; 1 -1])) == [u, -u]
+  @test eigenvalues_with_multiplicities(R, diagonal_matrix(ZZ[1 1; 1 -1], ZZ[1 1; 1 -1])) == [(u, 2), (-u, 2)]
+  @test eigenvalues(R, QQ[1 1; 1 -1]) == [u, -u]
+  @test eigenvalues_with_multiplicities(R, QQ[1 1; 1 -1]) == [(u, 1), (-u, 1)]
+  @test eigenvalues(R, diagonal_matrix(QQ[1 1; 1 -1], QQ[1 1; 1 -1])) == [u, -u]
+  @test eigenvalues_with_multiplicities(R, diagonal_matrix(QQ[1 1; 1 -1], QQ[1 1; 1 -1])) == [(u, 2), (-u, 2)]
 
   @test conjugates(QQBarFieldElem(3)) == [QQBarFieldElem(3)]
   @test conjugates(u) == [u, -u]
@@ -189,14 +188,14 @@ end
     @test_throws DomainError (RR(i))
 
     v = sqrt(RR(2)) + sqrt(RR(3))
-    @test guess(CalciumQQBar, v, 4) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
-    @test guess(CalciumQQBar, v, 4, 10) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
-    @test_throws ErrorException guess(CalciumQQBar, v, 2)
+    @test guess(R, v, 4) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
+    @test guess(R, v, 4, 10) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
+    @test_throws ErrorException guess(R, v, 2)
 
-    @test guess(CalciumQQBar, CC(2+i), 2, 10) == 2+i
+    @test guess(R, CC(2+i), 2, 10) == 2+i
 
-    Rx, x = polynomial_ring(QQBar, "x")
-    @test gcd(x^4 - 4*x^2 + 4, x^2 + sqrt(QQBar(18))*x + 4) == x + sqrt(QQBar(2))
+    Rx, x = polynomial_ring(R, "x")
+    @test gcd(x^4 - 4*x^2 + 4, x^2 + sqrt(R(18))*x + 4) == x + sqrt(R(2))
   end
 
   # floor, ceil, round
@@ -232,20 +231,18 @@ end
   @test_throws DomainError (RR(i))
 
   v = sqrt(RR(2)) + sqrt(RR(3))
-  @test guess(CalciumQQBar, v, 4) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
-  @test guess(CalciumQQBar, v, 4, 10) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
-  @test_throws ErrorException guess(CalciumQQBar, v, 2)
+  @test guess(R, v, 4) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
+  @test guess(R, v, 4, 10) == sqrt(QQBarFieldElem(2)) + sqrt(QQBarFieldElem(3))
+  @test_throws ErrorException guess(R, v, 2)
 
-  @test guess(CalciumQQBar, CC(2+i), 2, 10) == 2+i
+  @test guess(R, CC(2+i), 2, 10) == 2+i
 
-  Rx, x = polynomial_ring(QQBar, "x")
-  @test gcd(x^4 - 4*x^2 + 4, x^2 + sqrt(QQBar(18))*x + 4) == x + sqrt(QQBar(2))
+  Rx, x = polynomial_ring(R, "x")
+  @test gcd(x^4 - 4*x^2 + 4, x^2 + sqrt(R(18))*x + 4) == x + sqrt(R(2))
 
 end
 
 @testset "QQBarFieldElem.adhoc_operations" begin
-  R = CalciumQQBar
-
   @test QQBarFieldElem(2) + QQBarFieldElem(3) == 5
   @test QQBarFieldElem(2) + 3 == 5
   @test QQBarFieldElem(2) + ZZRingElem(3) == 5
@@ -297,7 +294,7 @@ end
 end
 
 @testset "QQBarFieldElem.comparison" begin
-  R = CalciumQQBar
+  R = algebraic_closure(QQ)
 
   u = R(3) // 2
   i = sqrt(R(-1))
@@ -350,7 +347,7 @@ end
 
 
 @testset "QQBarFieldElem.inplace" begin
-  R = CalciumQQBar
+  R = algebraic_closure(QQ)
 
   x = R(7)
   zero!(x)
@@ -374,25 +371,25 @@ end
 end
 
 @testset "QQBarFieldElem.rand" begin
-  R = CalciumQQBar
+  R = algebraic_closure(QQ)
 
   for i=1:10
-    x = rand(CalciumQQBar, degree=5, bits=5)
+    x = rand(R, degree=5, bits=5)
     @test degree(x) <= 5
   end
 
   for i=1:10
-    x = rand(CalciumQQBar, degree=5, bits=5, randtype=:real)
+    x = rand(R, degree=5, bits=5, randtype=:real)
     @test isreal(x)
   end
 
   for i=1:10
-    x = rand(CalciumQQBar, degree=5, bits=5, randtype=:nonreal)
+    x = rand(R, degree=5, bits=5, randtype=:nonreal)
     # todo: need to upgrade Calcium
     # @test !isreal(x)
   end
 
-  @test_throws ErrorException rand(CalciumQQBar, degree=2, bits=5, randtype=:gollum)
+  @test_throws ErrorException rand(R, degree=2, bits=5, randtype=:gollum)
 
 end
 
@@ -401,6 +398,6 @@ function test_elem(R::QQBarField)
 end
 
 @testset "QQBarFieldElem.conformance_tests" begin
-  test_Field_interface(CalciumQQBar)
+  test_Field_interface(algebraic_closure(QQ))
 end
 

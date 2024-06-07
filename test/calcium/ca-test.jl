@@ -237,6 +237,7 @@ end
 
 @testset "CalciumFieldElem.conversions" begin
   C = CalciumField()
+  R = algebraic_closure(QQ)
 
   n = C(3)
   h = C(1) // 2
@@ -248,9 +249,9 @@ end
   @test QQ(h) == QQFieldElem(1) // 2
   @test_throws ErrorException ZZ(h)
 
-  @test CalciumQQBar(h) == QQBarFieldElem(1) // 2
-  @test CalciumQQBar(c) == QQBarFieldElem(1+2im)
-  @test_throws ErrorException CalciumQQBar(t)
+  @test R(h) == QQBarFieldElem(1) // 2
+  @test R(c) == QQBarFieldElem(1+2im)
+  @test_throws ErrorException R(t)
 
   RR = ArbField(64)
   CC = AcbField(64)

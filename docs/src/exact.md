@@ -151,7 +151,7 @@ x^4 + -10*x^2 + 1
 ## Conversions and numerical evaluation
 
 Calcium numbers can created from integers (`ZZ`), rationals (`QQ`)
-and algebraic numbers (`QQbar`), and through the application of
+and algebraic numbers (`algebraic_closure(QQ)`), and through the application of
 arithmetic operations and transcendental functions.
 
 Calcium numbers can be converted to integers, rational and algebraic fields
@@ -165,7 +165,7 @@ value because of evaluation limits.
 julia> QQ(C(1))
 1
 
-julia> QQBar(sqrt(C(2)) // 2)
+julia> algebraic_closure(QQ)(sqrt(C(2)) // 2)
 Root 0.707107 of 2x^2 - 1
 
 julia> QQ(C(pi))
