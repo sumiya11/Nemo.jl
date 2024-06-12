@@ -2676,7 +2676,7 @@ mutable struct FqPolyRepFieldElem <: FinFieldElem
           (Ref{FqPolyRepFieldElem}, Ref{FqPolyRepField}), d, ctx)
     finalizer(_fq_clear_fn, d)
     ccall((:fq_set_fmpz_mod_poly, libflint), Nothing,
-          (Ref{Nemo.FqPolyRepFieldElem}, Ref{Nemo.FpPolyRingElem}, Ref{FqPolyRepField}),
+          (Ref{FqPolyRepFieldElem}, Ref{FpPolyRingElem}, Ref{FqPolyRepField}),
           d, x, ctx)
     d.parent = ctx
     return d
@@ -6470,7 +6470,7 @@ const _fq_default_mpoly_union = Union{AbstractAlgebra.Generic.MPoly{FqPolyRepFie
         return new(Fqx, R, 2)
       end
       Fq = FqPolyRepField(m, Symbol(R.var), cached, check = false)
-      Fqx = AbstractAlgebra.Generic.polynomial_ring(Fq, s, cached = cached, internal_ordering = internal_ordering)[1]
+      Fqx = polynomial_ring(Fq, s, cached = cached, internal_ordering = internal_ordering)[1]
       return new(Fqx, R, 1)
     end::FqMPolyRing
   end

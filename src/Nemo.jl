@@ -7,14 +7,14 @@ module Nemo
 
 import AbstractAlgebra
 
-using Libdl
+import Libdl
 
 using Random: Random, AbstractRNG, SamplerTrivial
 import Random: rand!
 
 using RandomExtensions: RandomExtensions, make, Make2, Make3
 
-using Pkg
+import Pkg
 
 import SHA
 
@@ -158,8 +158,6 @@ import LinearAlgebra: transpose!
 # Set, Module, Ring, Group and Field are too generic to pollute the users namespace with
 for i in names(AbstractAlgebra)
   (i in AbstractAlgebra.import_exclude || !isdefined(AbstractAlgebra, i)) && continue
-  i == :GF && continue           # remove once Nemocas/AbstractAlgebra.jl#1538 is available
-  i == :NumberField && continue  # remove once Nemocas/AbstractAlgebra.jl#1538 is available
   @eval import AbstractAlgebra: $i
   @eval export $i
 end
