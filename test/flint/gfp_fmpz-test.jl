@@ -95,6 +95,9 @@ end
 
   @test deepcopy(R(3)) == R(3)
 
+  @test coeff(R(2), 0) == 2
+  @test coeff(R(2), 1) == 0
+
   R1 = Native.GF(ZZ(13))
 
   @test R === R1
