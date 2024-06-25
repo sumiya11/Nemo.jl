@@ -61,8 +61,7 @@ end
   setindex_raw!(a, u.data, i, j) # no reduction necessary
 end
 
-setindex!(a::T, u::Integer, i::Int, j::Int) where T <: Zmodn_mat =
-setindex!(a, ZZRingElem(u), i, j)
+setindex!(a::Zmodn_mat, u::Integer, i::Int, j::Int) = setindex!(a, ZZRingElem(u), i, j)
 
 # as per setindex! but no reduction mod n and no bounds checking
 function setindex_raw!(a::T, u::UInt, i::Int, j::Int) where T <: Zmodn_mat
@@ -299,16 +298,14 @@ function mul!(A::fpMatrix, B::fpFieldElem, D::fpMatrix)
   return A
 end
 
-function Generic.add_one!(a::zzModMatrix, i::Int, j::Int)
+function Generic.add_one!(a::T, i::Int, j::Int) where T <: Zmodn_mat
   @boundscheck _checkbounds(a, i, j)
-  x = ccall((:nmod_mat_get_entry, libflint), UInt,
-            (Ref{zzModMatrix}, Int, Int), a, i - 1, j - 1)
+  x = getindex_raw(a, i, j)
   x += 1
   if x == base_ring(a).n
     x = UInt(0)
   end
-  ccall((:nmod_mat_set_entry, libflint), Nothing,
-        (Ref{zzModMatrix}, Int, Int, UInt), a, i - 1, j - 1, x)
+  setindex_raw!(a, x, i, j)
   return a
 end
 
