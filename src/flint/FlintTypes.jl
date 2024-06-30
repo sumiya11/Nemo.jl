@@ -13,8 +13,8 @@ const _err_dim_negative = ErrorException("Dimensions must be non-negative")
 ###############################################################################
 
 zz_ring_doc = raw"""
-ZZRing <: Ring
-ZZRingElem <: RingElem
+    ZZRing <: Ring
+    ZZRingElem <: RingElem
 
 The ring of integers $\mathbb Z$ and its elements.
 For convenience, we predefine the global variable `const ZZ = ZZRing()`,
@@ -35,6 +35,7 @@ julia> ZZ(2)^100
 struct ZZRing <: Ring
 end
 
+@doc zz_ring_doc
 const ZZ = ZZRing()
 
 integer_ring() = ZZRing()
@@ -142,8 +143,8 @@ end
 ###############################################################################
 
 qq_field_doc = raw"""
-QQField <: FracField{ZZRingElem}
-QQFieldElem <: FracFieldElem{ZZRingElem}
+    QQField <: FracField{ZZRingElem}
+    QQFieldElem <: FracFieldElem{ZZRingElem}
 
 The field of rationals $\mathbb Q$ and its elements.
 For convenience, we predefine the global variable `const QQ = QQField()`.
@@ -163,6 +164,7 @@ julia> QQ(1//6) - QQ(1//7)
 struct QQField <: FracField{ZZRingElem}
 end
 
+@doc qq_field_doc
 const QQ = QQField()
 
 rational_field() = QQ
