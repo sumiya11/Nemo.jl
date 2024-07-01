@@ -2275,6 +2275,7 @@ mutable struct fqPolyRepFieldElem <: FinFieldElem
     d = new()
     ccall((:fq_nmod_init2, libflint), Nothing,
           (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, ctx)
+    d.parent = ctx
     finalizer(_fq_nmod_clear_fn, d)
     return d
   end
@@ -2283,9 +2284,9 @@ mutable struct fqPolyRepFieldElem <: FinFieldElem
     d = new()
     ccall((:fq_nmod_init2, libflint), Nothing,
           (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, ctx)
+    d.parent = ctx
     finalizer(_fq_nmod_clear_fn, d)
-    ccall((:fq_nmod_set_si, libflint), Nothing,
-          (Ref{fqPolyRepFieldElem}, Int, Ref{fqPolyRepField}), d, x, ctx)
+    set!(d, x)
     return d
   end
 
@@ -2293,9 +2294,9 @@ mutable struct fqPolyRepFieldElem <: FinFieldElem
     d = new()
     ccall((:fq_nmod_init2, libflint), Nothing,
           (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, ctx)
+    d.parent = ctx
     finalizer(_fq_nmod_clear_fn, d)
-    ccall((:fq_nmod_set_fmpz, libflint), Nothing,
-          (Ref{fqPolyRepFieldElem}, Ref{ZZRingElem}, Ref{fqPolyRepField}), d, x, ctx)
+    set!(d, x)
     return d
   end
 
@@ -2303,9 +2304,9 @@ mutable struct fqPolyRepFieldElem <: FinFieldElem
     d = new()
     ccall((:fq_nmod_init2, libflint), Nothing,
           (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, ctx)
+    d.parent = ctx
     finalizer(_fq_nmod_clear_fn, d)
-    ccall((:fq_nmod_set, libflint), Nothing,
-          (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, x, ctx)
+    set!(d, x)
     return d
   end
 
@@ -2313,10 +2314,9 @@ mutable struct fqPolyRepFieldElem <: FinFieldElem
     d = new()
     ccall((:fq_nmod_init2, libflint), Nothing,
           (Ref{fqPolyRepFieldElem}, Ref{fqPolyRepField}), d, ctx)
+    d.parent = ctx
     finalizer(_fq_nmod_clear_fn, d)
-    ccall((:fq_nmod_set_nmod_poly, libflint), Nothing,
-          (Ref{fqPolyRepFieldElem}, Ref{fpPolyRingElem}, Ref{fqPolyRepField}),
-          d, x, ctx)
+    set!(d, x)
     return d
   end
 end
