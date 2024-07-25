@@ -12,8 +12,6 @@ Individual parts of Nemo may be distributed according to more permissive terms a
 
 * The file ZZ.jl is licensed with the MIT license (see ZZ.jl for precise conditions of the license).
 
-* The Arb library is licensed LGPL v2.1+.  The license text is supplied with the library, which is downloaded as part of the Nemo package installation.
-
 * The individual .jl files (other than ZZ.jl) in the Nemo.jl package are licensed under the Simplified "2-clause" BSD License:
 
 > Copyright (c) 2014-2016: William Hart, Tommy Hofmann, Claus Fieker, Fredrik
