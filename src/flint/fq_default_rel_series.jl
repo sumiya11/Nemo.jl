@@ -113,6 +113,16 @@ end
 
 characteristic(R::FqRelPowerSeriesRing) = characteristic(base_ring(R))
 
+function set_precision!(z::FqRelPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Precision must be non-negative"))
+  z = truncate!(z, k)
+  z.prec = k
+  if is_zero(z)
+    z.val = k
+  end
+  return z
+end
+
 ###############################################################################
 #
 #   Similar
@@ -350,28 +360,25 @@ end
 #
 ###############################################################################
 
-function truncate(x::FqRelPowerSeriesRingElem, prec::Int)
-  prec < 0 && throw(DomainError(prec, "Index must be non-negative"))
-  xlen = pol_length(x)
-  xprec = precision(x)
-  xval = valuation(x)
-  if xprec + xval <= prec
+function truncate(x::FqRelPowerSeriesRingElem, k::Int)
+  return truncate!(deepcopy(x), k)
+end
+
+function truncate!(x::FqRelPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Index must be non-negative"))
+  if precision(x) <= k
     return x
   end
-  z = parent(x)()
-  z.prec = prec
-  if prec <= xval
-    z = parent(x)()
-    z.val = prec
-    z.prec = prec
+  if k <= valuation(x)
+    x = zero!(x)
+    x.val = k
   else
-    z.val = xval
-    ccall((:fq_default_poly_set_trunc, libflint), Nothing,
-          (Ref{FqRelPowerSeriesRingElem}, Ref{FqRelPowerSeriesRingElem},
-           Int, Ref{FqField}),
-          z, x, min(prec - xval, xlen), base_ring(x))
+    ccall((:fq_default_poly_truncate, libflint), Nothing,
+          (Ref{FqRelPowerSeriesRingElem}, Int, Ref{FqField}),
+          x, k - valuation(x), base_ring(x))
   end
-  return z
+  x.prec = k
+  return x
 end
 
 ###############################################################################
