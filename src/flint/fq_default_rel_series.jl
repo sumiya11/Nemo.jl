@@ -317,6 +317,38 @@ end
 
 *(x::FqRelPowerSeriesRingElem, y::FqFieldElem) = y * x
 
+*(x::ZZRingElem, y::FqRelPowerSeriesRingElem) = base_ring(parent(y))(x) * y
+
+*(x::FqRelPowerSeriesRingElem, y::ZZRingElem) = y * x
+
+*(x::Integer, y::FqRelPowerSeriesRingElem) = base_ring(parent(y))(x) * y
+
+*(x::FqRelPowerSeriesRingElem, y::Integer) = y * x
+
++(x::FqFieldElem, y::FqRelPowerSeriesRingElem) = parent(y)(x) + y
+
++(x::FqRelPowerSeriesRingElem, y::FqFieldElem) = y + x
+
++(x::ZZRingElem, y::FqRelPowerSeriesRingElem) = base_ring(parent(y))(x) + y
+
++(x::FqRelPowerSeriesRingElem, y::ZZRingElem) = y + x
+
++(x::FqRelPowerSeriesRingElem, y::Integer) = x + base_ring(parent(x))(y)
+
++(x::Integer, y::FqRelPowerSeriesRingElem) = y + x
+
+-(x::FqFieldElem, y::FqRelPowerSeriesRingElem) = parent(y)(x) - y
+
+-(x::FqRelPowerSeriesRingElem, y::FqFieldElem) = x - parent(x)(y)
+
+-(x::ZZRingElem, y::FqRelPowerSeriesRingElem) = base_ring(parent(y))(x) - y
+
+-(x::FqRelPowerSeriesRingElem, y::ZZRingElem) = x - base_ring(parent(x))(y)
+
+-(x::FqRelPowerSeriesRingElem, y::Integer) = x - base_ring(parent(x))(y)
+
+-(x::Integer, y::FqRelPowerSeriesRingElem) = base_ring(parent(y))(x) - y
+
 ###############################################################################
 #
 #   Shifting
