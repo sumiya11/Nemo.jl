@@ -116,6 +116,13 @@ end
 
 characteristic(::QQAbsPowerSeriesRing) = 0
 
+function set_precision!(z::QQAbsPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Precision must be non-negative"))
+  z = truncate!(z, k)
+  z.prec = k
+  return z
+end
+
 ###############################################################################
 #
 #   Similar
@@ -340,17 +347,20 @@ end
 #
 ###############################################################################
 
-function truncate(x::QQAbsPowerSeriesRingElem, prec::Int)
-  prec < 0 && throw(DomainError(prec, "Precision must be non-negative"))
-  if x.prec <= prec
+function truncate(x::QQAbsPowerSeriesRingElem, k::Int)
+  return truncate!(deepcopy(x), k)
+end
+
+function truncate!(x::QQAbsPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Index must be non-negative"))
+  if precision(x) <= k
     return x
   end
-  z = parent(x)()
-  z.prec = prec
-  ccall((:fmpq_poly_set_trunc, libflint), Nothing,
-        (Ref{QQAbsPowerSeriesRingElem}, Ref{QQAbsPowerSeriesRingElem}, Int),
-        z, x, prec)
-  return z
+  ccall((:fmpq_poly_truncate, libflint), Nothing,
+        (Ref{QQAbsPowerSeriesRingElem}, Int),
+        x, k)
+  x.prec = k
+  return x
 end
 
 ###############################################################################

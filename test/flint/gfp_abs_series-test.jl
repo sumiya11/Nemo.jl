@@ -293,6 +293,7 @@ end
   b = O(x^4)
   c = 1 + x + 2x^2 + O(x^5)
   d = 2x + x^3 + O(x^4)
+  e = x^3 + O(x^10)
 
   @test truncate(a, 3) == 2*x + O(x^3)
 
@@ -301,6 +302,8 @@ end
   @test truncate(c, 5) == 2*x^2+x+1+O(x^5)
 
   @test truncate(d, 5) == x^3+2*x+O(x^4)
+
+  @test truncate(e, 2) == O(x^2)
 
   @test_throws DomainError truncate(a, -1)
 
@@ -464,4 +467,25 @@ end
     h = zero!(h)
     @test isequal(h, R())
   end
+end
+
+@testset "fpAbsPowerSeriesRingElem.set_precision" begin
+  S = Native.GF(23)
+  R, x = power_series_ring(S, 30, "x", model=:capped_absolute)
+
+  a = 2x + x^3
+  b = O(x^4)
+  c = 1 + x + 2x^2 + O(x^5)
+  d = 2x + x^3 + O(x^4)
+  e = x^3 + O(x^10)
+
+  @test set_precision(a, 3) == 2*x + O(x^3)
+  @test set_precision(b, 2) == O(x^2)
+  @test set_precision(b, 10) == O(x^10)
+  @test set_precision(c, 5) == 2*x^2+x+1+O(x^5)
+  @test set_precision(c, 10) == 2*x^2+x+1+O(x^10)
+  @test set_precision(d, 5) == x^3+2*x+O(x^5)
+  @test set_precision(e, 2) == O(x^2)
+
+  @test_throws DomainError set_precision(a, -1)
 end
