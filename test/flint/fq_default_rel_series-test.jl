@@ -344,6 +344,11 @@ end
   @test isequal(c*2, 2 + 2*x + 6*x^2 + O(x^5))
 
   @test isequal(d*ZZRingElem(3), 3x^2 + 9x^3 - 3x^4 + O(x^32))
+
+  @test isequal(a + ZZ(3), 3 + 2*x + x^3)
+  @test isequal(ZZ(3) + a, 3 + 2*x + x^3)
+  @test isequal(a - ZZ(3), 20 + 2*x + x^3)
+  @test isequal(ZZ(3) - a, 3 + 21*x + 22*x^3)
 end
 
 @testset "FqRelPowerSeriesRingElem.comparison" begin

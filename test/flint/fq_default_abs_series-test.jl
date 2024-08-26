@@ -203,6 +203,11 @@ end
   @test c*2 == 2 + 2*x + 6*x^2 + O(x^5)
 
   @test d*ZZ(3) == 3x^2 + 9x^3 - 3x^4
+
+  @test a + ZZ(3) == 3 + 2*x + x^3
+  @test ZZ(3) + a == 3 + 2*x + x^3
+  @test a - ZZ(3) == 20 + 2*x + x^3
+  @test ZZ(3) - a == 3 + 21*x + 22*x^3
 end
 
 @testset "FqAbsPowerSeriesRingElem.comparison" begin
