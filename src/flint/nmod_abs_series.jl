@@ -122,6 +122,13 @@ for (etype, rtype, mtype, brtype, flint_fn) in (
 
     characteristic(R::($rtype)) = characteristic(base_ring(R))
 
+    function set_precision!(z::($etype), k::Int)
+      k < 0 && throw(DomainError(k, "Precision must be non-negative"))
+      z = truncate!(z, k)
+      z.prec = k
+      return z
+    end
+
     ###############################################################################
     #
     #   Similar
@@ -322,17 +329,20 @@ for (etype, rtype, mtype, brtype, flint_fn) in (
     #
     ###############################################################################
 
-    function truncate(x::($etype), prec::Int)
-      prec < 0 && throw(DomainError(prec, "Index must be non-negative"))
-      if x.prec <= prec
+    function truncate(x::($etype), k::Int)
+      return truncate!(deepcopy(x), k)
+    end
+
+    function truncate!(x::($etype), k::Int)
+      k < 0 && throw(DomainError(k, "Index must be non-negative"))
+      if precision(x) <= k
         return x
       end
-      z = parent(x)()
-      z.prec = prec
-      ccall(($(flint_fn*"_set_trunc"), libflint), Nothing,
-            (Ref{($etype)}, Ref{($etype)}, Int),
-            z, x, prec)
-      return z
+      ccall(($(flint_fn*"_truncate"), libflint), Nothing,
+            (Ref{($etype)}, Int),
+            x, k)
+      x.prec = k
+      return x
     end
 
     ###############################################################################

@@ -121,6 +121,13 @@ end
 
 characteristic(R::FqAbsPowerSeriesRing) = characteristic(base_ring(R))
 
+function set_precision!(z::FqAbsPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Precision must be non-negative"))
+  z = truncate!(z, k)
+  z.prec = k
+  return z
+end
+
 ###############################################################################
 #
 #   Similar
@@ -247,6 +254,38 @@ end
 
 *(x::FqAbsPowerSeriesRingElem, y::FqFieldElem) = y * x
 
+*(x::ZZRingElem, y::FqAbsPowerSeriesRingElem) = base_ring(parent(y))(x) * y
+
+*(x::FqAbsPowerSeriesRingElem, y::ZZRingElem) = y * x
+
+*(x::Integer, y::FqAbsPowerSeriesRingElem) = base_ring(parent(y))(x) * y
+
+*(x::FqAbsPowerSeriesRingElem, y::Integer) = y * x
+
++(x::FqFieldElem, y::FqAbsPowerSeriesRingElem) = parent(y)(x) + y
+
++(x::FqAbsPowerSeriesRingElem, y::FqFieldElem) = y + x
+
++(x::ZZRingElem, y::FqAbsPowerSeriesRingElem) = base_ring(parent(y))(x) + y
+
++(x::FqAbsPowerSeriesRingElem, y::ZZRingElem) = y + x
+
++(x::FqAbsPowerSeriesRingElem, y::Integer) = x + base_ring(parent(x))(y)
+
++(x::Integer, y::FqAbsPowerSeriesRingElem) = y + x
+
+-(x::FqFieldElem, y::FqAbsPowerSeriesRingElem) = parent(y)(x) - y
+
+-(x::FqAbsPowerSeriesRingElem, y::FqFieldElem) = x - parent(x)(y)
+
+-(x::ZZRingElem, y::FqAbsPowerSeriesRingElem) = base_ring(parent(y))(x) - y
+
+-(x::FqAbsPowerSeriesRingElem, y::ZZRingElem) = x - base_ring(parent(x))(y)
+
+-(x::FqAbsPowerSeriesRingElem, y::Integer) = x - base_ring(parent(x))(y)
+
+-(x::Integer, y::FqAbsPowerSeriesRingElem) = base_ring(parent(y))(x) - y
+
 ###############################################################################
 #
 #   Shifting
@@ -290,17 +329,20 @@ end
 #
 ###############################################################################
 
-function truncate(x::FqAbsPowerSeriesRingElem, prec::Int)
-  prec < 0 && throw(DomainError(prec, "Index must be non-negative"))
-  if x.prec <= prec
+function truncate(x::FqAbsPowerSeriesRingElem, k::Int)
+  return truncate!(deepcopy(x), k)
+end
+
+function truncate!(x::FqAbsPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Index must be non-negative"))
+  if precision(x) <= k
     return x
   end
-  z = parent(x)()
-  z.prec = prec
-  ccall((:fq_default_poly_set_trunc, libflint), Nothing,
-        (Ref{FqAbsPowerSeriesRingElem}, Ref{FqAbsPowerSeriesRingElem}, Int, Ref{FqField}),
-        z, x, prec, base_ring(x))
-  return z
+  ccall((:fq_default_poly_truncate, libflint), Nothing,
+        (Ref{FqAbsPowerSeriesRingElem}, Int, Ref{FqField}),
+        x, k, base_ring(x))
+  x.prec = k
+  return x
 end
 
 ###############################################################################

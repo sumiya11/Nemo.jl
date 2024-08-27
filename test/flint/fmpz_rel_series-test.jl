@@ -392,6 +392,7 @@ end
   b = O(x^4)
   c = 1 + x + 2x^2 + O(x^5)
   d = 2x + x^3 + O(x^4)
+  e = x^3 + O(x^10)
 
   @test truncate(a, 3) == 2*x + O(x^3)
 
@@ -400,6 +401,8 @@ end
   @test truncate(c, 5) == 2*x^2+x+1+O(x^5)
 
   @test truncate(d, 5) == x^3+2*x+O(x^4)
+
+  @test isequal(truncate(e, 2), O(x^2))
 
   @test_throws DomainError truncate(a, -1)
 end
@@ -521,4 +524,24 @@ end
     h = zero!(h)
     @test isequal(h, R())
   end
+end
+
+@testset "ZZRelPowerSeriesRingElem.set_precision" begin
+  R, x = power_series_ring(ZZ, 30, "x")
+
+  a = 2x + x^3
+  b = O(x^4)
+  c = 1 + x + 2x^2 + O(x^5)
+  d = 2x + x^3 + O(x^4)
+  e = x^3 + O(x^10)
+
+  @test isequal(set_precision(a, 3), 2*x + O(x^3))
+  @test isequal(set_precision(b, 2), O(x^2))
+  @test isequal(set_precision(b, 10), O(x^10))
+  @test isequal(set_precision(c, 5), 2*x^2+x+1+O(x^5))
+  @test isequal(set_precision(c, 10), 2*x^2+x+1+O(x^10))
+  @test isequal(set_precision(d, 5), x^3+2*x+O(x^5))
+  @test isequal(set_precision(e, 2), O(x^2))
+
+  @test_throws DomainError set_precision(a, -1)
 end

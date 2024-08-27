@@ -109,6 +109,16 @@ end
 
 characteristic(::ZZRelPowerSeriesRing) = 0
 
+function set_precision!(z::ZZRelPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Precision must be non-negative"))
+  z = truncate!(z, k)
+  z.prec = k
+  if is_zero(z)
+    z.val = k
+  end
+  return z
+end
+
 ###############################################################################
 #
 #   Similar
@@ -357,27 +367,25 @@ end
 #
 ###############################################################################
 
-function truncate(x::ZZRelPowerSeriesRingElem, prec::Int)
-  prec < 0 && throw(DomainError(prec, "Index must be non-negative"))
-  xlen = pol_length(x)
-  xprec = precision(x)
-  xval = valuation(x)
-  if xprec + xval <= prec
+function truncate(x::ZZRelPowerSeriesRingElem, k::Int)
+  return truncate!(deepcopy(x), k)
+end
+
+function truncate!(x::ZZRelPowerSeriesRingElem, k::Int)
+  k < 0 && throw(DomainError(k, "Index must be non-negative"))
+  if precision(x) <= k
     return x
   end
-  z = parent(x)()
-  z.prec = prec
-  if prec <= xval
-    z = parent(x)()
-    z.val = prec
-    z.prec = prec
+  if k <= valuation(x)
+    x = zero!(x)
+    x.val = k
   else
-    z.val = xval
-    ccall((:fmpz_poly_set_trunc, libflint), Nothing,
-          (Ref{ZZRelPowerSeriesRingElem}, Ref{ZZRelPowerSeriesRingElem}, Int),
-          z, x, min(prec - xval, xlen))
+    ccall((:fmpz_poly_truncate, libflint), Nothing,
+          (Ref{ZZRelPowerSeriesRingElem}, Int),
+          x, k - valuation(x))
   end
-  return z
+  x.prec = k
+  return x
 end
 
 ###############################################################################
