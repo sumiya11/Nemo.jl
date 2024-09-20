@@ -677,24 +677,6 @@ function divexact(a::ZZModRingElem, y::ZZRingElem; check::Bool=true)
   return divexact(a, parent(a)(y), check=check)
 end
 
-function ^(a::ResElem, f::ZZRingElem)
-  f == 0 && return one(parent(a))
-  f == 1 && return a
-  if f < 0
-    f = -f
-    a = inv(a)
-  end
-  if f < (1 << 30)
-    return a^Int(f)
-  end
-  b = a^(div(f, 2))
-  b = b^2
-  if isodd(f)
-    b *= a
-  end
-  return b
-end
-
 characteristic(F::EuclideanRingResidueField{ZZRingElem}) = abs(F.modulus)
 
 #@doc raw"""
@@ -997,14 +979,6 @@ function mod_sym(a::T, b::T) where {T}
 end
 function mod_sym!(a::T, b::T) where {T}
   return mod!(a, b)
-end
-
-function mod_sym!(a::ZZRingElem, b::ZZRingElem)
-  mod!(a, a, b)
-  if a > div(b, 2)
-    sub!(a, a, b)
-  end
-  return a
 end
 
 Base.replace!(::typeof(-), m::ZZMatrix) = -m
