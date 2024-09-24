@@ -453,12 +453,12 @@ include("embedding/embedding.jl")
 include("Rings.jl")
 
 include("matrix.jl")
+include("poly.jl")
 
 include("Infinity.jl")
 
 include("HeckeMiscFiniteField.jl")
 include("HeckeMiscMatrix.jl")
-include("HeckeMiscPoly.jl")
 include("HeckeMoreStuff.jl")
 
 # More functionality for Julia types
