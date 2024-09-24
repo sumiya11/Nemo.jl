@@ -212,6 +212,23 @@ end
 
 ###############################################################################
 #
+#   Common denominator
+#
+###############################################################################
+
+# This function is really slow...
+function denominator(M::QQMatrix)
+  d = one(ZZ)
+  for i in 1:nrows(M)
+    for j in 1:ncols(M)
+      d = lcm!(d, d, denominator(M[i, j]))
+    end
+  end
+  return d
+end
+
+###############################################################################
+#
 #   transpose
 #
 ###############################################################################
@@ -222,6 +239,8 @@ function transpose(x::QQMatrix)
         (Ref{QQMatrix}, Ref{QQMatrix}), z, x)
   return z
 end
+
+transpose!(A::Union{ZZMatrix,QQMatrix}) = is_square(A) ? transpose!(A, A) : transpose(A)
 
 function transpose!(A::QQMatrix, B::QQMatrix)
   ccall((:fmpq_mat_transpose, libflint), Nothing,

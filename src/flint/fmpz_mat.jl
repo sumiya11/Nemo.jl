@@ -476,6 +476,14 @@ end
 
 ==(x::ZZRingElem, y::ZZMatrix) = parent(y)(x) == y
 
+# Return a positive integer if A[i, j] > b, negative if A[i, j] < b, 0 otherwise
+function compare_index(A::ZZMatrix, i::Int, j::Int, b::ZZRingElem)
+  GC.@preserve A begin
+    a = mat_entry_ptr(A, i, j)
+    return ccall((:fmpz_cmp, libflint), Cint, (Ptr{ZZRingElem}, Ref{ZZRingElem}), a, b)
+  end
+end
+
 ###############################################################################
 #
 #   Inversion
@@ -1900,6 +1908,22 @@ function Generic.add_one!(a::ZZMatrix, i::Int, j::Int)
   return a
 end
 
+function shift!(g::ZZMatrix, l::Int)
+  GC.@preserve g begin
+    for i = 1:nrows(g)
+      for j = 1:ncols(g)
+        z = mat_entry_ptr(g, i, j)
+        if l > 0
+          ccall((:fmpz_mul_2exp, libflint), Nothing, (Ptr{ZZRingElem}, Ptr{ZZRingElem}, Int), z, z, l)
+        else
+          ccall((:fmpz_tdiv_q_2exp, libflint), Nothing, (Ptr{ZZRingElem}, Ptr{ZZRingElem}, Int), z, z, -l)
+        end
+      end
+    end
+  end
+  return g
+end
+
 ###############################################################################
 #
 #   Parent object call overloads
@@ -1974,6 +1998,35 @@ function (::Type{Base.Matrix{BigInt}})(A::ZZMatrix)
   return mat
 end
 
+function map_entries(R::zzModRing, M::ZZMatrix)
+  MR = zero_matrix(R, nrows(M), ncols(M))
+  ccall((:fmpz_mat_get_nmod_mat, libflint), Nothing,
+        (Ref{zzModMatrix}, Ref{ZZMatrix}), MR, M)
+  return MR
+end
+
+function map_entries(F::fpField, M::ZZMatrix)
+  MR = zero_matrix(F, nrows(M), ncols(M))
+  ccall((:fmpz_mat_get_nmod_mat, libflint), Nothing,
+        (Ref{fpMatrix}, Ref{ZZMatrix}), MR, M)
+  return MR
+end
+
+function map_entries(R::ZZModRing, M::ZZMatrix)
+  N = zero_matrix(R, nrows(M), ncols(M))
+  GC.@preserve M N begin
+    for i = 1:nrows(M)
+      for j = 1:ncols(M)
+        m = mat_entry_ptr(M, i, j)
+        n = mat_entry_ptr(N, i, j)
+        ccall((:fmpz_mod, libflint), Nothing,
+              (Ptr{ZZRingElem}, Ptr{ZZRingElem}, Ref{ZZRingElem}), n, m, R.n)
+      end
+    end
+  end
+  return N
+end
+
 ###############################################################################
 #
 #   Matrix constructor
@@ -2029,6 +2082,23 @@ function identity_matrix(R::ZZRing, n::Int)
   z = ZZMatrix(n, n)
   ccall((:fmpz_mat_one, libflint), Nothing, (Ref{ZZMatrix}, ), z)
   return z
+end
+
+################################################################################
+#
+#  Product of diagonal
+#
+################################################################################
+
+function prod_diagonal(A::ZZMatrix)
+  a = one(ZZ)
+  GC.@preserve a A begin
+    for i = 1:min(nrows(A),ncols(A))
+      b = mat_entry_ptr(A, i, i)
+      mul!(a, a, b)
+    end
+  end
+  return a
 end
 
 ################################################################################

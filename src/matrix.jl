@@ -330,3 +330,67 @@ end
 function norm(v::Union{AcbMatrix, ArbMatrix, ComplexMatrix, RealMatrix})
   return sqrt(sum(a^2 for a in v; init=zero(base_ring(v))))
 end
+
+################################################################################
+#
+#  Diagonal
+#
+################################################################################
+
+@doc raw"""
+    diagonal(A::MatrixElem{T}) -> Vector{T}
+
+Return the diagonal of `A` as an array.
+"""
+diagonal(A::MatrixElem{T}) where {T} = T[A[i, i] for i in 1:min(nrows(A), ncols(A))]
+
+function prod_diagonal(A::MatrixElem{T}) where {T}
+  return prod(diagonal(A))
+end
+
+################################################################################
+#
+#  Reduce "modulo" RREF
+#
+################################################################################
+
+@doc raw"""
+    reduce_mod!(A::MatElem{T}, B::MatElem{T}) where T <: FieldElem
+
+For a reduced row echelon matrix $B$, reduce the rows of $A$ modulo $B$, i.e. all the pivot
+columns will be zero afterwards.
+"""
+function reduce_mod!(A::MatElem{T}, B::MatElem{T}) where {T<:FieldElem}
+  if is_rref(B)
+    scale = false
+  else
+    scale = true
+  end
+
+  for h = 1:nrows(A)
+    j = 1
+    for i = 1:nrows(B)
+      while iszero(B[i, j])
+        j += 1
+      end
+      if scale
+        A[h, :] -= A[h, j] * (inv(B[i, j]) * B[i, :])
+      else
+        A[h, :] -= A[h, j] * B[i, :]
+      end
+    end
+  end
+  return A
+end
+
+@doc raw"""
+    reduce_mod(A::MatElem{T}, B::MatElem{T}) where T <: FieldElem -> MatElem
+
+For a reduced row echelon matrix $B$, reduce $A$ modulo $B$, i.e. all the pivot
+columns will be zero afterwards.
+"""
+function reduce_mod(A::MatElem{T}, B::MatElem{T}) where {T<:FieldElem}
+  C = deepcopy(A)
+  reduce_mod!(C, B)
+  return C
+end
