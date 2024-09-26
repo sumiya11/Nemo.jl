@@ -369,13 +369,13 @@ for (jT, cN, cT) in ((QQFieldElem, :fmpq, Ref{QQFieldElem}), (ZZRingElem, :fmpz,
   end
 end
 
-+(a::QQMPolyRingElem, b::Integer) = a + ZZRingElem(b)
++(a::QQMPolyRingElem, b::Integer) = a + flintify(b)
 
 +(a::Integer, b::QQMPolyRingElem) = b + a
 
--(a::QQMPolyRingElem, b::Integer) = a - ZZRingElem(b)
+-(a::QQMPolyRingElem, b::Integer) = a - flintify(b)
 
--(a::Integer, b::QQMPolyRingElem) = -(b - a)
+-(a::Integer, b::QQMPolyRingElem) = neg!(b - a)
 
 +(a::QQMPolyRingElem, b::Rational{<:Integer}) = a + QQFieldElem(b)
 
@@ -383,9 +383,9 @@ end
 
 -(a::QQMPolyRingElem, b::Rational{<:Integer}) = a - QQFieldElem(b)
 
--(a::Rational{<:Integer}, b::QQMPolyRingElem) = -(b - a)
+-(a::Rational{<:Integer}, b::QQMPolyRingElem) = neg!(b - a)
 
-*(a::QQMPolyRingElem, b::Integer) = a * ZZRingElem(b)
+*(a::QQMPolyRingElem, b::Integer) = a * flintify(b)
 
 *(a::Integer, b::QQMPolyRingElem) = b * a
 
@@ -393,11 +393,11 @@ end
 
 *(a::Rational{<:Integer}, b::QQMPolyRingElem) = b * a
 
-divexact(a::QQMPolyRingElem, b::Integer; check::Bool=true) = divexact(a, ZZRingElem(b); check=check)
+divexact(a::QQMPolyRingElem, b::Integer; check::Bool=true) = divexact(a, flintify(b); check=check)
 
 divexact(a::QQMPolyRingElem, b::Rational{<:Integer}; check::Bool=true) = divexact(a, QQFieldElem(b); check=check)
 
-//(a::QQMPolyRingElem, b::Integer) = //(a, ZZRingElem(b))
+//(a::QQMPolyRingElem, b::Integer) = //(a, flintify(b))
 
 //(a::QQMPolyRingElem, b::Rational{<:Integer}) = //(a, QQFieldElem(b))
 
@@ -578,7 +578,7 @@ end
 
 ==(a::Int, b::QQMPolyRingElem) = b == a
 
-==(a::QQMPolyRingElem, b::Integer) = a == ZZRingElem(b)
+==(a::QQMPolyRingElem, b::Integer) = a == flintify(b)
 
 ==(a::Integer, b::QQMPolyRingElem) = b == a
 
@@ -1186,33 +1186,12 @@ function (R::QQMPolyRing)()
   return z
 end
 
-function (R::QQMPolyRing)(b::QQFieldElem)
+function (R::QQMPolyRing)(b::RationalUnion)
   z = QQMPolyRingElem(R, b)
   return z
 end
 
-function (R::QQMPolyRing)(b::ZZRingElem)
-  z = QQMPolyRingElem(R, b)
-  return z
-end
-
-function (R::QQMPolyRing)(b::Int)
-  z = QQMPolyRingElem(R, b)
-  return z
-end
-
-function (R::QQMPolyRing)(b::UInt)
-  z = QQMPolyRingElem(R, b)
-  return z
-end
-
-function (R::QQMPolyRing)(b::Integer)
-  return R(ZZRingElem(b))
-end
-
-function (R::QQMPolyRing)(b::Rational{<:Integer})
-  return R(QQFieldElem(b))
-end
+QQMPolyRingElem(ctx::QQMPolyRing, a::RationalUnion) = QQMPolyRingElem(ctx, flintify(a))
 
 function (R::QQMPolyRing)(a::QQMPolyRingElem)
   parent(a) != R && error("Unable to coerce polynomial")
