@@ -2565,8 +2565,8 @@ function add!(a::ZZRingElem, b::ZZRingElem, c::Ptr{Int})
   return a
 end
 
-add!(z::ZZRingElem, a::ZZRingElem, b::Integer) = add!(z, a, ZZRingElem(b))
-add!(z::ZZRingElem, x::Int, y::ZZRingElem) = add!(z, y, x)
+add!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr, b::Integer) = add!(z, a, flintify(b))
+add!(z::ZZRingElemOrPtr, x::Int, y::ZZRingElemOrPtr) = add!(z, y, x)
 
 function neg!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr)
   ccall((:fmpz_neg, libflint), Nothing,
@@ -2599,7 +2599,7 @@ function sub!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr, b::UInt)
 end
 
 function sub!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr, b::Integer)
-  return sub!(z, a, ZZRingElem(b))
+  return sub!(z, a, flintify(b))
 end
 
 function sub!(z::ZZRingElemOrPtr, b::Integer, a::ZZRingElemOrPtr)
@@ -2626,7 +2626,7 @@ function mul!(z::ZZRingElemOrPtr, x::ZZRingElemOrPtr, y::UInt)
   return z
 end
 
-mul!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr, b::Integer) = mul!(z, a, ZZRingElem(b))
+mul!(z::ZZRingElemOrPtr, a::ZZRingElemOrPtr, b::Integer) = mul!(z, a, flintify(b))
 
 mul!(z::ZZRingElemOrPtr, x::Integer, y::ZZRingElemOrPtr) = mul!(z, y, x)
 
