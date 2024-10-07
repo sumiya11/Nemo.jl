@@ -343,6 +343,7 @@ function sub!(a::AbsSimpleNumFieldElem, b::AbsSimpleNumFieldElem, c::AbsSimpleNu
   ccall((:nf_elem_sub, libflint), Nothing,
         (Ref{AbsSimpleNumFieldElem}, Ref{AbsSimpleNumFieldElem}, Ref{AbsSimpleNumFieldElem}, Ref{AbsSimpleNumField}),
         a, b, c, a.parent)
+  return a
 end
 
 function lift(R::ZZAbsPowerSeriesRing, f::ZZModAbsPowerSeriesRingElem)
@@ -1045,6 +1046,7 @@ function mod_sym!(f::ZZPolyRingElem, p::ZZRingElem)
   for i = 0:degree(f)
     setcoeff!(f, i, mod_sym(coeff(f, i), p))
   end
+  return f
 end
 
 function mod_sym(a::AbsSimpleNumFieldElem, b::ZZRingElem, b2::ZZRingElem)
