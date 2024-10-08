@@ -350,22 +350,9 @@ end
 #
 ###############################################################################
 
-function zero!(z::zzModRingElem)
-  R = parent(z)
-  return zzModRingElem(UInt(0), R)
-end
+# Since this data type is immutable, we can not do better for the unsafe ops
+# than their default implementations.
 
-function mul!(z::zzModRingElem, x::zzModRingElem, y::zzModRingElem)
-  return x*y
-end
-
-function add!(z::zzModRingElem, x::zzModRingElem)
-  return z + x
-end
-
-function add!(z::zzModRingElem, x::zzModRingElem, y::zzModRingElem)
-  return x + y
-end
 ###############################################################################
 #
 #   Random functions
