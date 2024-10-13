@@ -1,3 +1,4 @@
+Nemo.show_banner()
 include("Fields-test.jl")
 include("Rings-test.jl")
 include("Generic-test.jl")
