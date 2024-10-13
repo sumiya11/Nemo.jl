@@ -329,6 +329,13 @@ end
 #
 ################################################################################
 
+function show_banner()
+  println("")
+  println("Welcome to Nemo version $(version())")
+  println("")
+  println("Nemo comes with absolutely no warranty whatsoever")
+end
+
 const __isthreaded = Ref(false)
 
 function __init__()
@@ -346,10 +353,7 @@ function __init__()
         (Ptr{Nothing},), @cfunction(flint_abort, Nothing, ()))
 
   if AbstractAlgebra.should_show_banner() && get(ENV, "NEMO_PRINT_BANNER", "true") != "false"
-    println("")
-    println("Welcome to Nemo version $(version())")
-    println("")
-    println("Nemo comes with absolutely no warranty whatsoever")
+    show_banner()
   end
 
   # Initialize the thread local random state
